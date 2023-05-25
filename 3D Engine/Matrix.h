@@ -240,13 +240,13 @@ public:
     int NumRows() override { return 4; }
     int NumCols() override { return 4; }
     
-    void Set(float matrix[4][4])
+    void Set(const Matrix4x4& matrix)
     {
         for (size_t r = 0; r < 4; r++)
         {
             for (size_t c = 0; c < 3; c++)
             {
-                this->m[r][c] = matrix[r][c];
+                this->m[r][c] = matrix.m[r][c];
             }
         }
     }
@@ -254,31 +254,31 @@ public:
     Matrix4x4(){}
     Matrix4x4(float matrix[4][4]) { Set(matrix);}
 
-    static Matrix4x4 Transpose(const float matrix[][4])
+    static Matrix4x4 Transpose(const Matrix4x4& matrix)
     {
         Matrix4x4 mtx = Matrix4x4();
         for (int r = 0; r < 4; r++) {
             for (int c = 0; c < 4; c++) {
-                mtx.m[c][r] = matrix[r][c];
+                mtx.m[c][r] = matrix.m[r][c];
             }
         }
         return mtx;
     }
 
     // A*B
-    static Matrix4x4 Multiply(const float matrixA[][4], const float matrixB[][4])
+    static Matrix4x4 Multiply(const Matrix4x4& matrixA, const Matrix4x4& matrixB)
     {
         Matrix4x4 result = Matrix4x4();
         for (size_t r = 0; r < 4; r++)
         {
-            Vector4<float> rowVec = Vector4<float>(matrixA[r][0], matrixA[r][1], matrixA[r][2], matrixA[r][3]);
+            Vector4<float> rowVec = Vector4<float>(matrixA.m[r][0], matrixA.m[r][1], matrixA.m[r][2], matrixA.m[r][3]);
             for (size_t c = 0; c < 4; c++)
             {
                 Vector4<float> columnVec;
-                columnVec.x = matrixB[0][c];
-                columnVec.y = matrixB[1][c];
-                columnVec.z = matrixB[2][c];
-                columnVec.w = matrixB[3][c];
+                columnVec.x = matrixB.m[0][c];
+                columnVec.y = matrixB.m[1][c];
+                columnVec.z = matrixB.m[2][c];
+                columnVec.w = matrixB.m[3][c];
                 result.m[r][c] = DotProduct(rowVec, columnVec);
             }
         }
@@ -287,9 +287,9 @@ public:
     }
 
     // Same as matrixA = matrixA * matrixB
-    Matrix4x4& operator*=(Matrix4x4 matrixB)
+    Matrix4x4& operator*=(const Matrix4x4& matrixB)
     {
-        *this = Multiply(this->m, matrixB.m);
+        *this = Multiply(this->m, matrixB);
         return *this;
     }
 
@@ -303,7 +303,7 @@ public:
 // A * B
 Matrix4x4 operator*(const Matrix4x4& matrixA, const Matrix4x4& matrixB)
 {
-    Matrix4x4 matrix = Matrix4x4::Multiply(matrixA.m, matrixB.m);
+    Matrix4x4 matrix = Matrix4x4::Multiply(matrixA, matrixB);
     return matrix;
 }
 

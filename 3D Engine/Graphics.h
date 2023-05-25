@@ -2,8 +2,10 @@
 #include <Matrix.h>
 #include <math.h>
 #include <vector>
+
 #include <string.h>
-#define PI 3.14159
+const float PI = 3.14159265359f;
+#define List std::vector
 
 float ToDeg(float rad) {
     return rad * 180.0 / PI;
@@ -52,8 +54,8 @@ float orthographicProjectionMatrix[4][4] = {
     {0, 0, 0, 1}
 };
 
-float nearClippingPlane = -.1;
-float farClippingPlane = -1000;
+float nearClippingPlane = -0.1;
+float farClippingPlane = -1000.0;
 float fov = 60 * PI / 180.0;
 
 float perspectiveProjectionMatrix[4][4] {
@@ -75,6 +77,21 @@ void FOV(int deg)
     };
 }*/
 
+void Point(float x, float y)
+{
+    glBegin(GL_POINTS);
+    glVertex2f(x, y);
+    glEnd();
+}
+
+void Line(int x0, int y0, int x, int y)
+{
+    glBegin(GL_LINES);
+    glVertex2f(x0, y0);
+    glVertex2f(x, y);
+    glEnd();
+}
+
 Vec4 ProjectPoint(Vec4 point)
 {
     if (GraphicSettings::perspective) {
@@ -90,38 +107,48 @@ Vec4 ProjectPoint(Vec4 point)
     return point;
 }
 
-void DrawTriangle(Vec4 tri[3]) {
-    Vec4 p1 = tri[0];
-    Vec4 p2 = tri[1];
-    Vec4 p3 = tri[2];
-
-    //Draw Triangle
-    //line(p1.x, p1.y, 0, p2.x, p2.y, 0);
-    //line(p2.x, p2.y, 0, p3.x, p3.y, 0);
-    //line(p3.x, p3.y, 0, p1.x, p1.y, 0);
-}
-
-class Triangle
+struct Triangle
 {
-public:
+    static int count;
     Vec3 verts[3];
     //Vec3 centroid;
-
+    Triangle() { count++; };
     Triangle(Vec3 p1, Vec3 p2, Vec3 p3)
     {
         this->verts[0] = p1;
         this->verts[1] = p2;
         this->verts[2] = p3;
-
+        count++;
         //centroid...
     }
 };
+int Triangle::count = 0;
+void DrawTriangle(Triangle tri)
+{
+    Vec4 p1 = tri.verts[0];
+    Vec4 p2 = tri.verts[1];
+    Vec4 p3 = tri.verts[2];
+
+    glBegin(GL_LINES);
+
+    glVertex2f(p1.x, p1.y);
+    glVertex2f(p2.x, p2.y);
+
+    glVertex2f(p2.x, p2.y);
+    glVertex2f(p3.x, p3.y);
+
+    glVertex2f(p3.x, p3.y);
+    glVertex2f(p1.x, p1.y);
+
+    glEnd();
+}
+
 
 class Transform
 {
 public:
-    static Transform** transforms;// = [];
-    static int transformCount;
+    //static List<Transform*> transforms;// = [];
+    //static int transformCount;
 
     Vec3 scale = Vec3(1, 1, 1);
     Vec3 position = Vec3(0, 0, 0);
@@ -141,7 +168,7 @@ public:
         this->scale.z = scale;
         this->position = position;
         this->rotation = YPR(rotationEuler.x, rotationEuler.y, rotationEuler.z);
-        Transform::transforms[Transform::transformCount++] = this;
+        //Transform::transforms[Transform::transformCount++] = this;
     }
 
     Matrix4x4 ScaleMatrix4x4()
@@ -166,6 +193,8 @@ public:
             {this->rotation.m[2][0], this->rotation.m[2][1], this->rotation.m[2][2], 0},
             {0, 0, 0, 1}
         };
+
+        return Matrix4x4(matrix);
     }
 
     Matrix4x4 TranslationMatrix4x4() 
@@ -207,13 +236,15 @@ public:
         return Matrix4x4::Transpose(this->RotationMatrix4x4().m) * this->TranslationMatrix4x4Inverse();
     }
 };
-Transform** Transform::transforms = new Transform*[100];
+//Transform** Transform::transforms = new Transform*[100];
+//List<Transform*> Transform::transforms = List<Transform*>(1000);
+//int Transform::transformCount = 0;
 
 class Camera : Transform
 {
 public:
     static Camera* main;
-    static Camera** cameras;
+    static List<Camera*> cameras;
     static int cameraCount;
     //string name;
 
@@ -227,18 +258,18 @@ public:
         //this.name = "Camera " + Camera.#cameraCount;
     }
 };
-Camera** Camera::cameras = new Camera*[3];
-Camera* Camera::main = &Camera();
+Camera* Camera::main = new Camera();
+List<Camera*> Camera::cameras = List<Camera*>({Camera::main});
+int Camera::cameraCount = 0;
 
 class Mesh : Transform
 {
 public:
-    static Mesh** meshes;
+    static List<Mesh*> meshes;
     static int meshCount;
-    //static int worldTriangleCount;
     static int worldTriangleDrawCount;
-    Vec3* vertices; // = []
-    Vec3* projectedTriangles; // = []
+    List<Vec3> vertices; // = []
+    List<Triangle> projectedTriangles; // = []
 
     Mesh(float scale = 1, Vec3 position = Vec3(0, 0, 0), Vec3 rotationEuler = Vec3(0, 0, 0))
         : Transform(scale, position, rotationEuler)
@@ -246,65 +277,74 @@ public:
         Mesh::meshes[Mesh::meshCount++] = this;
         //Mesh::worldTriangleCount += (*this->triangles(this->vertices)).length;
     }
+
+    static void DrawMeshes() {
+        Mesh::worldTriangleDrawCount = 0;
+        for (int i = 0; i < Mesh::meshCount; i++)
+        {
+            Mesh:meshes[i]->drawMesh();
+        }
+    }
+
 protected:
-    virtual Vec3* triangles(Vec3* verts) = 0;
+    virtual List<Triangle>* getTriangles();
 
     void transformTriangles() 
     {
         //Transform Triangles
-        Vec3* tris = this->triangles(this->vertices);
-        for (let i = 0; i < tris.length; i++)
+        List<Triangle>* tris = this->getTriangles();
+        for (int i = 0; i < tris->size(); i++)
         {
-            let camSpaceTri = [];
-            let tri = tris[i];
-            for (let j = 0; j < tri.length; j++)
+            Triangle camSpaceTri;
+            Triangle tri = tris->at(i);
+            for (int j = 0; j < 3; j++)
             {
-                let vert = tri[j];// Local 3D (x,y,z)
+                Vec4 vert = tri.verts[j];
                 // Homogeneous coords (x, y, z, w=1)
-                vert = new Vec4(vert.x, vert.y, vert.z, 1);
+                //vert = new Vec4(vert.x, vert.y, vert.z, 1);
 
                 // =================== WORLD SPACE ===================
                 // Transform local coords to world-space coords.
 
-                let modelToWorldMatrix = this.TRS;
-                let worldPoint = Matrix4x4VectorMult(modelToWorldMatrix, vert);
+                Matrix4x4 modelToWorldMatrix = TRS();
+                Vec4 worldPoint = modelToWorldMatrix * vert;
 
                 // ================ VIEW/CAM/EYE SPACE ================
                 // Transform world coordinates to view coordinates.
 
-                let worldToViewMatrix = Camera.main.TRInverse;
-                let cameraSpacePoint = Matrix4x4VectorMult(worldToViewMatrix, worldPoint);
-                camSpaceTri[j] = cameraSpacePoint;
+                Matrix4x4 worldToViewMatrix = (*(Transform*)Camera::main).TRInverse();
+                Vec4 cameraSpacePoint = worldToViewMatrix * worldPoint;
+                camSpaceTri.verts[j] = cameraSpacePoint;
             };
 
             // Still in View/Cam/Eye space
             //-------------------Normal/Culling------------------------
-            let p1 = camSpaceTri[0];
-            let p2 = camSpaceTri[1];
-            let p3 = camSpaceTri[2];
-            let centroid = new Vec3((p1.x + p2.x + p3.x) / 3.0, (p1.y + p2.y + p3.y) / 3.0, (p1.z + p2.z + p3.z) / 3.0);
+            Vec3 p1 = camSpaceTri.verts[0];
+            Vec3 p2 = camSpaceTri.verts[1];
+            Vec3 p3 = camSpaceTri.verts[2];
+            Vec3 centroid = Vec3((p1.x + p2.x + p3.x) / 3.0, (p1.y + p2.y + p3.y) / 3.0, (p1.z + p2.z + p3.z) / 3.0);
 
-            let tooCloseToCamera = (p1.z >= nearClippingPlane || p2.z >= nearClippingPlane || p3.z >= nearClippingPlane || centroid.z >= nearClippingPlane);
-            let tooFarFromCamera = (p1.z <= farClippingPlane || p2.z <= farClippingPlane || p3.z <= farClippingPlane || centroid.z <= farClippingPlane);
-            let behindCamera = DotProduct(Normalized(centroid), forward) <= 0;
+            bool tooCloseToCamera = (p1.z >= nearClippingPlane || p2.z >= nearClippingPlane || p3.z >= nearClippingPlane || centroid.z >= nearClippingPlane);
+            bool tooFarFromCamera = (p1.z <= farClippingPlane || p2.z <= farClippingPlane || p3.z <= farClippingPlane || centroid.z <= farClippingPlane);
+            bool behindCamera = DotProduct(centroid.Normalized(), World::forward) <= 0;
             if (tooCloseToCamera || tooFarFromCamera || behindCamera) {
                 continue; // Skip triangle if it's out of cam view.
             }
 
             // Calculate triangle suface Normal
-            let a = VectorSub(p3, p1);
-            let b = VectorSub(p2, p1);
-            let normal = Normalized(CrossProduct(a, b));
+            Vec3 a = p3 - p1;
+            Vec3 b = p2 - p1;
+            Vec3 normal = (CrossProduct(a, b)).Normalized();
 
-            if (GraphicSettings.invertNormals) {
-                normal = VectorScale(normal, -1.0)
+            if (GraphicSettings::invertNormals) {
+                normal = normal * -1.0;
             }
 
-            if (GraphicSettings.culling)
+            if (GraphicSettings::culling)
             {
                 // Back-face culling - Checks if the triangles backside is facing the camera.
-                let normalizedFromCamPos = Normalized(centroid);// Since camera is (0,0,0) in view space, the displacement vector from camera to centroid IS the centroid itself.
-                let camVisible = DotProduct(normalizedFromCamPos, normal) <= 0;
+                Vec3 normalizedFromCamPos = centroid.Normalized();// Since camera is (0,0,0) in view space, the displacement vector from camera to centroid IS the centroid itself.
+                bool camVisible = DotProduct(normalizedFromCamPos, normal) <= 0;
 
                 if (!camVisible) {
                     continue;// Skip triangle if it's out of cam view or it's part of the other side of the mesh.
@@ -314,92 +354,104 @@ protected:
             // ================ SCREEN SPACE ==================
             // Project to screen space (image space) 
 
-            if (GraphicSettings.debugNormals)
+            if (GraphicSettings::debugNormals)
             {
-                //---------Draw triangle centroid and normal-----------
-                let projCentroidToNormal = ProjectPoint(Vec4.ToVec4(VectorSum(centroid, normal)));
-                let projCentroid = ProjectPoint(Vec4.ToVec4(centroid));
-                point(projCentroid.x, projCentroid.y, 0);
-                line(projCentroid.x, projCentroid.y, 0, projCentroidToNormal.x, projCentroidToNormal.y, 0);
+                //---------Draw point at centroid and a line from centroid to normal-----------
+                Vec2 projectedNormal = ProjectPoint(centroid + normal);
+                Vec2 projectedCentroid = ProjectPoint(centroid);
+                Point(projectedCentroid.x, projectedCentroid.y);
+                Line(projectedCentroid.x, projectedCentroid.y, projectedNormal.x, projectedNormal.y);
             }
 
             //Project single triangle from 3D to 2D
-            let projectedTri = []
-                for (let j = 0; j < 3; j++) {
-                    const cameraSpacePoint = camSpaceTri[j];
-                    projectedTri[j] = ProjectPoint(cameraSpacePoint);
-                };
+            Triangle projectedTri;
+            for (int j = 0; j < 3; j++) {
+                Vec4 cameraSpacePoint = camSpaceTri.verts[j];
+                projectedTri.verts[j] = ProjectPoint(cameraSpacePoint);
+            };
             //Add projected tri
             projectedTriangles[i] = projectedTri;
         }
-
-        return projectedTriangles;
     }
 
-    drawMesh() {
-        strokeWeight(2);
-        let projectedTriangles = this.transformTriangles();
-        Mesh.worldTriangleDrawCount += projectedTriangles.length;
-        projectedTriangles.forEach(tri = > {
-            DrawTriangle(tri);
-        });
+    void drawMesh() {
+        //strokeWeight(2);
+        this->transformTriangles();
+        Mesh::worldTriangleDrawCount += this->projectedTriangles.size();
+        for (int i = 0; i < projectedTriangles.size(); i++)
+        {
+            DrawTriangle(projectedTriangles.at(i));
+        }
     }
-
-    static DrawMeshes() {
-        Mesh.worldTriangleDrawCount = 0;
-        Mesh.meshes.forEach(mesh = > {
-            mesh.drawMesh();
-        });
-    }
-}
+};
+List<Mesh*> Mesh::meshes = List<Mesh*>();
+int Mesh::meshCount = 0;
 
 class CubeMesh : Mesh
 {
+public:
     CubeMesh(int scale = 1, Vec3 position = Vec3(0, 0, 0), Vec3 rotationEuler = Vec3(0, 0, 0))
         :Mesh(scale, position, rotationEuler)
     {
         // Local Space (Object Space)
-        this->vertices = {
+        this->vertices = List<Vec3>({//new Vec3[8] {
             //south
             Vec3(-1, -1, 1),
             Vec3(-1, 1, 1),
-            { x: 1, y : 1, z : 1 },
-            { x: 1, y : -1, z : 1 },
+            Vec3(1, 1, 1),
+            Vec3(1, -1, 1),
             //north
-            { x: -1, y : -1, z : -1 },
-            { x: -1, y : 1, z : -1 },
-            { x: 1, y : 1, z : -1 },
-            { x: 1, y : -1, z : -1 },
-        };
+            Vec3(-1, -1, -1),
+            Vec3(-1, 1, -1),
+            Vec3(1, 1, -1),
+            Vec3(1, -1, -1)
+        });
     }
 
-    Triangle** triangles = NULL;
-    void createTriangles(Vec3* verts, int count)
-    {
-        if (triangles != NULL) {
-            return;
-        }
+    List<Triangle> indexMap = List<Triangle>({
+        //south
+        Triangle(vertices[0], vertices[1], vertices[2]),
+        Triangle(vertices[0], vertices[2], vertices[3]),
+        //north
+        Triangle(vertices[7], vertices[6], vertices[5]),
+        Triangle(vertices[7], vertices[5], vertices[4]),
+        //right
+        Triangle(vertices[3], vertices[2], vertices[6]),
+        Triangle(vertices[3], vertices[6], vertices[7]),
+        //left
+        Triangle(vertices[4], vertices[5], vertices[1]),
+        Triangle(vertices[4], vertices[1], vertices[0]),
+        //top
+        Triangle(vertices[1], vertices[5], vertices[6]),
+        Triangle(vertices[1], vertices[6], vertices[2]),
+        //bottom
+        Triangle(vertices[3], vertices[7], vertices[4]),
+        Triangle(vertices[3], vertices[4], vertices[0])
+        });
 
-        int count = count / 3;
-        triangles = new Triangle*[count] {
-            //south
-            new Triangle(verts[0], verts[1], verts[2]),
-            new Triangle(verts[0], verts[2], verts[3]),
-            //north
-            new Triangle(verts[7], verts[6], verts[5]),
-            new Triangle(verts[7], verts[5], verts[4]),
-            //right
-            new Triangle(verts[3], verts[2], verts[6]),
-            new Triangle(verts[3], verts[6], verts[7]),
-            //left
-            new Triangle(verts[4], verts[5], verts[1]),
-            new Triangle(verts[4], verts[1], verts[0]),
-            //top
-            new Triangle(verts[1], verts[5], verts[6]),
-            new Triangle(verts[1], verts[6], verts[2]),
-            //bottom
-            new Triangle(verts[3], verts[7], verts[4]),
-            new Triangle(verts[3], verts[4], verts[0])
-        };
+    List<Triangle> triangles = List<Triangle>();
+    List<Triangle>* getTriangles()//, Vec3& vertexIndexMap)
+    {
+        triangles.clear();
+        //south
+        triangles.push_back(Triangle(vertices[0], vertices[1], vertices[2]));
+        triangles.push_back(Triangle(vertices[0], vertices[2], vertices[3]));
+        //north
+        triangles.push_back(Triangle(vertices[7], vertices[6], vertices[5]));
+        triangles.push_back(Triangle(vertices[7], vertices[5], vertices[4]));
+        //right
+        triangles.push_back(Triangle(vertices[3], vertices[2], vertices[6]));
+        triangles.push_back(Triangle(vertices[3], vertices[6], vertices[7]));
+        //left
+        triangles.push_back(Triangle(vertices[4], vertices[5], vertices[1]));
+        triangles.push_back(Triangle(vertices[4], vertices[1], vertices[0]));
+        //top
+        triangles.push_back(Triangle(vertices[1], vertices[5], vertices[6]));
+        triangles.push_back(Triangle(vertices[1], vertices[6], vertices[2]));
+        //bottom
+        triangles.push_back(Triangle(vertices[3], vertices[7], vertices[4]));
+        triangles.push_back(Triangle(vertices[3], vertices[4], vertices[0]));
+
+        return &triangles;
     }
 };

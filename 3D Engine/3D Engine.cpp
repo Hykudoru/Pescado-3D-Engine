@@ -11,12 +11,13 @@ int main()
 //#include <GL/glew.h>
 #include <GLFW/glfw3.h>
 //#include <Z:/3D Engine/3D Engine/Matrix.cpp>
-#include <Matrix.h>
+
 #include <iostream>
 #include <math.h>
+#include <Matrix.h>
+#include <Graphics.h>
 using namespace std;
-const float PI = 3.14159265359f;
-Matrix3x3 rotation;
+
 int main(void)
 {
     GLFWwindow* window;
@@ -41,7 +42,7 @@ int main(void)
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
     {
-        rotation = Matrix3x3::RotZ((PI / 2.0));
+        //rotation = Matrix3x3::RotZ((PI / 2.0));
         Vec2 v2;
         Vec3 v3;
         Vec4 v4;
