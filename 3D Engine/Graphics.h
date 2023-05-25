@@ -268,13 +268,13 @@ public:
     static List<Mesh*> meshes;
     static int meshCount;
     static int worldTriangleDrawCount;
-    List<Vec3> vertices; // = []
-    List<Triangle> projectedTriangles; // = []
+    List<Vec3> vertices = List<Vec3>(); // = []
+    List<Triangle> projectedTriangles = List<Triangle>(); // = []
 
     Mesh(float scale = 1, Vec3 position = Vec3(0, 0, 0), Vec3 rotationEuler = Vec3(0, 0, 0))
         : Transform(scale, position, rotationEuler)
     {
-        Mesh::meshes[Mesh::meshCount++] = this;
+        Mesh::meshes[meshCount++]=this;
         //Mesh::worldTriangleCount += (*this->triangles(this->vertices)).length;
     }
 
@@ -282,12 +282,12 @@ public:
         Mesh::worldTriangleDrawCount = 0;
         for (int i = 0; i < Mesh::meshCount; i++)
         {
-            Mesh:meshes[i]->drawMesh();
+            Mesh::meshes[i]->drawMesh();
         }
     }
 
-protected:
-    virtual List<Triangle>* getTriangles();
+    List<Triangle> triangles = List<Triangle>();
+    virtual List<Triangle>* getTriangles() { return &triangles; };
 
     void transformTriangles() 
     {
@@ -384,8 +384,9 @@ protected:
         }
     }
 };
-List<Mesh*> Mesh::meshes = List<Mesh*>();
+List<Mesh*> Mesh::meshes = List<Mesh*>(1000);
 int Mesh::meshCount = 0;
+int Mesh::worldTriangleDrawCount = 0;
 
 class CubeMesh : Mesh
 {
@@ -408,28 +409,7 @@ public:
         });
     }
 
-    List<Triangle> indexMap = List<Triangle>({
-        //south
-        Triangle(vertices[0], vertices[1], vertices[2]),
-        Triangle(vertices[0], vertices[2], vertices[3]),
-        //north
-        Triangle(vertices[7], vertices[6], vertices[5]),
-        Triangle(vertices[7], vertices[5], vertices[4]),
-        //right
-        Triangle(vertices[3], vertices[2], vertices[6]),
-        Triangle(vertices[3], vertices[6], vertices[7]),
-        //left
-        Triangle(vertices[4], vertices[5], vertices[1]),
-        Triangle(vertices[4], vertices[1], vertices[0]),
-        //top
-        Triangle(vertices[1], vertices[5], vertices[6]),
-        Triangle(vertices[1], vertices[6], vertices[2]),
-        //bottom
-        Triangle(vertices[3], vertices[7], vertices[4]),
-        Triangle(vertices[3], vertices[4], vertices[0])
-        });
-
-    List<Triangle> triangles = List<Triangle>();
+    
     List<Triangle>* getTriangles()//, Vec3& vertexIndexMap)
     {
         triangles.clear();

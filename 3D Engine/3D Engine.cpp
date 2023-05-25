@@ -18,6 +18,14 @@ int main()
 #include <Graphics.h>
 using namespace std;
 
+
+CubeMesh Cube(1, Vec3(-5, -5, -10));
+Camera camera;
+void Update()
+{
+    //----------- DRAW ------------
+    Mesh::DrawMeshes();
+}
 int main(void)
 {
     GLFWwindow* window;
@@ -39,6 +47,8 @@ int main(void)
     
     //glewInit();
     
+    
+
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
     {
@@ -47,7 +57,7 @@ int main(void)
         /* Render here */
         glClear(GL_COLOR_BUFFER_BIT);
 
-        
+        Update();
 
         /* Swap front and back buffers */
         glfwSwapBuffers(window);
