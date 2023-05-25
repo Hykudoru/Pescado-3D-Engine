@@ -1,14 +1,4 @@
 ﻿  3D Engine.cpp
-Z:\3D Engine\3D Engine\Matrix.h(292,17): error C2664: 'Matrix4x4 Matrix4x4::Multiply(const Matrix4x4 &,const Matrix4x4 &)': cannot convert argument 1 from 'float [4][4]' to 'const Matrix4x4 &'
-Z:\3D Engine\3D Engine\Matrix.h(292,30): message : Reason: cannot convert from 'float [4][4]' to 'const Matrix4x4'
-Z:\3D Engine\3D Engine\Matrix.h(292,30): message : No constructor could take the source type, or constructor overload resolution was ambiguous
-Z:\3D Engine\3D Engine\Matrix.h(269,22): message : see declaration of 'Matrix4x4::Multiply'
-Z:\3D Engine\3D Engine\Matrix.h(292,17): message : while trying to match the argument list '(float [4][4], const Matrix4x4)'
-Z:\3D Engine\3D Engine\Matrix.h(298,13): error C2664: 'void Matrix4x4::Set(const Matrix4x4 &)': cannot convert argument 1 from 'float [][4]' to 'const Matrix4x4 &'
-Z:\3D Engine\3D Engine\Matrix.h(298,19): message : Reason: cannot convert from 'float [][4]' to 'const Matrix4x4'
-Z:\3D Engine\3D Engine\Matrix.h(298,19): message : No constructor could take the source type, or constructor overload resolution was ambiguous
-Z:\3D Engine\3D Engine\Matrix.h(243,10): message : see declaration of 'Matrix4x4::Set'
-Z:\3D Engine\3D Engine\Matrix.h(298,13): message : while trying to match the argument list '(float [][4])'
 Z:\3D Engine\3D Engine\Graphics.h(11,24): warning C4244: 'return': conversion from 'double' to 'float', possible loss of data
 Z:\3D Engine\3D Engine\Graphics.h(15,21): warning C4244: 'return': conversion from 'double' to 'float', possible loss of data
 Z:\3D Engine\3D Engine\Graphics.h(57,25): warning C4305: 'initializing': truncation from 'double' to 'float'
@@ -17,47 +7,6 @@ Z:\3D Engine\3D Engine\Graphics.h(90,20): warning C4244: 'argument': conversion 
 Z:\3D Engine\3D Engine\Graphics.h(90,16): warning C4244: 'argument': conversion from 'int' to 'GLfloat', possible loss of data
 Z:\3D Engine\3D Engine\Graphics.h(91,19): warning C4244: 'argument': conversion from 'int' to 'GLfloat', possible loss of data
 Z:\3D Engine\3D Engine\Graphics.h(91,16): warning C4244: 'argument': conversion from 'int' to 'GLfloat', possible loss of data
-Z:\3D Engine\3D Engine\Graphics.h(98,17): error C2678: binary '*': no operator found which takes a left-hand operand of type 'float [4][4]' (or there is no acceptable conversion)
-Z:\3D Engine\3D Engine\Matrix.h(311,16): message : could be 'Vector4<T> operator *(const Matrix4x4 &,const Vector4<T> &)'
-          with
-          [
-              T=float
-          ]
-Z:\3D Engine\3D Engine\Matrix.h(304,11): message : or       'Matrix4x4 operator *(const Matrix4x4 &,const Matrix4x4 &)'
-Z:\3D Engine\3D Engine\Matrix.h(189,16): message : or       'Vector3<float> operator *(const Matrix3x3 &,const Vector3<float> &)'
-Z:\3D Engine\3D Engine\Matrix.h(183,11): message : or       'Matrix3x3 operator *(const Matrix3x3 &,const Matrix3x3 &)'
-Z:\3D Engine\3D Engine\Graphics.h(98,17): message : while trying to match the argument list '(float [4][4], Vector4<T>)'
-          with
-          [
-              T=float
-          ]
-Z:\3D Engine\3D Engine\Graphics.h(101,17): error C2678: binary '*': no operator found which takes a left-hand operand of type 'float [4][4]' (or there is no acceptable conversion)
-Z:\3D Engine\3D Engine\Matrix.h(311,16): message : could be 'Vector4<T> operator *(const Matrix4x4 &,const Vector4<T> &)'
-          with
-          [
-              T=float
-          ]
-Z:\3D Engine\3D Engine\Matrix.h(304,11): message : or       'Matrix4x4 operator *(const Matrix4x4 &,const Matrix4x4 &)'
-Z:\3D Engine\3D Engine\Matrix.h(189,16): message : or       'Vector3<float> operator *(const Matrix3x3 &,const Vector3<float> &)'
-Z:\3D Engine\3D Engine\Matrix.h(183,11): message : or       'Matrix3x3 operator *(const Matrix3x3 &,const Matrix3x3 &)'
-Z:\3D Engine\3D Engine\Graphics.h(101,17): message : while trying to match the argument list '(float [4][4], Vector4<T>)'
-          with
-          [
-              T=float
-          ]
-Z:\3D Engine\3D Engine\Graphics.h(184,25): error C2440: '<function-style-cast>': cannot convert from 'float [4][4]' to 'Matrix4x4'
-Z:\3D Engine\3D Engine\Graphics.h(184,25): message : No constructor could take the source type, or constructor overload resolution was ambiguous
-Z:\3D Engine\3D Engine\Graphics.h(197,25): error C2440: '<function-style-cast>': cannot convert from 'float [4][4]' to 'Matrix4x4'
-Z:\3D Engine\3D Engine\Graphics.h(197,25): message : No constructor could take the source type, or constructor overload resolution was ambiguous
-Z:\3D Engine\3D Engine\Graphics.h(209,25): error C2440: '<function-style-cast>': cannot convert from 'float [4][4]' to 'Matrix4x4'
-Z:\3D Engine\3D Engine\Graphics.h(209,25): message : No constructor could take the source type, or constructor overload resolution was ambiguous
-Z:\3D Engine\3D Engine\Graphics.h(221,25): error C2440: '<function-style-cast>': cannot convert from 'float [4][4]' to 'Matrix4x4'
-Z:\3D Engine\3D Engine\Graphics.h(221,25): message : No constructor could take the source type, or constructor overload resolution was ambiguous
-Z:\3D Engine\3D Engine\Graphics.h(236,27): error C2664: 'Matrix4x4 Matrix4x4::Transpose(const Matrix4x4 &)': cannot convert argument 1 from 'float [4][4]' to 'const Matrix4x4 &'
-Z:\3D Engine\3D Engine\Graphics.h(236,62): message : Reason: cannot convert from 'float [4][4]' to 'const Matrix4x4'
-Z:\3D Engine\3D Engine\Graphics.h(236,62): message : No constructor could take the source type, or constructor overload resolution was ambiguous
-Z:\3D Engine\3D Engine\Matrix.h(257,22): message : see declaration of 'Matrix4x4::Transpose'
-Z:\3D Engine\3D Engine\Graphics.h(236,27): message : while trying to match the argument list '(float [4][4])'
 Z:\3D Engine\3D Engine\Graphics.h(325,111): warning C4244: 'argument': conversion from 'double' to 'T', possible loss of data
           with
           [
@@ -94,4 +43,8 @@ Z:\3D Engine\3D Engine\Graphics.h(363,39): warning C4244: 'argument': conversion
               T=float
           ]
 Z:\3D Engine\3D Engine\Graphics.h(380,70): warning C4267: '+=': conversion from 'size_t' to 'int', possible loss of data
-Z:\3D Engine\3D Engine\Graphics.h(395,15): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+Z:\3D Engine\3D Engine\Graphics.h(396,15): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+Z:\3D Engine\3D Engine\3D Engine.cpp(27,72): warning C4305: 'argument': truncation from 'double' to 'float'
+Z:\3D Engine\3D Engine\3D Engine.cpp(27,49): warning C4305: 'argument': truncation from 'double' to 'float'
+Z:\3D Engine\3D Engine\3D Engine.cpp(27,28): warning C4305: 'argument': truncation from 'double' to 'float'
+  3D Engine.vcxproj -> Z:\3D Engine\x64\Debug\3D Engine.exe

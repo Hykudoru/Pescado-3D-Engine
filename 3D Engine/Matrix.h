@@ -240,19 +240,19 @@ public:
     int NumRows() override { return 4; }
     int NumCols() override { return 4; }
     
-    void Set(const Matrix4x4& matrix)
+    void Set(float matrix[4][4])
     {
         for (size_t r = 0; r < 4; r++)
         {
-            for (size_t c = 0; c < 3; c++)
+            for (size_t c = 0; c < 4; c++)
             {
-                this->m[r][c] = matrix.m[r][c];
+                this->m[r][c] = matrix[r][c];
             }
         }
     }
     
     Matrix4x4(){}
-    Matrix4x4(float matrix[4][4]) { Set(matrix);}
+    Matrix4x4(float matrix[][4]) { Set(matrix); }
 
     static Matrix4x4 Transpose(const Matrix4x4& matrix)
     {

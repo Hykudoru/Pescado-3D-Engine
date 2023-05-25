@@ -21,8 +21,13 @@ using namespace std;
 
 CubeMesh Cube(1, Vec3(-5, -5, -10));
 Camera camera;
+Matrix3x3 rotation;
 void Update()
 {
+    rotation *= YPR(3.14159/180.0, 10 * 3.14159 / 180.0, 100 * 3.14159 / 180.0);
+    std::cout << *rotation.m[0] << endl;
+    std::cout << *rotation.m[1] << endl;
+    std::cout << *rotation.m[2] << endl;
     //----------- DRAW ------------
     Mesh::DrawMeshes();
 }
@@ -46,8 +51,6 @@ int main(void)
     glfwMakeContextCurrent(window);
     
     //glewInit();
-    
-    
 
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))

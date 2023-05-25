@@ -268,8 +268,8 @@ public:
     static List<Mesh*> meshes;
     static int meshCount;
     static int worldTriangleDrawCount;
-    List<Vec3> vertices = List<Vec3>(); // = []
-    List<Triangle> projectedTriangles = List<Triangle>(); // = []
+    List<Vec3> vertices; // = []
+    List<Triangle> projectedTriangles; // = []
 
     Mesh(float scale = 1, Vec3 position = Vec3(0, 0, 0), Vec3 rotationEuler = Vec3(0, 0, 0))
         : Transform(scale, position, rotationEuler)
@@ -382,6 +382,7 @@ public:
         {
             DrawTriangle(projectedTriangles.at(i));
         }
+        projectedTriangles.clear();
     }
 };
 List<Mesh*> Mesh::meshes = List<Mesh*>(1000);
