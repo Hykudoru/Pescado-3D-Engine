@@ -244,23 +244,23 @@ class Camera : Transform
 {
 public:
     static Camera* main;
-    static List<Camera*> cameras;
-    static int cameraCount;
+    //static List<Camera*> cameras;
+    //static int cameraCount;
     //string name;
 
     Camera(float scale = 1, Vec3 position = Vec3(0, 0, 0), Vec3 rotationEuler = Vec3(0, 0, 0))
         : Transform(scale, position, rotationEuler)
     {
-        if (Camera::cameraCount == 0) {
+        //if (Camera::cameraCount == 0) {
             Camera::main = this;
-        }
-        Camera::cameras[Camera::cameraCount++] = this;
+        //}
+        //Camera::cameras[Camera::cameraCount++] = this;
         //this.name = "Camera " + Camera.#cameraCount;
     }
 };
 Camera* Camera::main = new Camera();
-List<Camera*> Camera::cameras = List<Camera*>({Camera::main});
-int Camera::cameraCount = 0;
+//List<Camera*> Camera::cameras = List<Camera*>({Camera::main});
+//int Camera::cameraCount = 0;
 
 class Mesh : Transform
 {
