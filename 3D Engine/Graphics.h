@@ -198,7 +198,7 @@ public:
     Vec3 scale = Vec3(1, 1, 1);
     Vec3 position = Vec3(0, 0, 0);
     Matrix3x3 rotation = Identity3x3;
-    Vec3 Forward() { return this->rotation * World::up; }
+    Vec3 Forward() { return this->rotation * World::forward; }
     Vec3 Back() { return this->rotation * World::back; }
     Vec3 Right() { return this->rotation * World::right; }
     Vec3 Left() { return this->rotation * World::left; }
@@ -219,7 +219,7 @@ public:
     Matrix4x4 ScaleMatrix4x4()
     {
         float matrix[4][4] =
-        {
+{
             {this->scale.x, 0, 0, 0},
             {0, this->scale.y, 0, 0},
             {0, 0, this->scale.z, 0},
@@ -244,7 +244,8 @@ public:
 
     Matrix4x4 TranslationMatrix4x4() 
     {
-        float matrix[4][4] = {
+        float matrix[4][4] = 
+        {
             {1, 0, 0, this->position.x},
             {0, 1, 0, this->position.y},
             {0, 0, 1, this->position.z},
@@ -256,7 +257,8 @@ public:
 
     Matrix4x4 TranslationMatrix4x4Inverse() 
     {
-        float matrix[4][4] = {
+        float matrix[4][4] = 
+        {
             {1, 0, 0, -this->position.x},
             {0, 1, 0, -this->position.y},
             {0, 0, 1, -this->position.z},
@@ -289,23 +291,24 @@ class Camera : public Transform
 {
 public:
     static Camera* main;
-    //static List<Camera*> cameras;
-    //static int cameraCount;
+    static List<Camera*> cameras;
+    static int cameraCount;
     //string name;
     Camera(float scale = 1, Vec3 position = Vec3(0, 0, 0), Vec3 rotationEuler = Vec3(0, 0, 0))
     : Transform(scale, position, rotationEuler)
     {
-        //if (Camera::cameraCount == 0) {
+        if (Camera::cameraCount == 0) {
             Camera::main = this;
-        //}
-        //Camera::cameras[Camera::cameraCount++] = this;
+            Camera::cameras = List<Camera*>({this});
+        }
+        Camera::cameras[Camera::cameraCount++] = this;
         //this.name = "Camera " + Camera.#cameraCount;
     }
 };
 Camera* cam = new Camera();
-Camera* Camera::main = cam;
-//List<Camera*> Camera::cameras = List<Camera*>({Camera::main});
-//int Camera::cameraCount = 0;
+Camera* Camera::main;
+List<Camera*> Camera::cameras;
+int Camera::cameraCount = 0;
 
 //                                      List<Triangle>* triangleBuffer = new List<Triangle>(100);
 
