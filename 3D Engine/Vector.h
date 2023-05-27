@@ -373,12 +373,14 @@ Vector3<T>::operator Vector4<T>()
 template <typename T>
 Vector4<T>::operator Vector3<T>()
 {
-    Vector3<T> vec3;
+    /*Vector3<T> vec3;
     if (w != 0.0) {
         vec3.x = x/w;
         vec3.y = y/w;
         vec3.z = z/w;
-    }
+    }*/
+    Vector3<T> vec3(x, y, z);
+
     return vec3;
 }
 // Constructors

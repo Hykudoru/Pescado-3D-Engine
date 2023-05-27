@@ -33,20 +33,13 @@
     --------------------------------------------------------------------------------------------------
 */
 
-class Matrix
-{
-public:
-    virtual int NumRows() { return 0; };
-    virtual int NumCols() { return 0; };
-};
-
 float Identity3x3[3][3] = {
     {1, 0, 0},
     {0, 1, 0},
     {0, 0, 1}
 };
 
-class Matrix3x3 : Matrix
+class Matrix3x3
 {
 public:
     float m[3][3] = {
@@ -54,9 +47,6 @@ public:
         {0, 1, 0},
         {0, 0, 1}
     };
-    
-    int NumRows() override { return 3; }
-    int NumCols() override { return 3; }
 
     void Set(float matrix3x3[3][3])
     {
@@ -69,20 +59,20 @@ public:
         }
     }
 
-    Matrix3x3() {}
+    Matrix3x3(){}
     Matrix3x3(float matrix3x3[3][3]) {Set(matrix3x3);}
 
     static Matrix3x3 Transpose(const float matrix[][3])
     {
-        Matrix3x3 mtx = Matrix3x3();
+        Matrix3x3 result;
         for (int r = 0; r < 3; r++) 
         {
             for (int c = 0; c < 3; c++) 
             {
-                mtx.m[c][r] = matrix[r][c];
+                result.m[c][r] = matrix[r][c];
             }
         }
-        return mtx;
+        return result;
     }
 
     // A*B
@@ -216,8 +206,6 @@ Matrix3x3 YPR(float roll, float pitch, float yaw)
     return rotation;
 }
 
-
-
 //-------------------4x4---------------------
 
 float Identity4x4[4][4] = {
@@ -227,7 +215,7 @@ float Identity4x4[4][4] = {
     {0, 0, 0, 1}
 };
 
-class Matrix4x4 : Matrix
+class Matrix4x4
 {
 public:
     float m[4][4] = {
@@ -237,38 +225,35 @@ public:
         {0, 0, 0, 1}
     };
 
-    int NumRows() override { return 4; }
-    int NumCols() override { return 4; }
-    
-    void Set(float matrix[4][4])
+    Matrix4x4() {}
+    Matrix4x4(float matrix[][4]){ Set(matrix); }
+
+    void Set(float matrix[][4])
     {
-        for (size_t r = 0; r < 4; r++)
+        for (int r = 0; r < 4; r++)
         {
-            for (size_t c = 0; c < 4; c++)
+            for (int c = 0; c < 4; c++)
             {
                 this->m[r][c] = matrix[r][c];
             }
         }
     }
     
-    Matrix4x4(){}
-    Matrix4x4(float matrix[][4]) { Set(matrix); }
-
     static Matrix4x4 Transpose(const Matrix4x4& matrix)
     {
-        Matrix4x4 mtx = Matrix4x4();
+        Matrix4x4 result;
         for (int r = 0; r < 4; r++) {
             for (int c = 0; c < 4; c++) {
-                mtx.m[c][r] = matrix.m[r][c];
+                result.m[c][r] = matrix.m[r][c];
             }
         }
-        return mtx;
+        return result;
     }
 
     // A*B
     static Matrix4x4 Multiply(const Matrix4x4& matrixA, const Matrix4x4& matrixB)
     {
-        Matrix4x4 result = Matrix4x4();
+        Matrix4x4 result;
         for (size_t r = 0; r < 4; r++)
         {
             Vector4<float> rowVec = Vector4<float>(matrixA.m[r][0], matrixA.m[r][1], matrixA.m[r][2], matrixA.m[r][3]);
@@ -318,9 +303,9 @@ Vector4<float> operator*(const Matrix4x4& matrix, const Vector4<float>& colVec)
     result.x = DotProduct(row1, colVec);
     result.y = DotProduct(row2, colVec);
     result.z = DotProduct(row3, colVec);
-    result.w = DotProduct(row3, colVec);
+    result.w = DotProduct(row4, colVec);
 
-    if (result.w != 0.0)
+    if (result.w != 0.0000)
     {
         result.x /= result.w;
         result.y /= result.w;
