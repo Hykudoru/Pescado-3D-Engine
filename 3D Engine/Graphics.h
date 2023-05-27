@@ -14,9 +14,9 @@ float ToDeg(float rad) {
 float ToRad(float deg) {
     return deg * PI / 180.0;
 }
-int screenWidth = 700;//700;//screen.width - 20;
-int screenHeight = 700; //screen.height - 20; //screen.height;// - 30;
-float worldScale = .5;
+int screenWidth = 800;//700;//screen.width - 20;
+int screenHeight = 800; //screen.height - 20; //screen.height;// - 30;
+
 //-----------GRAPHICS---------------
 
 struct GraphicSettings
@@ -33,58 +33,94 @@ bool GraphicSettings::perspective = true;
 
 struct World
 {
+private:
+    static float worldScale;
+public:
     static Vec3 forward;
     static Vec3 back;
     static Vec3 right;
     static Vec3 left;
     static Vec3 up;
     static Vec3 down;
+    
+    static void SetScale(float val)
+    {
+        if (val <= 0.0)
+        {
+            return;
+        }
+        worldScale = val;
+    }
+
+    static float GetScale()
+    {
+        return worldScale;
+    }
 };
-Vec3 World::forward(0, 0, -1);
+float World::worldScale = 1;
+Vec3 World::forward = Vec3(0, 0, -1);
 Vec3 World::back = Vec3(0, 0, 1);
 Vec3 World::right = Vec3(1, 0, 0);
 Vec3 World::left = Vec3(-1, 0, 0);
 Vec3 World::up = Vec3(0, 1, 0);
 Vec3 World::down = Vec3(0, -1, 0);
 
-float orthographicProjectionMatrix[4][4] = {
+float aspectRatio = screenWidth / screenHeight;
+float nearClippingPlane = -0.1;
+float farClippingPlane = -1000.0;
+float fieldOfViewDeg = 60;
+float fov = ToRad(fieldOfViewDeg);
+
+// Perspective Projection Matrix
+float persp[4][4] = {
+    {1 / tan(fov / 2), 0, 0, 0},
+    {0, 1 / tan(fov / 2), 0, 0},
+    {0, 0, 1, 0},
+    {0, 0, -1, 0}
+};
+
+//Orthographic Projection Matrix
+float ortho[4][4] = {
     {1, 0, 0, 0},
     {0, 1, 0, 0},
     {0, 0, 0, 0},
     {0, 0, 0, 1}
 };
 
-float nearClippingPlane = -0.1;
-float farClippingPlane = -1000.0;
-float fov = 60 * PI / 180.0;
+Matrix4x4 perspectiveProjectionMatrix = persp;
+Matrix4x4 orthographicProjectionMatrix = ortho;
 
-float perspectiveProjectionMatrix[4][4] {
-    {1/tan(fov/2), 0, 0, 0},
-    {0, 1/tan(fov/2), 0, 0},
-    {0, 0, 1, 0},
-    {0, 0, -1, 0}
-};
-
-/*
 void FOV(int deg)
 {
+    fieldOfViewDeg = deg;
     fov = ToRad(deg);
-    perspectiveProjectionMatrix[4][4] = {
+    float newPerspectiveProjectionMatrix[4][4] = {
         {1/tan(fov/2), 0, 0, 0},
         {0, 1/tan(fov/2), 0, 0},
         {0, 0, 1, 0},
         {0, 0, -1, 0}
     };
-}*/
+
+    perspectiveProjectionMatrix = newPerspectiveProjectionMatrix;
+}
 
 void Point(float x, float y)
 {
     glBegin(GL_POINTS);
     glVertex2f(x, y);
     glEnd();
-}
+}/*
+void Points(Vec2 verts[])
+{
+    glBegin(GL_POINTS);
+    glVertex2f(-0.5, -0.5);
+    glVertex2f(-0.5, 0.5);
 
-void Line(int x0, int y0, int x, int y)
+    glVertex2f(0.5, 0.5);
+    glVertex2f(0.5, -0.5);
+    glEnd();
+}*/
+void Line(float x0, float y0, float x, float y)
 {
     glBegin(GL_LINES);
     glVertex2f(x0, y0);
@@ -92,7 +128,7 @@ void Line(int x0, int y0, int x, int y)
     glEnd();
 }
 
-Vec4 ProjectPoint(Vec4 point)
+Vec2 ProjectPoint(Vec4 point)
 {
     if (GraphicSettings::perspective) {
         point = perspectiveProjectionMatrix * point;
@@ -100,10 +136,9 @@ Vec4 ProjectPoint(Vec4 point)
     else {
         point = orthographicProjectionMatrix * point;
     }
-
-    point.x *= worldScale * screenWidth;
-    point.y *= worldScale * screenHeight;
     
+    point.x *= World::GetScale();
+    point.y *= World::GetScale();
     return point;
 }
 
@@ -123,11 +158,21 @@ struct Triangle
     }
 };
 int Triangle::count = 0;
+
 void DrawTriangle(Triangle tri)
 {
     Vec4 p1 = tri.verts[0];
     Vec4 p2 = tri.verts[1];
     Vec4 p3 = tri.verts[2];
+    
+    Point(p1.x, p1.y);
+    Point(p2.x, p2.y);
+
+    Point(p2.x, p2.y);
+    Point(p3.x, p3.y);
+
+    Point(p3.x, p3.y);
+    Point(p1.x, p1.y);
 
     glBegin(GL_LINES);
 
@@ -223,33 +268,32 @@ public:
 
     Matrix4x4 TRS() 
     {
-        return this->TranslationMatrix4x4() * this->RotationMatrix4x4() * this->ScaleMatrix4x4();
+        return TranslationMatrix4x4() * RotationMatrix4x4() * ScaleMatrix4x4();
     }
 
     Matrix4x4 TR() 
     {
-        return this->TranslationMatrix4x4() * this->RotationMatrix4x4();
+        return TranslationMatrix4x4() * RotationMatrix4x4();
     }
 
     Matrix4x4 TRInverse() 
     {
-        return Matrix4x4::Transpose(this->RotationMatrix4x4().m) * this->TranslationMatrix4x4Inverse();
+        return Matrix4x4::Transpose(RotationMatrix4x4()) * TranslationMatrix4x4Inverse();
     }
 };
 //Transform** Transform::transforms = new Transform*[100];
 //List<Transform*> Transform::transforms = List<Transform*>(1000);
 //int Transform::transformCount = 0;
 
-class Camera : Transform
+class Camera : public Transform
 {
 public:
     static Camera* main;
     //static List<Camera*> cameras;
     //static int cameraCount;
     //string name;
-
     Camera(float scale = 1, Vec3 position = Vec3(0, 0, 0), Vec3 rotationEuler = Vec3(0, 0, 0))
-        : Transform(scale, position, rotationEuler)
+    : Transform(scale, position, rotationEuler)
     {
         //if (Camera::cameraCount == 0) {
             Camera::main = this;
@@ -258,27 +302,40 @@ public:
         //this.name = "Camera " + Camera.#cameraCount;
     }
 };
-Camera* Camera::main = new Camera();
+Camera* cam = new Camera();
+Camera* Camera::main = cam;
 //List<Camera*> Camera::cameras = List<Camera*>({Camera::main});
 //int Camera::cameraCount = 0;
 
-class Mesh : Transform
+//                                      List<Triangle>* triangleBuffer = new List<Triangle>(100);
+
+class Mesh : public Transform
 {
 public:
     static List<Mesh*> meshes;
     static int meshCount;
     static int worldTriangleDrawCount;
-    List<Vec3> vertices; // = []
-    List<Triangle> projectedTriangles; // = []
+    
+    List<Vec3>* vertices;
+    List<Triangle>* triangles;
+    static List<Triangle> projectedTriangles;
+    virtual List<Triangle>* MapVertsToTriangles() { return NULL; }
 
     Mesh(float scale = 1, Vec3 position = Vec3(0, 0, 0), Vec3 rotationEuler = Vec3(0, 0, 0))
-        : Transform(scale, position, rotationEuler)
+    : Transform(scale, position, rotationEuler)
     {
-        Mesh::meshes[meshCount++]=this;
-        //Mesh::worldTriangleCount += (*this->triangles(this->vertices)).length;
+        Mesh::meshes[meshCount++] = this;
+        //Mesh::worldTriangleCount += (*this->triangles(this->vertices)).length; 
+        MapVertsToTriangles();
     }
 
     static void DrawMeshes() {
+        static bool init = false;
+        if (!init) { 
+            meshes.resize(meshCount);
+            init = true;
+        }
+
         Mesh::worldTriangleDrawCount = 0;
         for (int i = 0; i < Mesh::meshCount; i++)
         {
@@ -286,13 +343,11 @@ public:
         }
     }
 
-    List<Triangle> triangles = List<Triangle>();
-    virtual List<Triangle>* getTriangles() { return &triangles; };
-
     void transformTriangles() 
     {
         //Transform Triangles
-        List<Triangle>* tris = this->getTriangles();
+        List<Triangle>* tris = MapVertsToTriangles();
+        projectedTriangles.resize(tris->size());
         for (int i = 0; i < tris->size(); i++)
         {
             Triangle camSpaceTri;
@@ -312,7 +367,7 @@ public:
                 // ================ VIEW/CAM/EYE SPACE ================
                 // Transform world coordinates to view coordinates.
 
-                Matrix4x4 worldToViewMatrix = (*(Transform*)Camera::main).TRInverse();
+                Matrix4x4 worldToViewMatrix = Camera::main->TRInverse();
                 Vec4 cameraSpacePoint = worldToViewMatrix * worldPoint;
                 camSpaceTri.verts[j] = cameraSpacePoint;
             };
@@ -382,57 +437,67 @@ public:
         {
             DrawTriangle(projectedTriangles.at(i));
         }
-        projectedTriangles.clear();
+        //projectedTriangles.clear();
     }
 };
-List<Mesh*> Mesh::meshes = List<Mesh*>(1000);
+List<Mesh*> Mesh::meshes = List<Mesh*>(100);
+List<Triangle> Mesh::projectedTriangles = List<Triangle>(100);
 int Mesh::meshCount = 0;
 int Mesh::worldTriangleDrawCount = 0;
 
-class CubeMesh : Mesh
+class CubeMesh : public Mesh
 {
 public:
     CubeMesh(int scale = 1, Vec3 position = Vec3(0, 0, 0), Vec3 rotationEuler = Vec3(0, 0, 0))
         :Mesh(scale, position, rotationEuler)
     {
-        // Local Space (Object Space)
-        this->vertices = List<Vec3>({//new Vec3[8] {
-            //south
-            Vec3(-1, -1, 1),
-            Vec3(-1, 1, 1),
-            Vec3(1, 1, 1),
-            Vec3(1, -1, 1),
-            //north
-            Vec3(-1, -1, -1),
-            Vec3(-1, 1, -1),
-            Vec3(1, 1, -1),
-            Vec3(1, -1, -1)
-        });
+        
     }
 
-    
-    List<Triangle>* getTriangles()//, Vec3& vertexIndexMap)
+    List<Triangle>* MapVertsToTriangles()
     {
-        triangles.clear();
-        //south
-        triangles.push_back(Triangle(vertices[0], vertices[1], vertices[2]));
-        triangles.push_back(Triangle(vertices[0], vertices[2], vertices[3]));
-        //north
-        triangles.push_back(Triangle(vertices[7], vertices[6], vertices[5]));
-        triangles.push_back(Triangle(vertices[7], vertices[5], vertices[4]));
-        //right
-        triangles.push_back(Triangle(vertices[3], vertices[2], vertices[6]));
-        triangles.push_back(Triangle(vertices[3], vertices[6], vertices[7]));
-        //left
-        triangles.push_back(Triangle(vertices[4], vertices[5], vertices[1]));
-        triangles.push_back(Triangle(vertices[4], vertices[1], vertices[0]));
-        //top
-        triangles.push_back(Triangle(vertices[1], vertices[5], vertices[6]));
-        triangles.push_back(Triangle(vertices[1], vertices[6], vertices[2]));
-        //bottom
-        triangles.push_back(Triangle(vertices[3], vertices[7], vertices[4]));
-        triangles.push_back(Triangle(vertices[3], vertices[4], vertices[0]));
+        static int calls = 0;
+        if (calls < 1)
+        {
+            // Local Space (Object Space)
+            this->vertices = new List<Vec3>({//new Vec3[8] {
+                //south
+                Vec3(-1, -1, 1),
+                Vec3(-1, 1, 1),
+                Vec3(1, 1, 1),
+                Vec3(1, -1, 1),
+                //north
+                Vec3(-1, -1, -1),
+                Vec3(-1, 1, -1),
+                Vec3(1, 1, -1),
+                Vec3(1, -1, -1)
+            });
 
-        return &triangles;
+            triangles = new List<Triangle>();
+            triangles->reserve(36 / 3);
+        }
+        else {
+            triangles->clear();
+        }
+        //south
+        triangles->push_back(Triangle((*vertices)[0], (*vertices)[1], (*vertices)[2]));
+        triangles->push_back(Triangle((*vertices)[0], (*vertices)[2], (*vertices)[3]));
+        //                                                     
+        triangles->push_back(Triangle((*vertices)[7], (*vertices)[6], (*vertices)[5]));
+        triangles->push_back(Triangle((*vertices)[7], (*vertices)[5], (*vertices)[4]));
+                             
+        triangles->push_back(Triangle((*vertices)[3], (*vertices)[2], (*vertices)[6]));
+        triangles->push_back(Triangle((*vertices)[3], (*vertices)[6], (*vertices)[7]));
+                                
+        triangles->push_back(Triangle((*vertices)[4], (*vertices)[5], (*vertices)[1]));
+        triangles->push_back(Triangle((*vertices)[4], (*vertices)[1], (*vertices)[0]));
+                                                                                    
+        triangles->push_back(Triangle((*vertices)[1], (*vertices)[5], (*vertices)[6]));
+        triangles->push_back(Triangle((*vertices)[1], (*vertices)[6], (*vertices)[2]));
+                                                                                    
+        triangles->push_back(Triangle((*vertices)[3], (*vertices)[7], (*vertices)[4]));
+        triangles->push_back(Triangle((*vertices)[3], (*vertices)[4], (*vertices)[0]));
+
+        return triangles;
     }
 };
