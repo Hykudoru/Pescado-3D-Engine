@@ -25,11 +25,13 @@ struct GraphicSettings
     static bool invertNormals;
     static bool debugNormals;
     static bool perspective;
+    static bool fillTriangles;
 };
 bool GraphicSettings::culling = true;
 bool GraphicSettings::invertNormals = false;
 bool GraphicSettings::debugNormals = false;
 bool GraphicSettings::perspective = true;
+bool GraphicSettings::fillTriangles = false;
 
 struct World
 {
@@ -175,17 +177,28 @@ void DrawTriangle(Triangle tri)
     Point(p1.x, p1.y);
 
     glBegin(GL_LINES);
+    
+        glVertex2f(p1.x, p1.y);
+        glVertex2f(p2.x, p2.y);
 
-    glVertex2f(p1.x, p1.y);
-    glVertex2f(p2.x, p2.y);
+        glVertex2f(p2.x, p2.y);
+        glVertex2f(p3.x, p3.y);
 
-    glVertex2f(p2.x, p2.y);
-    glVertex2f(p3.x, p3.y);
-
-    glVertex2f(p3.x, p3.y);
-    glVertex2f(p1.x, p1.y);
+        glVertex2f(p3.x, p3.y);
+        glVertex2f(p1.x, p1.y);
 
     glEnd();
+
+    if (GraphicSettings::fillTriangles)
+    {
+        glBegin(GL_TRIANGLES);
+
+        glVertex2f(p1.x, p1.y);
+        glVertex2f(p2.x, p2.y);
+        glVertex2f(p3.x, p3.y);
+
+        glEnd();
+    }
 }
 
 
@@ -327,7 +340,7 @@ public:
     Mesh(float scale = 1, Vec3 position = Vec3(0, 0, 0), Vec3 rotationEuler = Vec3(0, 0, 0))
     : Transform(scale, position, rotationEuler)
     {
-        Mesh::meshes[meshCount++] = this;
+        Mesh::meshes[Mesh::meshCount++] = this;
         //Mesh::worldTriangleCount += (*this->triangles(this->vertices)).length; 
         MapVertsToTriangles();
     }

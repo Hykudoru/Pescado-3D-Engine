@@ -1,37 +1,49 @@
 ﻿  3D Engine.cpp
 Z:\3D Engine\3D Engine\Graphics.h(11,24): warning C4244: 'return': conversion from 'double' to 'float', possible loss of data
 Z:\3D Engine\3D Engine\Graphics.h(15,21): warning C4244: 'return': conversion from 'double' to 'float', possible loss of data
-Z:\3D Engine\3D Engine\Graphics.h(68,19): warning C4244: 'initializing': conversion from 'int' to 'float', possible loss of data
-Z:\3D Engine\3D Engine\Graphics.h(69,25): warning C4305: 'initializing': truncation from 'double' to 'float'
-Z:\3D Engine\3D Engine\Graphics.h(95,22): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
-Z:\3D Engine\3D Engine\Graphics.h(96,17): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-Z:\3D Engine\3D Engine\Graphics.h(383,111): warning C4244: 'argument': conversion from 'double' to 'T', possible loss of data
+Z:\3D Engine\3D Engine\Graphics.h(70,19): warning C4244: 'initializing': conversion from 'int' to 'float', possible loss of data
+Z:\3D Engine\3D Engine\Graphics.h(71,25): warning C4305: 'initializing': truncation from 'double' to 'float'
+Z:\3D Engine\3D Engine\Graphics.h(97,22): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
+Z:\3D Engine\3D Engine\Graphics.h(98,17): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+Z:\3D Engine\3D Engine\Graphics.h(396,111): warning C4244: 'argument': conversion from 'double' to 'T', possible loss of data
           with
           [
               T=float
           ]
-Z:\3D Engine\3D Engine\Graphics.h(383,83): warning C4244: 'argument': conversion from 'double' to 'T', possible loss of data
+Z:\3D Engine\3D Engine\Graphics.h(396,83): warning C4244: 'argument': conversion from 'double' to 'T', possible loss of data
           with
           [
               T=float
           ]
-Z:\3D Engine\3D Engine\Graphics.h(383,55): warning C4244: 'argument': conversion from 'double' to 'T', possible loss of data
+Z:\3D Engine\3D Engine\Graphics.h(396,55): warning C4244: 'argument': conversion from 'double' to 'T', possible loss of data
           with
           [
               T=float
           ]
-Z:\3D Engine\3D Engine\Graphics.h(438,70): warning C4267: '+=': conversion from 'size_t' to 'int', possible loss of data
-Z:\3D Engine\3D Engine\Graphics.h(455,15): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-Z:\3D Engine\3D Engine\3D Engine.cpp(12,13): warning C4305: 'initializing': truncation from 'double' to 'float'
-Z:\3D Engine\3D Engine\3D Engine.cpp(13,14): warning C4305: 'initializing': truncation from 'double' to 'float'
-Z:\3D Engine\3D Engine\3D Engine.cpp(27,25): warning C4305: 'argument': truncation from 'double' to 'const T'
+Z:\3D Engine\3D Engine\Graphics.h(451,70): warning C4267: '+=': conversion from 'size_t' to 'int', possible loss of data
+Z:\3D Engine\3D Engine\Graphics.h(468,15): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+Z:\3D Engine\3D Engine\3D Engine.cpp(11,13): warning C4305: 'initializing': truncation from 'double' to 'float'
+Z:\3D Engine\3D Engine\3D Engine.cpp(12,14): warning C4305: 'initializing': truncation from 'double' to 'float'
+Z:\3D Engine\3D Engine\3D Engine.cpp(39,25): warning C4305: 'argument': truncation from 'double' to 'const T'
           with
           [
               T=float
           ]
-Z:\3D Engine\3D Engine\3D Engine.cpp(36,49): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
-Z:\3D Engine\3D Engine\3D Engine.cpp(47,26): warning C4305: 'initializing': truncation from 'double' to 'float'
-Z:\3D Engine\3D Engine\3D Engine.cpp(58,86): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
-Z:\3D Engine\3D Engine\3D Engine.cpp(58,47): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
-Z:\3D Engine\3D Engine\3D Engine.cpp(65,24): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
+Z:\3D Engine\3D Engine\3D Engine.cpp(41,46): warning C4244: 'argument': conversion from 'double' to 'const T', possible loss of data
+          with
+          [
+              T=float
+          ]
+Z:\3D Engine\3D Engine\3D Engine.cpp(45,57): warning C4244: 'argument': conversion from 'double' to 'const T', possible loss of data
+          with
+          [
+              T=float
+          ]
+Z:\3D Engine\3D Engine\3D Engine.cpp(48,54): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+Z:\3D Engine\3D Engine\3D Engine.cpp(60,24): warning C4305: 'initializing': truncation from 'double' to 'float'
+Z:\3D Engine\3D Engine\3D Engine.cpp(74,43): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+Z:\3D Engine\3D Engine\3D Engine.cpp(74,35): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+Z:\3D Engine\3D Engine\3D Engine.cpp(80,24): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
+Z:\3D Engine\3D Engine\3D Engine.cpp(129,63): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+Z:\3D Engine\3D Engine\3D Engine.cpp(133,64): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
   3D Engine.vcxproj -> Z:\3D Engine\x64\Debug\3D Engine.exe

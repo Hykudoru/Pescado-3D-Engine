@@ -6,37 +6,50 @@
 #include <Graphics.h>
 using namespace std;
 
-double angle = (PI / 4) * 0.005;
-
-float moveSpeed = 1;
+float moveSpeed = 50;
+float rotateSpeed = PI/2;
 float accel = 0.1;
 float deccel = 0.95;
 bool isKinematic = false;
 bool dampenersActive = true;
 
-Vec3 moveDir = Vec3(0,0,0);
+Vec3 moveDir = Vec3(0, 0, 0);
 Vec3 velocity = Vec3(0, 0, 0);
+
 //Camera camera2 = Camera(1, new Vec3(0, 50, 0), new Vec3(-90 * Math.PI / 180, 0, 0));
+
+
+double deltaTime = 0;
+void Time()
+{
+    static double prevTime = 0;
+    double currentTime = glfwGetTime();
+    deltaTime = currentTime - prevTime;
+    prevTime = currentTime;
+
+    //std::cout << deltaTime << std::endl;
+}
 
 static void Physics(GLFWwindow* window)
 {
     //---------- Physics Update ------------
     if (!isKinematic) {
-        velocity += moveDir * accel;
+        velocity += moveDir * moveSpeed * accel;
         if (dampenersActive) {
             velocity *= 0.95;
         }
-        Camera::main->position += velocity;
+        Camera::main->position += velocity * deltaTime;
         //std::cout << "Velocity:" << velocity.ToString();
     }
     else {
-        Camera::main->position += moveDir * moveSpeed;
+        Camera::main->position += moveDir * moveSpeed * deltaTime;
     }
 
-    Mesh::meshes[0]->rotation = Matrix3x3::RotZ(angle) * Mesh::meshes[0]->rotation;// MatrixMultiply(YPR(angle * ((screenWidth / 2)), angle * -((screenWidth / 2)), 0), Mesh.meshes[1].rotation);
+    Mesh::meshes[0]->rotation = Matrix3x3::RotZ(2*PI * deltaTime) * Mesh::meshes[0]->rotation;// MatrixMultiply(YPR(angle * ((screenWidth / 2)), angle * -((screenWidth / 2)), 0), Mesh.meshes[1].rotation);
 }
 
 //-----------------Input----------------------
+
 
 static double prevMouseX;
 static double prevMouseY;
@@ -44,31 +57,39 @@ static double deltaMouseX;
 static double deltaMouseY;
 static double mouseX;
 static double mouseY;
-static float rotateSpeed = 0.008;
+float mouseSensitivity = .1;
 
 static void CheckMouseMove(GLFWwindow* window) 
 {
     static  double centerX = (screenWidth / 2.0);
     static  double centerY = (screenHeight / 2.0);
+
     glfwGetCursorPos(window, &mouseX, &mouseY);
     deltaMouseX = mouseX - centerX;
     deltaMouseY = mouseY - centerY;
     glfwSetCursorPos(window, centerX, centerY);
-
-    Camera::main->rotation *= YPR(rotateSpeed * -deltaMouseY, (0.00001 + rotateSpeed)* -deltaMouseX, 0);
+    
+    double xAngle = mouseSensitivity * deltaTime *-deltaMouseY;
+    double yAngle = 0.00001 + mouseSensitivity * deltaTime * -deltaMouseX;
+    Camera::main->rotation *= YPR(xAngle, yAngle, 0);
     //Camera::main->rotation = Matrix3x3::RotX(rotateSpeed * -deltaMouseY) * Camera::main->rotation * Matrix3x3::RotY((0.00001 + rotateSpeed) * -deltaMouseX);
-
 };
 
 void OnScrollEvent(GLFWwindow* window, double xOffset, double yOffset)
 {
     FOV(fieldOfViewDeg - yOffset);
+    //moveSpeed += yOffset;
 
     std::cout << "FOV:" << ToDeg(fov) << "°" << std::endl;
-    std::cout << "World Scale:" << World::GetScale() << std::endl;
-    std::cout << "Camera Pos:" << Camera::main->position.z << std::endl;
+    //std::cout << "World Scale:" << World::GetScale() << std::endl;
+    //std::cout << "Camera Pos:" << Camera::main->position.z << std::endl;
+    //std::cout << "Movement Speed:" << moveSpeed << std::endl;
 }
-GLFWscrollfun onScroll = OnScrollEvent;
+
+void OnMouseButtonEvent(GLFWwindow* window, int button, int action, int mods)
+{
+    std::cout << "Mouse button:" << button << std::endl;
+}
 
 
 static void Input(GLFWwindow* window)
@@ -105,15 +126,14 @@ static void Input(GLFWwindow* window)
 
     // ROTATE CCW
     if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) {
-        Camera::main->rotation *= Matrix3x3::RotZ(PI / 90);
+        Camera::main->rotation *= Matrix3x3::RotZ(rotateSpeed * deltaTime);
     }
     // ROTATE CW
     else if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS) {
-        Camera::main->rotation *= Matrix3x3::RotZ(-PI / 90);
+        Camera::main->rotation *= Matrix3x3::RotZ(-rotateSpeed * deltaTime);
     }
     // Reset Camera
-    else if (glfwGetKey(window, GLFW_KEY_0) == GLFW_PRESS)
-    {
+    else if (glfwGetKey(window, GLFW_KEY_0) == GLFW_PRESS) {
         // Camera::main->reset();
         //Fix later
         Camera::main->rotation = Identity3x3;
@@ -126,21 +146,8 @@ static void Input(GLFWwindow* window)
         Camera::main = Camera::cameras[1];
     }
 
-
-    if (glfwGetKey(window, GLFW_KEY_MINUS) == GLFW_PRESS) {
-        GraphicSettings::invertNormals = !GraphicSettings::invertNormals;
-    }
-    if (glfwGetKey(window, GLFW_KEY_N) == GLFW_PRESS) {
-        GraphicSettings::debugNormals = !GraphicSettings::debugNormals;
-    }
-    if (glfwGetKey(window, GLFW_KEY_V) == GLFW_PRESS) {
-        GraphicSettings::culling = !GraphicSettings::culling;
-    }
-    if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS) {
-        GraphicSettings::perspective = !GraphicSettings::perspective;
-    }
-
     //------------------Physics-------------------
+    // 
     // Toggle momentum
     if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS) {
         velocity = Vec3(0, 0, 0);//Reset every toggle state
@@ -156,8 +163,23 @@ static void Input(GLFWwindow* window)
 
     // Spawn Mesh
     if (glfwGetKey(window, GLFW_KEY_APOSTROPHE) == GLFW_PRESS) {
-        Mesh* c = new CubeMesh(1);
-        c->position = Camera::main->position + (Camera::main->Forward() * 10);
+        CubeMesh* cube = new CubeMesh(100, Vec3(0, 0, -400));
+        cube->position = Camera::main->position + (Camera::main->Forward() * 10);
+    }
+
+    //-------------------Debugging------------------------
+
+    if (glfwGetKey(window, GLFW_KEY_MINUS) == GLFW_PRESS) {
+        GraphicSettings::invertNormals = !GraphicSettings::invertNormals;
+    }
+    if (glfwGetKey(window, GLFW_KEY_N) == GLFW_PRESS) {
+        GraphicSettings::debugNormals = !GraphicSettings::debugNormals;
+    }
+    if (glfwGetKey(window, GLFW_KEY_V) == GLFW_PRESS) {
+        GraphicSettings::culling = !GraphicSettings::culling;
+    }
+    if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS) {
+        GraphicSettings::perspective = !GraphicSettings::perspective;
     }
 
     /*
@@ -179,22 +201,31 @@ static void Input(GLFWwindow* window)
     }*/
 }
 
-CubeMesh cube1(1, Vec3(-5, -5, -10));
-CubeMesh cube2(1, Vec3(-5, 5, -20));
-CubeMesh cube3(1, Vec3(5, 5, -30));
-CubeMesh cube4(10, Vec3(5, -5, -40));
-CubeMesh cube5(1, Vec3(-5, -5, 10));
-CubeMesh cube6(1, Vec3(-5, 5, 20));
-CubeMesh cube7(1, Vec3(5, 5, 30));
-CubeMesh cube8(10, Vec3(5, -5, 40));
-CubeMesh cube9(100, Vec3(0, 0, -400));
+GLFWscrollfun onScroll = OnScrollEvent;
+GLFWmousebuttonfun onMouseButton = OnMouseButtonEvent;
 void Init(GLFWwindow* window)
 {
-    World::SetScale(1);
-    Camera::main->position.z = 10;
     glfwSetScrollCallback(window, onScroll);
+    glfwSetMouseButtonCallback(window, onMouseButton);
     glfwGetWindowSize(window, &screenWidth, &screenHeight);
     glfwSetCursorPos(window, screenWidth / 2.0, screenHeight / 2.0);
+
+    World::SetScale(1);
+    Camera::main->position.z = 10;
+    CubeMesh* cube1 = new CubeMesh(1, Vec3(-5, -5, -10));
+    CubeMesh* cube2 = new CubeMesh(1, Vec3(-5, 5, -20));
+    CubeMesh* cube3 = new CubeMesh(1, Vec3(5, 5, -30));
+    CubeMesh* cube4 = new CubeMesh(10, Vec3(5, -5, -40));
+    CubeMesh* cube5 = new CubeMesh(1, Vec3(-5, -5, 10));
+    CubeMesh* cube6 = new CubeMesh(1, Vec3(-5, 5, 20));
+    CubeMesh* cube7 = new CubeMesh(1, Vec3(5, 5, 30));
+    CubeMesh* cube8 = new CubeMesh(10, Vec3(5, -5, 40));
+    CubeMesh* cube9 = new CubeMesh(100, Vec3(0, 0, -400));
+}
+
+void Draw()
+{
+    Mesh::DrawMeshes();
 }
 
 int main(void)
@@ -227,11 +258,10 @@ int main(void)
         /* Render here */
         glClear(GL_COLOR_BUFFER_BIT);
         
-
+        Time();
         Input(window);
         Physics(window);
-        Mesh::DrawMeshes();
- 
+        Draw();
 
 
         /* Swap front and back buffers */
