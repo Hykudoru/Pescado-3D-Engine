@@ -2,10 +2,22 @@
 #include <Matrix.h>
 #include <math.h>
 #include <vector>
-
+#include <algorithm>
 #include <string.h>
 const float PI = 3.14159265359f;
+#define Color Vector3<int>
 #define List std::vector
+
+float Clamp(float value, float min, float max)
+{
+    if (value < min) {
+        value = min;
+    }
+    else if (value > max) {
+        value = max;
+    }
+    return value;
+}
 
 float ToDeg(float rad) {
     return rad * 180.0 / PI;
@@ -26,12 +38,14 @@ struct GraphicSettings
     static bool debugNormals;
     static bool perspective;
     static bool fillTriangles;
+    static bool displayWireFrames;
 };
 bool GraphicSettings::culling = true;
 bool GraphicSettings::invertNormals = false;
 bool GraphicSettings::debugNormals = false;
 bool GraphicSettings::perspective = true;
 bool GraphicSettings::fillTriangles = false;
+bool GraphicSettings::displayWireFrames = false;
 
 struct World
 {
@@ -146,61 +160,71 @@ Vec2 ProjectPoint(Vec4 point)
 
 struct Triangle
 {
-    static int count;
     Vec3 verts[3];
-    //Vec3 centroid;
-    Triangle() { count++; };
+    Color color;
+    Vec3 centroid;
+    Triangle() 
+    { 
+        color = Color(255, 255, 255); 
+        centroid = Vec3(0, 0, 0);
+    };
     Triangle(Vec3 p1, Vec3 p2, Vec3 p3)
     {
         this->verts[0] = p1;
         this->verts[1] = p2;
         this->verts[2] = p3;
-        count++;
-        //centroid...
+        color = Color(255, 255, 255);
+        centroid = Vec3(0, 0, 0);
+    }
+
+    static void DrawTriangle(Triangle tri)
+    {
+        Vec4 p1 = tri.verts[0];
+        Vec4 p2 = tri.verts[1];
+        Vec4 p3 = tri.verts[2];
+
+        Point(p1.x, p1.y);
+        Point(p2.x, p2.y);
+
+        Point(p2.x, p2.y);
+        Point(p3.x, p3.y);
+
+        Point(p3.x, p3.y);
+        Point(p1.x, p1.y);
+
+        glBegin(GL_LINES);
+        if (GraphicSettings::fillTriangles && GraphicSettings::displayWireFrames)
+        {
+            float c = Clamp(1 / (0.000001+(tri.color.x + tri.color.y + tri.color.z) / 3), 0, 255);
+            glColor3f(c, c, c);
+        }
+        else {
+            glColor3f(255, 255, 255);
+        }
+        glVertex2f(p1.x, p1.y);
+        glVertex2f(p2.x, p2.y);
+
+        glVertex2f(p2.x, p2.y);
+        glVertex2f(p3.x, p3.y);
+
+        glVertex2f(p3.x, p3.y);
+        glVertex2f(p1.x, p1.y);
+        glEnd();
+
+        if (GraphicSettings::fillTriangles)
+        {
+            glBegin(GL_TRIANGLES);
+            glColor3f(tri.color.x, tri.color.y, tri.color.z);
+
+            glVertex2f(p1.x, p1.y);
+            glVertex2f(p2.x, p2.y);
+            glVertex2f(p3.x, p3.y);
+            glEnd();
+        }
     }
 };
-int Triangle::count = 0;
 
-void DrawTriangle(Triangle tri)
-{
-    Vec4 p1 = tri.verts[0];
-    Vec4 p2 = tri.verts[1];
-    Vec4 p3 = tri.verts[2];
-    
-    Point(p1.x, p1.y);
-    Point(p2.x, p2.y);
-
-    Point(p2.x, p2.y);
-    Point(p3.x, p3.y);
-
-    Point(p3.x, p3.y);
-    Point(p1.x, p1.y);
-
-    glBegin(GL_LINES);
-    
-        glVertex2f(p1.x, p1.y);
-        glVertex2f(p2.x, p2.y);
-
-        glVertex2f(p2.x, p2.y);
-        glVertex2f(p3.x, p3.y);
-
-        glVertex2f(p3.x, p3.y);
-        glVertex2f(p1.x, p1.y);
-
-    glEnd();
-
-    if (GraphicSettings::fillTriangles)
-    {
-        glBegin(GL_TRIANGLES);
-
-        glVertex2f(p1.x, p1.y);
-        glVertex2f(p2.x, p2.y);
-        glVertex2f(p3.x, p3.y);
-
-        glEnd();
-    }
-}
-
+List<Triangle>* triBuffer = new List<Triangle>(100);
 
 class Transform
 {
@@ -336,6 +360,7 @@ public:
     List<Triangle>* triangles;
     static List<Triangle> projectedTriangles;
     virtual List<Triangle>* MapVertsToTriangles() { return NULL; }
+    Color color = Color(255, 255, 255);
 
     Mesh(float scale = 1, Vec3 position = Vec3(0, 0, 0), Vec3 rotationEuler = Vec3(0, 0, 0))
     : Transform(scale, position, rotationEuler)
@@ -355,15 +380,27 @@ public:
         Mesh::worldTriangleDrawCount = 0;
         for (int i = 0; i < Mesh::meshCount; i++)
         {
-            Mesh::meshes[i]->drawMesh();
+            //Mesh::meshes[i]->drawMesh();
+            Mesh::meshes[i]->transformTriangles();
         }
+        Mesh::worldTriangleDrawCount = triBuffer->size();
+
+        sort(triBuffer->begin(), triBuffer->end(), [](const Triangle& t1, const Triangle& t2) -> bool
+        {
+                return t1.centroid.z < t2.centroid.z;
+        });
+        for (int i = 0; i < triBuffer->size(); i++)
+        {
+            std::cout << triBuffer->at(i).centroid.z << std::endl;
+            Triangle::DrawTriangle(triBuffer->at(i));
+        }
+        triBuffer->clear();
     }
 
     void transformTriangles() 
     {
         //Transform Triangles
         List<Triangle>* tris = MapVertsToTriangles();
-        projectedTriangles.resize(tris->size());
         for (int i = 0; i < tris->size(); i++)
         {
             Triangle camSpaceTri;
@@ -436,28 +473,18 @@ public:
 
             //Project single triangle from 3D to 2D
             Triangle projectedTri;
+            projectedTri.centroid = centroid;
+            projectedTri.color = color;
             for (int j = 0; j < 3; j++) {
                 Vec4 cameraSpacePoint = camSpaceTri.verts[j];
                 projectedTri.verts[j] = ProjectPoint(cameraSpacePoint);
             };
             //Add projected tri
-            projectedTriangles[i] = projectedTri;
+            triBuffer->push_back(projectedTri);
         }
-    }
-
-    void drawMesh() {
-        //strokeWeight(2);
-        this->transformTriangles();
-        Mesh::worldTriangleDrawCount += this->projectedTriangles.size();
-        for (int i = 0; i < projectedTriangles.size(); i++)
-        {
-            DrawTriangle(projectedTriangles.at(i));
-        }
-        //projectedTriangles.clear();
     }
 };
 List<Mesh*> Mesh::meshes = List<Mesh*>(100);
-List<Triangle> Mesh::projectedTriangles = List<Triangle>(100);
 int Mesh::meshCount = 0;
 int Mesh::worldTriangleDrawCount = 0;
 

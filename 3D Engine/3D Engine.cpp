@@ -181,6 +181,10 @@ static void Input(GLFWwindow* window)
     if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS) {
         GraphicSettings::perspective = !GraphicSettings::perspective;
     }
+    if (glfwGetKey(window, GLFW_KEY_M) == GLFW_PRESS) {
+        GraphicSettings::fillTriangles = !GraphicSettings::fillTriangles;
+        GraphicSettings::displayWireFrames = !GraphicSettings::displayWireFrames;
+    }
 
     /*
     // ------------------------------------
@@ -221,6 +225,14 @@ void Init(GLFWwindow* window)
     CubeMesh* cube7 = new CubeMesh(1, Vec3(5, 5, 30));
     CubeMesh* cube8 = new CubeMesh(10, Vec3(5, -5, 40));
     CubeMesh* cube9 = new CubeMesh(100, Vec3(0, 0, -400));
+
+
+    cube1->color = Color(255, 0, 0);
+    cube2->color = Color(255, 255, 0);
+    cube3->color = Color(0, 255, 255);
+    cube4->color = Color(255, 0, 255);
+    cube5->color = Color(0, 0, 255);
+
 }
 
 void Draw()
