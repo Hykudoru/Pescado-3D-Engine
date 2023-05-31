@@ -5,38 +5,39 @@ Z:\3D Engine\3D Engine\Graphics.h(84,19): warning C4244: 'initializing': convers
 Z:\3D Engine\3D Engine\Graphics.h(85,25): warning C4305: 'initializing': truncation from 'double' to 'float'
 Z:\3D Engine\3D Engine\Graphics.h(111,22): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
 Z:\3D Engine\3D Engine\Graphics.h(112,17): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-Z:\3D Engine\3D Engine\Graphics.h(198,31): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
-Z:\3D Engine\3D Engine\Graphics.h(217,58): warning C4244: 'argument': conversion from 'T' to 'GLfloat', possible loss of data
+Z:\3D Engine\3D Engine\Graphics.h(210,31): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+Z:\3D Engine\3D Engine\Graphics.h(229,58): warning C4244: 'argument': conversion from 'T' to 'GLfloat', possible loss of data
           with
           [
               T=int
           ]
-Z:\3D Engine\3D Engine\Graphics.h(217,45): warning C4244: 'argument': conversion from 'T' to 'GLfloat', possible loss of data
+Z:\3D Engine\3D Engine\Graphics.h(229,45): warning C4244: 'argument': conversion from 'T' to 'GLfloat', possible loss of data
           with
           [
               T=int
           ]
-Z:\3D Engine\3D Engine\Graphics.h(217,32): warning C4244: 'argument': conversion from 'T' to 'GLfloat', possible loss of data
+Z:\3D Engine\3D Engine\Graphics.h(229,32): warning C4244: 'argument': conversion from 'T' to 'GLfloat', possible loss of data
           with
           [
               T=int
           ]
-Z:\3D Engine\3D Engine\Graphics.h(432,111): warning C4244: 'argument': conversion from 'double' to 'T', possible loss of data
+Z:\3D Engine\3D Engine\Graphics.h(401,55): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+Z:\3D Engine\3D Engine\Graphics.h(452,111): warning C4244: 'argument': conversion from 'double' to 'T', possible loss of data
           with
           [
               T=float
           ]
-Z:\3D Engine\3D Engine\Graphics.h(432,83): warning C4244: 'argument': conversion from 'double' to 'T', possible loss of data
+Z:\3D Engine\3D Engine\Graphics.h(452,83): warning C4244: 'argument': conversion from 'double' to 'T', possible loss of data
           with
           [
               T=float
           ]
-Z:\3D Engine\3D Engine\Graphics.h(432,55): warning C4244: 'argument': conversion from 'double' to 'T', possible loss of data
+Z:\3D Engine\3D Engine\Graphics.h(452,55): warning C4244: 'argument': conversion from 'double' to 'T', possible loss of data
           with
           [
               T=float
           ]
-Z:\3D Engine\3D Engine\Graphics.h(506,15): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+Z:\3D Engine\3D Engine\Graphics.h(514,15): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
 Z:\3D Engine\3D Engine\3D Engine.cpp(11,13): warning C4305: 'initializing': truncation from 'double' to 'float'
 Z:\3D Engine\3D Engine\3D Engine.cpp(12,14): warning C4305: 'initializing': truncation from 'double' to 'float'
 Z:\3D Engine\3D Engine\3D Engine.cpp(39,25): warning C4305: 'argument': truncation from 'double' to 'const T'
@@ -67,8 +68,8 @@ Z:\3D Engine\3D Engine\Vector.h(323,9): warning C4244: '=': conversion from 'dou
               T=int
           ]
 Z:\3D Engine\3D Engine\Vector.h(322,1): message : while compiling class template member function 'Vector3<int>::Vector3(void)'
-Z:\3D Engine\3D Engine\Graphics.h(166,13): message : see the first reference to 'Vector3<int>::Vector3' in 'Triangle::Triangle'
-Z:\3D Engine\3D Engine\Graphics.h(164,11): message : see reference to class template instantiation 'Vector3<int>' being compiled
+Z:\3D Engine\3D Engine\Graphics.h(175,13): message : see the first reference to 'Vector3<int>::Vector3' in 'Triangle::Triangle'
+Z:\3D Engine\3D Engine\Graphics.h(171,11): message : see reference to class template instantiation 'Vector3<int>' being compiled
 Z:\3D Engine\3D Engine\Vector.h(324,9): warning C4244: '=': conversion from 'double' to 'T', possible loss of data
           with
           [
@@ -79,5 +80,4 @@ Z:\3D Engine\3D Engine\Vector.h(325,9): warning C4244: '=': conversion from 'dou
           [
               T=int
           ]
-LINK : warning LNK4098: defaultlib 'MSVCRT' conflicts with use of other libs; use /NODEFAULTLIB:library
   3D Engine.vcxproj -> Z:\3D Engine\x64\Debug\3D Engine.exe

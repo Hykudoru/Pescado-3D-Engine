@@ -120,6 +120,8 @@ void FOV(int deg)
     perspectiveProjectionMatrix = newPerspectiveProjectionMatrix;
 }
 
+
+
 void Point(float x, float y)
 {
     glBegin(GL_POINTS);
@@ -144,14 +146,19 @@ void Line(float x0, float y0, float x, float y)
     glEnd();
 }
 
-Vec2 ProjectPoint(Vec4 point)
+Matrix4x4 ProjectionMatrix()
 {
     if (GraphicSettings::perspective) {
-        point = perspectiveProjectionMatrix * point;
-    } 
-    else {
-        point = orthographicProjectionMatrix * point;
+        return perspectiveProjectionMatrix;
     }
+    else {
+        return orthographicProjectionMatrix;
+    }
+}
+
+Vec4 ProjectPoint(Vec4 point)
+{
+    point = ProjectionMatrix() * point;
     
     point.x *= World::GetScale();
     point.y *= World::GetScale();
@@ -162,12 +169,16 @@ struct Triangle
 {
     Vec3 verts[3];
     Color color;
-    Vec3 centroid;
+    Vec4 centroid;
+    Vec3 normal;
+
     Triangle() 
     { 
         color = Color(255, 255, 255); 
         centroid = Vec3(0, 0, 0);
+        normal = Vec3(0, 0, 0);
     };
+
     Triangle(Vec3 p1, Vec3 p2, Vec3 p3)
     {
         this->verts[0] = p1;
@@ -175,6 +186,7 @@ struct Triangle
         this->verts[2] = p3;
         color = Color(255, 255, 255);
         centroid = Vec3(0, 0, 0);
+        normal = Vec3(0, 0, 0);
     }
 
     static void DrawTriangle(Triangle tri)
@@ -358,7 +370,6 @@ public:
     
     List<Vec3>* vertices;
     List<Triangle>* triangles;
-    static List<Triangle> projectedTriangles;
     virtual List<Triangle>* MapVertsToTriangles() { return NULL; }
     Color color = Color(255, 255, 255);
 
@@ -370,7 +381,8 @@ public:
         MapVertsToTriangles();
     }
 
-    static void DrawMeshes() {
+    static void DrawMeshes() 
+    {
         static bool init = false;
         if (!init) { 
             meshes.resize(meshCount);
@@ -378,27 +390,37 @@ public:
         }
 
         Mesh::worldTriangleDrawCount = 0;
+        
+        // Transform
         for (int i = 0; i < Mesh::meshCount; i++)
         {
             //Mesh::meshes[i]->drawMesh();
             Mesh::meshes[i]->transformTriangles();
         }
-        Mesh::worldTriangleDrawCount = triBuffer->size();
 
-        sort(triBuffer->begin(), triBuffer->end(), [](const Triangle& t1, const Triangle& t2) -> bool
+        Mesh::worldTriangleDrawCount = triBuffer->size();
+        std::cout << Mesh::worldTriangleDrawCount << std::endl;
+        
+        // Depth Sort
+        sort(triBuffer->begin(), triBuffer->end(), [](const Triangle& triA, const Triangle& triB) -> bool
         {
-                return t1.centroid.z < t2.centroid.z;
+                return triA.centroid.w > triB.centroid.w;
         });
+
+        //Draw
         for (int i = 0; i < triBuffer->size(); i++)
         {
-            std::cout << triBuffer->at(i).centroid.z << std::endl;
+            //std::cout << triBuffer->at(i).centroid.z << std::endl;
             Triangle::DrawTriangle(triBuffer->at(i));
         }
+
         triBuffer->clear();
     }
 
     void transformTriangles() 
     {
+        Matrix4x4 modelToWorldMatrix = TRS();
+        Matrix4x4 worldToViewMatrix = Camera::main->TRInverse();
         //Transform Triangles
         List<Triangle>* tris = MapVertsToTriangles();
         for (int i = 0; i < tris->size(); i++)
@@ -407,20 +429,17 @@ public:
             Triangle tri = tris->at(i);
             for (int j = 0; j < 3; j++)
             {
-                Vec4 vert = tri.verts[j];
                 // Homogeneous coords (x, y, z, w=1)
-                //vert = new Vec4(vert.x, vert.y, vert.z, 1);
-
+                Vec4 vert = tri.verts[j];
+                
                 // =================== WORLD SPACE ===================
                 // Transform local coords to world-space coords.
 
-                Matrix4x4 modelToWorldMatrix = TRS();
                 Vec4 worldPoint = modelToWorldMatrix * vert;
 
                 // ================ VIEW/CAM/EYE SPACE ================
                 // Transform world coordinates to view coordinates.
 
-                Matrix4x4 worldToViewMatrix = Camera::main->TRInverse();
                 Vec4 cameraSpacePoint = worldToViewMatrix * worldPoint;
                 camSpaceTri.verts[j] = cameraSpacePoint;
             };
@@ -473,7 +492,7 @@ public:
 
             //Project single triangle from 3D to 2D
             Triangle projectedTri;
-            projectedTri.centroid = centroid;
+            projectedTri.centroid = ProjectPoint(centroid);
             projectedTri.color = color;
             for (int j = 0; j < 3; j++) {
                 Vec4 cameraSpacePoint = camSpaceTri.verts[j];
