@@ -189,6 +189,27 @@ struct Triangle
         normal = Vec3(0, 0, 0);
     }
 
+    Vec4 Normal()
+    {
+        // Calculate triangle suface Normal
+        Vec3 a = verts[2] - verts[0];
+        Vec3 b = verts[1] - verts[0];
+        Vec3 normal = (CrossProduct(a, b)).Normalized();
+
+        return normal;
+    }
+
+    Vec4 Centroid()
+    {
+        Vec4 centroid = Vec4(
+            (verts[0].x + verts[1].x + verts[2].x) / 3.0,
+            (verts[0].y + verts[1].y + verts[2].y) / 3.0, 
+            (verts[0].z + verts[1].z + verts[2].z) / 3.0
+        );
+
+        return centroid;
+    }
+
     static void DrawTriangle(Triangle tri)
     {
         Vec4 p1 = tri.verts[0];
@@ -205,32 +226,32 @@ struct Triangle
         Point(p1.x, p1.y);
 
         glBegin(GL_LINES);
-        if (GraphicSettings::fillTriangles && GraphicSettings::displayWireFrames)
-        {
-            float c = Clamp(1 / (0.000001+(tri.color.x + tri.color.y + tri.color.z) / 3), 0, 255);
-            glColor3f(c, c, c);
-        }
-        else {
-            glColor3f(255, 255, 255);
-        }
-        glVertex2f(p1.x, p1.y);
-        glVertex2f(p2.x, p2.y);
+            if (GraphicSettings::fillTriangles && GraphicSettings::displayWireFrames)
+            {
+                float c = Clamp(1.0 / (0.000001+(tri.color.x + tri.color.y + tri.color.z) / 3), 0, 255);
+                glColor3ub(c, c, c);
+            }
+            else {
+                glColor3ub(255, 255, 255);
+            }
+            glVertex2f(p1.x, p1.y);
+            glVertex2f(p2.x, p2.y);
 
-        glVertex2f(p2.x, p2.y);
-        glVertex2f(p3.x, p3.y);
+            glVertex2f(p2.x, p2.y);
+            glVertex2f(p3.x, p3.y);
 
-        glVertex2f(p3.x, p3.y);
-        glVertex2f(p1.x, p1.y);
+            glVertex2f(p3.x, p3.y);
+            glVertex2f(p1.x, p1.y);
         glEnd();
 
         if (GraphicSettings::fillTriangles)
         {
             glBegin(GL_TRIANGLES);
-            glColor3f(tri.color.x, tri.color.y, tri.color.z);
+                glColor3ub(tri.color.x, tri.color.y, tri.color.z);
 
-            glVertex2f(p1.x, p1.y);
-            glVertex2f(p2.x, p2.y);
-            glVertex2f(p3.x, p3.y);
+                glVertex2f(p1.x, p1.y);
+                glVertex2f(p2.x, p2.y);
+                glVertex2f(p3.x, p3.y);
             glEnd();
         }
     }
@@ -394,7 +415,6 @@ public:
         // Transform
         for (int i = 0; i < Mesh::meshCount; i++)
         {
-            //Mesh::meshes[i]->drawMesh();
             Mesh::meshes[i]->transformTriangles();
         }
 
@@ -425,6 +445,7 @@ public:
         List<Triangle>* tris = MapVertsToTriangles();
         for (int i = 0; i < tris->size(); i++)
         {
+            Triangle worldSpaceTri;
             Triangle camSpaceTri;
             Triangle tri = tris->at(i);
             for (int j = 0; j < 3; j++)
@@ -436,6 +457,7 @@ public:
                 // Transform local coords to world-space coords.
 
                 Vec4 worldPoint = modelToWorldMatrix * vert;
+                worldSpaceTri.verts[j] = worldPoint;
 
                 // ================ VIEW/CAM/EYE SPACE ================
                 // Transform world coordinates to view coordinates.
@@ -443,6 +465,9 @@ public:
                 Vec4 cameraSpacePoint = worldToViewMatrix * worldPoint;
                 camSpaceTri.verts[j] = cameraSpacePoint;
             };
+
+            Vec3 lightSource = World::up + World::right;
+            float l = DotProduct(lightSource, (Vec3)worldSpaceTri.Normal());
 
             // Still in View/Cam/Eye space
             //-------------------Normal/Culling------------------------
@@ -491,9 +516,10 @@ public:
             }
 
             //Project single triangle from 3D to 2D
-            Triangle projectedTri;
+            Triangle projectedTri = camSpaceTri;
             projectedTri.centroid = ProjectPoint(centroid);
             projectedTri.color = color;
+            //projectedTri.color = color;
             for (int j = 0; j < 3; j++) {
                 Vec4 cameraSpacePoint = camSpaceTri.verts[j];
                 projectedTri.verts[j] = ProjectPoint(cameraSpacePoint);
