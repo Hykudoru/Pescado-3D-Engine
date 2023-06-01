@@ -50,7 +50,6 @@ static void Physics(GLFWwindow* window)
 
 //-----------------Input----------------------
 
-
 static double prevMouseX;
 static double prevMouseY;
 static double deltaMouseX;
@@ -64,9 +63,12 @@ static void CheckMouseMove(GLFWwindow* window)
     static  double centerX = (screenWidth / 2.0);
     static  double centerY = (screenHeight / 2.0);
 
+    // Read mouse displacement.
+    // Also subtract centerX and centerY since the mouse will move back to center before next frame.
     glfwGetCursorPos(window, &mouseX, &mouseY);
     deltaMouseX = mouseX - centerX;
     deltaMouseY = mouseY - centerY;
+    // Reset cursor to center of screen
     glfwSetCursorPos(window, centerX, centerY);
     
     double xAngle = mouseSensitivity * deltaTime *-deltaMouseY;

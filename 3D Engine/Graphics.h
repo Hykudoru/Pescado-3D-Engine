@@ -421,7 +421,7 @@ public:
         Mesh::worldTriangleDrawCount = triBuffer->size();
         std::cout << Mesh::worldTriangleDrawCount << std::endl;
         
-        // Depth Sort
+        // Depth Sort (painting algorithm)
         sort(triBuffer->begin(), triBuffer->end(), [](const Triangle& triA, const Triangle& triB) -> bool
         {
                 return triA.centroid.w > triB.centroid.w;
