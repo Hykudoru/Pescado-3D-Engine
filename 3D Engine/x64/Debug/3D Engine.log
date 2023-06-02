@@ -66,8 +66,8 @@ Z:\3D Engine\3D Engine\3D Engine.cpp(119,24): warning C4305: 'initializing': tru
 Z:\3D Engine\3D Engine\3D Engine.cpp(139,47): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
 Z:\3D Engine\3D Engine\3D Engine.cpp(139,39): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
 Z:\3D Engine\3D Engine\3D Engine.cpp(146,24): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
-Z:\3D Engine\3D Engine\3D Engine.cpp(195,63): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
-Z:\3D Engine\3D Engine\3D Engine.cpp(199,64): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+Z:\3D Engine\3D Engine\3D Engine.cpp(191,63): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+Z:\3D Engine\3D Engine\3D Engine.cpp(195,64): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
 Z:\3D Engine\3D Engine\Vector.h(323,9): warning C4244: '=': conversion from 'double' to 'T', possible loss of data
           with
           [
@@ -86,5 +86,4 @@ Z:\3D Engine\3D Engine\Vector.h(325,9): warning C4244: '=': conversion from 'dou
           [
               T=int
           ]
-LINK : warning LNK4098: defaultlib 'MSVCRT' conflicts with use of other libs; use /NODEFAULTLIB:library
   3D Engine.vcxproj -> Z:\3D Engine\x64\Debug\3D Engine.exe

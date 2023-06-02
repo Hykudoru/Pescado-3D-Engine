@@ -257,7 +257,7 @@ struct Triangle
     }
 };
 
-List<Triangle>* triBuffer = new List<Triangle>(100);
+List<Triangle>* triBuffer = new List<Triangle>(10000);
 
 class Transform
 {

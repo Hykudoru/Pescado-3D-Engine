@@ -52,9 +52,9 @@ Mesh* LoadMeshFromOBJFile(string objFile)
             //std::cout << "(" << x << ", " << y << ", " << z << ")" << endl;
         }
         else if (str == "f") { // means the next 3 strings will be the indices for mapping vertices
-            int p1Index = stof(strings[++i]);
-            int p2Index = stof(strings[++i]);
             int p3Index = stof(strings[++i]);
+            int p2Index = stof(strings[++i]);
+            int p1Index = stof(strings[++i]);
             Triangle tri = Triangle(verts->at(p1Index-1), verts->at(p2Index-1), verts->at(p3Index-1));
             triangles->push_back(tri);
         }
@@ -225,7 +225,7 @@ static void Input(GLFWwindow* window)
 
     // Spawn Mesh
     if (glfwGetKey(window, GLFW_KEY_APOSTROPHE) == GLFW_PRESS) {
-        Mesh* mesh = LoadMeshFromOBJFile("Objects/sphere.obj");
+        Mesh* mesh = LoadMeshFromOBJFile("Objects/Sphere.obj");
         mesh->position = Camera::main->position + (Camera::main->Forward() * 10);
     }
 
@@ -298,9 +298,14 @@ void Init(GLFWwindow* window)
     cube4->color = Color(255, 0, 255);
     cube5->color = Color(0, 0, 255);
 
-    Mesh* mesh = LoadMeshFromOBJFile("Objects/sphere.obj");
-    mesh->scale = Vec3(100, 100, 100);
-    mesh = LoadMeshFromOBJFile("Objects/tinker.obj");
+    Mesh* mesh = LoadMeshFromOBJFile("Objects/Sphere.obj");
+    mesh->scale = Vec3(500, 500, 500);
+    mesh->position += World::forward * 1000;
+    //mesh = LoadMeshFromOBJFile("Objects/tinker.obj");
+    //Mesh* guitar = LoadMeshFromOBJFile("Objects/Guitar.obj");
+    //guitar->position += (Camera::main->Forward() * 10) + Camera::main->Right();
+    Mesh* chair = LoadMeshFromOBJFile("Objects/Chair.obj");
+    chair->position += (Camera::main->Forward() * 10) + Camera::main->Left();
 }
     
 void Draw()
