@@ -9,27 +9,32 @@
 #include <Graphics.h>
 using namespace std;
 
-Mesh* ReadObjFile(string filename)
+Mesh* LoadMeshFromOBJFile(string objFile)
 {
+    // ----------- Read object file -------------
     List<string> strings;
     string line;
     std::ifstream file;
-    file.open(filename);
+
+    file.open(objFile);
     if (file.is_open())
     {
         while (file) {
+            // 1st. Gets the next line.
+            // 2nd. Seperates each word from that line then stores each word into the strings array.
             getline(file, line);
             string s;
             stringstream ss(line);
-
             while (getline(ss, s, ' ')) {
-                //std::cout << s << std::endl;
                 strings.push_back(s);
             }
         }
     }
     file.close();
         
+    // -----------------Construct new mesh-------------------
+    // v = vertex
+    // f = face.
     List<Vec3>* verts = new List<Vec3>();
     verts->reserve(100);
     List<Triangle>* triangles = new List<Triangle>();
@@ -46,7 +51,7 @@ Mesh* ReadObjFile(string filename)
             verts->push_back(Vec3(x, y, z));
             //std::cout << "(" << x << ", " << y << ", " << z << ")" << endl;
         }
-        else if (str == "f") {
+        else if (str == "f") { // means the next 3 strings will be the indices for mapping vertices
             int p1Index = stof(strings[++i]);
             int p2Index = stof(strings[++i]);
             int p3Index = stof(strings[++i]);
@@ -73,7 +78,6 @@ Vec3 moveDir = Vec3(0, 0, 0);
 Vec3 velocity = Vec3(0, 0, 0);
 
 //Camera camera2 = Camera(1, new Vec3(0, 50, 0), new Vec3(-90 * Math.PI / 180, 0, 0));
-
 
 double deltaTime = 0;
 void Time()
@@ -113,11 +117,11 @@ static double deltaMouseY;
 static double mouseX;
 static double mouseY;
 float mouseSensitivity = .1;
-bool mouseRotationEnabled = true;
+bool mouseCameraControlEnabled = true;
 
 static void CheckMouseMove(GLFWwindow* window) 
 {
-    if (mouseRotationEnabled)
+    if (mouseCameraControlEnabled)
     {
         static  double centerX = (screenWidth / 2.0);
         static  double centerY = (screenHeight / 2.0);
@@ -140,12 +144,8 @@ static void CheckMouseMove(GLFWwindow* window)
 void OnScrollEvent(GLFWwindow* window, double xOffset, double yOffset)
 {
     FOV(fieldOfViewDeg - yOffset);
-    //moveSpeed += yOffset;
 
     std::cout << "FOV:" << ToDeg(fov) << "°" << std::endl;
-    //std::cout << "World Scale:" << World::GetScale() << std::endl;
-    //std::cout << "Camera Pos:" << Camera::main->position.z << std::endl;
-    //std::cout << "Movement Speed:" << moveSpeed << std::endl;
 }
 
 void OnMouseButtonEvent(GLFWwindow* window, int button, int action, int mods)
@@ -225,7 +225,7 @@ static void Input(GLFWwindow* window)
 
     // Spawn Mesh
     if (glfwGetKey(window, GLFW_KEY_APOSTROPHE) == GLFW_PRESS) {
-        Mesh* mesh = ReadObjFile("Objects/sphere.obj");
+        Mesh* mesh = LoadMeshFromOBJFile("Objects/sphere.obj");
         mesh->position = Camera::main->position + (Camera::main->Forward() * 10);
     }
 
@@ -246,6 +246,10 @@ static void Input(GLFWwindow* window)
     if (glfwGetKey(window, GLFW_KEY_M) == GLFW_PRESS) {
         GraphicSettings::fillTriangles = !GraphicSettings::fillTriangles;
         GraphicSettings::displayWireFrames = !GraphicSettings::displayWireFrames;
+    }
+    
+    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
+        mouseCameraControlEnabled = !mouseCameraControlEnabled;
     }
 
     /*
@@ -294,9 +298,9 @@ void Init(GLFWwindow* window)
     cube4->color = Color(255, 0, 255);
     cube5->color = Color(0, 0, 255);
 
-    Mesh* mesh = ReadObjFile("Objects/sphere.obj");
+    Mesh* mesh = LoadMeshFromOBJFile("Objects/sphere.obj");
     mesh->scale = Vec3(100, 100, 100);
-    mesh = ReadObjFile("Objects/tinker.obj");
+    mesh = LoadMeshFromOBJFile("Objects/tinker.obj");
 }
     
 void Draw()
@@ -325,20 +329,20 @@ int main(void)
     
     //glewInit();
     Init(window);
-
+    
+    glLineWidth(2);
+    glPointSize(2);
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
     {
-        glLineWidth(2);
-        glPointSize(2);
         /* Render here */
         glClear(GL_COLOR_BUFFER_BIT);
-        
+
+
         Time();
         Input(window);
         Physics(window);
         Draw();
-
 
         /* Swap front and back buffers */
         glfwSwapBuffers(window);
