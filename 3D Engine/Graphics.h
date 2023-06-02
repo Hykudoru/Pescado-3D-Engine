@@ -5,7 +5,7 @@
 #include <algorithm>
 #include <string.h>
 const float PI = 3.14159265359f;
-#define Color Vector3<int>
+#define Color Vector3<float>
 #define List std::vector
 
 float Clamp(float value, float min, float max)
@@ -83,7 +83,7 @@ Vec3 World::down = Vec3(0, -1, 0);
 
 float aspectRatio = screenWidth / screenHeight;
 float nearClippingPlane = -0.1;
-float farClippingPlane = -1000.0;
+float farClippingPlane = -10000.0;
 float fieldOfViewDeg = 60;
 float fov = ToRad(fieldOfViewDeg);
 
@@ -119,8 +119,6 @@ void FOV(int deg)
 
     perspectiveProjectionMatrix = newPerspectiveProjectionMatrix;
 }
-
-
 
 void Point(float x, float y)
 {
@@ -248,6 +246,7 @@ struct Triangle
         {
             glBegin(GL_TRIANGLES);
                 glColor3ub(tri.color.x, tri.color.y, tri.color.z);
+                //glColor3f(tri.color.x/255.0, tri.color.y/255.0, tri.color.z/255.0);
 
                 glVertex2f(p1.x, p1.y);
                 glVertex2f(p2.x, p2.y);
@@ -363,6 +362,7 @@ public:
     static Camera* main;
     static List<Camera*> cameras;
     static int cameraCount;
+    
     //string name;
     Camera(float scale = 1, Vec3 position = Vec3(0, 0, 0), Vec3 rotationEuler = Vec3(0, 0, 0))
     : Transform(scale, position, rotationEuler)
@@ -516,10 +516,15 @@ public:
                 Line(projectedCentroid.x, projectedCentroid.y, projectedNormal.x, projectedNormal.y);
             }
 
+            // Lighting
+            Vec3 lightDirection = World::up + World::right;
+            float lDot = DotProduct(lightDirection, (Vec3)worldSpaceTri.Normal());
+            Vec3 lColor = (color * Clamp(lDot, 0.15, 1));
+
             //Project single triangle from 3D to 2D
             Triangle projectedTri = camSpaceTri;
             projectedTri.centroid = ProjectPoint(centroid);
-            projectedTri.color = color;
+            projectedTri.color = lColor;
             //projectedTri.color = color;
             for (int j = 0; j < 3; j++) {
                 Vec4 cameraSpacePoint = camSpaceTri.verts[j];

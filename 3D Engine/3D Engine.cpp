@@ -304,8 +304,8 @@ void Init(GLFWwindow* window)
     //mesh = LoadMeshFromOBJFile("Objects/tinker.obj");
     //Mesh* guitar = LoadMeshFromOBJFile("Objects/Guitar.obj");
     //guitar->position += (Camera::main->Forward() * 10) + Camera::main->Right();
-    Mesh* chair = LoadMeshFromOBJFile("Objects/Chair.obj");
-    chair->position += (Camera::main->Forward() * 10) + Camera::main->Left();
+    //Mesh* chair = LoadMeshFromOBJFile("Objects/Chair.obj");
+    //chair->position += (Camera::main->Forward() * 10) + Camera::main->Left();
 }
     
 void Draw()
@@ -322,7 +322,7 @@ int main(void)
         return -1;
 
     /* Create a windowed mode window and its OpenGL context */
-    window = glfwCreateWindow(800, 800, "3D Graphics Engine", NULL, NULL);
+    window = glfwCreateWindow(800, 800, "Toast Engine", NULL, NULL);
     if (!window)
     {
         glfwTerminate();
