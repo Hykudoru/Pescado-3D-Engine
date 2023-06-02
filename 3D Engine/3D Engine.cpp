@@ -23,7 +23,7 @@ Mesh* ReadObjFile(string filename)
             stringstream ss(line);
 
             while (getline(ss, s, ' ')) {
-                std::cout << s << std::endl;
+                //std::cout << s << std::endl;
                 strings.push_back(s);
             }
         }
@@ -44,7 +44,7 @@ Mesh* ReadObjFile(string filename)
             float y = stof(strings[++i]);
             float z = stof(strings[++i]);
             verts->push_back(Vec3(x, y, z));
-            std::cout << "(" << x << ", " << y << ", " << z << ")" << endl;
+            //std::cout << "(" << x << ", " << y << ", " << z << ")" << endl;
         }
         else if (str == "f") {
             int p1Index = stof(strings[++i]);
@@ -113,24 +113,28 @@ static double deltaMouseY;
 static double mouseX;
 static double mouseY;
 float mouseSensitivity = .1;
+bool mouseRotationEnabled = true;
 
 static void CheckMouseMove(GLFWwindow* window) 
 {
-    static  double centerX = (screenWidth / 2.0);
-    static  double centerY = (screenHeight / 2.0);
+    if (mouseRotationEnabled)
+    {
+        static  double centerX = (screenWidth / 2.0);
+        static  double centerY = (screenHeight / 2.0);
 
-    // Read mouse displacement.
-    // Also subtract centerX and centerY since the mouse will move back to center before next frame.
-    glfwGetCursorPos(window, &mouseX, &mouseY);
-    deltaMouseX = mouseX - centerX;
-    deltaMouseY = mouseY - centerY;
-    // Reset cursor to center of screen
-    glfwSetCursorPos(window, centerX, centerY);
-    
-    double xAngle = mouseSensitivity * deltaTime *-deltaMouseY;
-    double yAngle = 0.00001 + mouseSensitivity * deltaTime * -deltaMouseX;
-    Camera::main->rotation *= YPR(xAngle, yAngle, 0);
-    //Camera::main->rotation = Matrix3x3::RotX(rotateSpeed * -deltaMouseY) * Camera::main->rotation * Matrix3x3::RotY((0.00001 + rotateSpeed) * -deltaMouseX);
+        // Read mouse displacement.
+        // Also subtract centerX and centerY since the mouse will move back to center before next frame.
+        glfwGetCursorPos(window, &mouseX, &mouseY);
+        deltaMouseX = mouseX - centerX;
+        deltaMouseY = mouseY - centerY;
+        // Reset cursor to center of screen
+        glfwSetCursorPos(window, centerX, centerY);
+
+        double xAngle = mouseSensitivity * deltaTime * -deltaMouseY;
+        double yAngle = 0.00001 + mouseSensitivity * deltaTime * -deltaMouseX;
+        Camera::main->rotation *= YPR(xAngle, yAngle, 0);
+        //Camera::main->rotation = Matrix3x3::RotX(rotateSpeed * -deltaMouseY) * Camera::main->rotation * Matrix3x3::RotY((0.00001 + rotateSpeed) * -deltaMouseX);
+    }
 };
 
 void OnScrollEvent(GLFWwindow* window, double xOffset, double yOffset)
@@ -221,8 +225,8 @@ static void Input(GLFWwindow* window)
 
     // Spawn Mesh
     if (glfwGetKey(window, GLFW_KEY_APOSTROPHE) == GLFW_PRESS) {
-        CubeMesh* cube = new CubeMesh(100, Vec3(0, 0, -400));
-        cube->position = Camera::main->position + (Camera::main->Forward() * 10);
+        Mesh* mesh = ReadObjFile("Objects/sphere.obj");
+        mesh->position = Camera::main->position + (Camera::main->Forward() * 10);
     }
 
     //-------------------Debugging------------------------
@@ -292,6 +296,7 @@ void Init(GLFWwindow* window)
 
     Mesh* mesh = ReadObjFile("Objects/sphere.obj");
     mesh->scale = Vec3(100, 100, 100);
+    mesh = ReadObjFile("Objects/tinker.obj");
 }
     
 void Draw()

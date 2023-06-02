@@ -397,7 +397,8 @@ public:
     Mesh(float scale = 1, Vec3 position = Vec3(0, 0, 0), Vec3 rotationEuler = Vec3(0, 0, 0))
     : Transform(scale, position, rotationEuler)
     {
-        Mesh::meshes[Mesh::meshCount++] = this;
+        Mesh::meshes.emplace(meshes.begin()+meshCount++, this);
+        //Mesh::meshes[Mesh::meshCount++] = this; 
         //Mesh::worldTriangleCount += (*this->triangles(this->vertices)).length; 
         MapVertsToTriangles();
     }
@@ -529,7 +530,7 @@ public:
         }
     }
 };
-List<Mesh*> Mesh::meshes = List<Mesh*>(100);
+List<Mesh*> Mesh::meshes = List<Mesh*>(1000);
 int Mesh::meshCount = 0;
 int Mesh::worldTriangleDrawCount = 0;
 
