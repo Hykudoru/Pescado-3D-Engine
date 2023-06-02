@@ -41,30 +41,33 @@ Z:\3D Engine\3D Engine\Graphics.h(477,55): warning C4244: 'argument': conversion
               T=float
           ]
 Z:\3D Engine\3D Engine\Graphics.h(540,15): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-Z:\3D Engine\3D Engine\3D Engine.cpp(11,13): warning C4305: 'initializing': truncation from 'double' to 'float'
-Z:\3D Engine\3D Engine\3D Engine.cpp(12,14): warning C4305: 'initializing': truncation from 'double' to 'float'
-Z:\3D Engine\3D Engine\3D Engine.cpp(39,25): warning C4305: 'argument': truncation from 'double' to 'const T'
+Z:\3D Engine\3D Engine\3D Engine.cpp(53,29): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
+Z:\3D Engine\3D Engine\3D Engine.cpp(54,29): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
+Z:\3D Engine\3D Engine\3D Engine.cpp(55,29): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
+Z:\3D Engine\3D Engine\3D Engine.cpp(71,13): warning C4305: 'initializing': truncation from 'double' to 'float'
+Z:\3D Engine\3D Engine\3D Engine.cpp(72,14): warning C4305: 'initializing': truncation from 'double' to 'float'
+Z:\3D Engine\3D Engine\3D Engine.cpp(99,25): warning C4305: 'argument': truncation from 'double' to 'const T'
           with
           [
               T=float
           ]
-Z:\3D Engine\3D Engine\3D Engine.cpp(41,46): warning C4244: 'argument': conversion from 'double' to 'const T', possible loss of data
+Z:\3D Engine\3D Engine\3D Engine.cpp(101,46): warning C4244: 'argument': conversion from 'double' to 'const T', possible loss of data
           with
           [
               T=float
           ]
-Z:\3D Engine\3D Engine\3D Engine.cpp(45,57): warning C4244: 'argument': conversion from 'double' to 'const T', possible loss of data
+Z:\3D Engine\3D Engine\3D Engine.cpp(105,57): warning C4244: 'argument': conversion from 'double' to 'const T', possible loss of data
           with
           [
               T=float
           ]
-Z:\3D Engine\3D Engine\3D Engine.cpp(48,54): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
-Z:\3D Engine\3D Engine\3D Engine.cpp(60,24): warning C4305: 'initializing': truncation from 'double' to 'float'
-Z:\3D Engine\3D Engine\3D Engine.cpp(74,43): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
-Z:\3D Engine\3D Engine\3D Engine.cpp(74,35): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
-Z:\3D Engine\3D Engine\3D Engine.cpp(80,24): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
-Z:\3D Engine\3D Engine\3D Engine.cpp(129,63): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
-Z:\3D Engine\3D Engine\3D Engine.cpp(133,64): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+Z:\3D Engine\3D Engine\3D Engine.cpp(108,54): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+Z:\3D Engine\3D Engine\3D Engine.cpp(119,24): warning C4305: 'initializing': truncation from 'double' to 'float'
+Z:\3D Engine\3D Engine\3D Engine.cpp(136,43): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+Z:\3D Engine\3D Engine\3D Engine.cpp(136,35): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+Z:\3D Engine\3D Engine\3D Engine.cpp(142,24): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
+Z:\3D Engine\3D Engine\3D Engine.cpp(191,63): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+Z:\3D Engine\3D Engine\3D Engine.cpp(195,64): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
 Z:\3D Engine\3D Engine\Vector.h(323,9): warning C4244: '=': conversion from 'double' to 'T', possible loss of data
           with
           [
@@ -83,4 +86,5 @@ Z:\3D Engine\3D Engine\Vector.h(325,9): warning C4244: '=': conversion from 'dou
           [
               T=int
           ]
+Z:\3D Engine\3D Engine\3D Engine.cpp(67): warning C4715: 'ReadObjFile': not all control paths return a value
   3D Engine.vcxproj -> Z:\3D Engine\x64\Debug\3D Engine.exe

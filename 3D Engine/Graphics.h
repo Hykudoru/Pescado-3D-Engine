@@ -391,7 +391,7 @@ public:
     
     List<Vec3>* vertices;
     List<Triangle>* triangles;
-    virtual List<Triangle>* MapVertsToTriangles() { return NULL; }
+    virtual List<Triangle>* MapVertsToTriangles() { return triangles; }
     Color color = Color(255, 255, 255);
 
     Mesh(float scale = 1, Vec3 position = Vec3(0, 0, 0), Vec3 rotationEuler = Vec3(0, 0, 0))

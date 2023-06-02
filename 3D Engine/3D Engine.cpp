@@ -1,10 +1,70 @@
 //#include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
+#include <fstream>
+#include <sstream>
+#include <string>
 #include <math.h>
 #include <Matrix.h>
 #include <Graphics.h>
 using namespace std;
+
+Mesh* ReadObjFile(string filename)
+{
+    List<string> strings;
+    string line, temp;
+    std::ifstream file;
+    file.open(filename);
+    if (file.is_open())
+    {
+        while (file) {
+            getline(file, line);
+            //getline(file, line, '\n');
+           //std::cout << line << std::endl;
+            //line.erase(remove(line.begin(), line.end(), '\n'), line.cend());
+
+           string s;
+           stringstream ss(line);
+
+           while (getline(ss, s, ' ')) {
+               std::cout << s << std::endl;
+               strings.push_back(s);
+           }
+
+           //strings.push_back(line);
+        }
+        file.close();
+        
+        List<Vec3>* verts = new List<Vec3>(100);
+        List<Triangle>* triangles = new List<Triangle>(100);
+        
+        for (size_t i = 0; i < strings.size(); i++)
+        {
+            string str = strings[i];
+            
+            if (str == "v") {
+                float x = stof(strings[++i]);
+                float y = stof(strings[++i]);
+                float z = stof(strings[++i]);
+                verts->push_back(Vec3(x, y, z));
+                std::cout << "(" << x << ", " << y << ", " << z << ")" << endl;
+            }
+            else if (str == "f") {
+                int p1Index = stof(strings[++i]);
+                int p2Index = stof(strings[++i]);
+                int p3Index = stof(strings[++i]);
+                Triangle tri = Triangle(verts->at(p1Index-1), verts->at(p2Index-1), verts->at(p3Index-1));
+                triangles->push_back(tri);
+            }
+        }
+
+        Mesh* mesh = new Mesh();
+        mesh->vertices = verts;
+        mesh->triangles = triangles;
+
+        return mesh;
+    }
+}
 
 float moveSpeed = 50;
 float rotateSpeed = PI/2;
@@ -21,7 +81,7 @@ Vec3 velocity = Vec3(0, 0, 0);
 
 double deltaTime = 0;
 void Time()
-{
+{ 
     static double prevTime = 0;
     double currentTime = glfwGetTime();
     deltaTime = currentTime - prevTime;
@@ -228,15 +288,17 @@ void Init(GLFWwindow* window)
     CubeMesh* cube8 = new CubeMesh(10, Vec3(5, -5, 40));
     CubeMesh* cube9 = new CubeMesh(100, Vec3(0, 0, -400));
 
-
     cube1->color = Color(255, 0, 0);
     cube2->color = Color(255, 255, 0);
     cube3->color = Color(0, 255, 255);
     cube4->color = Color(255, 0, 255);
     cube5->color = Color(0, 0, 255);
 
+    Mesh* mesh = ReadObjFile("Objects/sphere.obj");
+    mesh->scale = Vec3(100, 100, 100);
 }
 
+    
 void Draw()
 {
     Mesh::DrawMeshes();
