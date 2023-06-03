@@ -36,16 +36,20 @@ struct GraphicSettings
     static bool culling;
     static bool invertNormals;
     static bool debugNormals;
+    static bool debugVertices;
     static bool perspective;
     static bool fillTriangles;
     static bool displayWireFrames;
+    static bool lighting;
 };
 bool GraphicSettings::culling = true;
 bool GraphicSettings::invertNormals = false;
 bool GraphicSettings::debugNormals = false;
+bool GraphicSettings::debugVertices = false;
 bool GraphicSettings::perspective = true;
-bool GraphicSettings::fillTriangles = false;
+bool GraphicSettings::fillTriangles = true;
 bool GraphicSettings::displayWireFrames = false;
+bool GraphicSettings::lighting = true;
 
 struct World
 {
@@ -157,7 +161,7 @@ Matrix4x4 ProjectionMatrix()
 Vec4 ProjectPoint(Vec4 point)
 {
     point = ProjectionMatrix() * point;
-    
+
     point.x *= World::GetScale();
     point.y *= World::GetScale();
     return point;
@@ -170,9 +174,9 @@ struct Triangle
     Vec4 centroid;
     Vec3 normal;
 
-    Triangle() 
-    { 
-        color = Color(255, 255, 255); 
+    Triangle()
+    {
+        color = Color(255, 255, 255);
         centroid = Vec3(0, 0, 0);
         normal = Vec3(0, 0, 0);
     };
@@ -201,7 +205,7 @@ struct Triangle
     {
         Vec4 centroid = Vec4(
             (verts[0].x + verts[1].x + verts[2].x) / 3.0,
-            (verts[0].y + verts[1].y + verts[2].y) / 3.0, 
+            (verts[0].y + verts[1].y + verts[2].y) / 3.0,
             (verts[0].z + verts[1].z + verts[2].z) / 3.0
         );
 
@@ -214,24 +218,36 @@ struct Triangle
         Vec4 p2 = tri.verts[1];
         Vec4 p3 = tri.verts[2];
 
-        Point(p1.x, p1.y);
-        Point(p2.x, p2.y);
+        if (GraphicSettings::debugVertices) 
+        {
+            float c = Clamp(1.0 / (0.000001 + (tri.color.x + tri.color.y + tri.color.z) / 3), 0, 255);
+            glColor3ub(c, c, c);
 
-        Point(p2.x, p2.y);
-        Point(p3.x, p3.y);
+            Point(p1.x, p1.y);
+            Point(p2.x, p2.y);
 
-        Point(p3.x, p3.y);
-        Point(p1.x, p1.y);
+            Point(p2.x, p2.y);
+            Point(p3.x, p3.y);
 
-        glBegin(GL_LINES);
-            if (GraphicSettings::fillTriangles && GraphicSettings::displayWireFrames)
+            Point(p3.x, p3.y);
+            Point(p1.x, p1.y);
+        }
+
+        if (GraphicSettings::fillTriangles == false) 
+        {
+            GraphicSettings::displayWireFrames = true;
+        }
+
+        glColor3ub(255, 255, 255);
+
+        if (GraphicSettings::displayWireFrames)
+        {
+            glBegin(GL_LINES);
+            if (GraphicSettings::fillTriangles)
             {
-                float c = Clamp(1.0 / (0.000001+(tri.color.x + tri.color.y + tri.color.z) / 3), 0, 255);
+                float c = Clamp(1.0 / (0.000001 + (tri.color.x + tri.color.y + tri.color.z) / 3), 0, 255);
                 glColor3ub(c, c, c);
             }
-            else {
-                glColor3ub(255, 255, 255);
-            }
             glVertex2f(p1.x, p1.y);
             glVertex2f(p2.x, p2.y);
 
@@ -240,17 +256,16 @@ struct Triangle
 
             glVertex2f(p3.x, p3.y);
             glVertex2f(p1.x, p1.y);
-        glEnd();
+            glEnd();
+        }
 
         if (GraphicSettings::fillTriangles)
         {
             glBegin(GL_TRIANGLES);
-                glColor3ub(tri.color.x, tri.color.y, tri.color.z);
-                //glColor3f(tri.color.x/255.0, tri.color.y/255.0, tri.color.z/255.0);
-
-                glVertex2f(p1.x, p1.y);
-                glVertex2f(p2.x, p2.y);
-                glVertex2f(p3.x, p3.y);
+            glColor3ub(tri.color.x, tri.color.y, tri.color.z);
+            glVertex2f(p1.x, p1.y);
+            glVertex2f(p2.x, p2.y);
+            glVertex2f(p3.x, p3.y);
             glEnd();
         }
     }
@@ -380,8 +395,6 @@ Camera* Camera::main;
 List<Camera*> Camera::cameras;
 int Camera::cameraCount = 0;
 
-//                                      List<Triangle>* triangleBuffer = new List<Triangle>(100);
-
 class Mesh : public Transform
 {
 public:
@@ -431,7 +444,6 @@ public:
         //Draw
         for (int i = 0; i < triBuffer->size(); i++)
         {
-            //std::cout << triBuffer->at(i).centroid.z << std::endl;
             Triangle::DrawTriangle(triBuffer->at(i));
         }
 
@@ -442,6 +454,10 @@ public:
     {
         Matrix4x4 modelToWorldMatrix = TRS();
         Matrix4x4 worldToViewMatrix = Camera::main->TRInverse();
+        Matrix4x4 projectionMatrix = ProjectionMatrix();
+
+        Matrix4x4 mvp = projectionMatrix * worldToViewMatrix * modelToWorldMatrix;
+
         //Transform Triangles
         List<Triangle>* tris = MapVertsToTriangles();
         for (int i = 0; i < tris->size(); i++)
@@ -467,11 +483,18 @@ public:
                 camSpaceTri.verts[j] = cameraSpacePoint;
             };
 
-            Vec3 lightSource = World::up + World::right;
-            float l = DotProduct(lightSource, (Vec3)worldSpaceTri.Normal());
+            //------------------------ Lighting ------------------------
+            Color triColor = this->color;
+            if (GraphicSettings::lighting && GraphicSettings::fillTriangles)
+            {
+                Vec3 lightSource = World::up + World::right;
+                float amountFacingLight = DotProduct((Vec3)worldSpaceTri.Normal(), lightSource);
+                Color colorLit = (triColor * Clamp(amountFacingLight, 0.15, 1));
+                
+                triColor = colorLit;
+            }
 
-            // Still in View/Cam/Eye space
-            //-------------------Normal/Culling------------------------
+            //------------------- Normal/Culling ------------------------
             Vec3 p1 = camSpaceTri.verts[0];
             Vec3 p2 = camSpaceTri.verts[1];
             Vec3 p3 = camSpaceTri.verts[2];
@@ -516,20 +539,15 @@ public:
                 Line(projectedCentroid.x, projectedCentroid.y, projectedNormal.x, projectedNormal.y);
             }
 
-            // Lighting
-            Vec3 lightDirection = World::up + World::right;
-            float lDot = DotProduct(lightDirection, (Vec3)worldSpaceTri.Normal());
-            Vec3 lColor = (color * Clamp(lDot, 0.15, 1));
-
             //Project single triangle from 3D to 2D
             Triangle projectedTri = camSpaceTri;
-            projectedTri.centroid = ProjectPoint(centroid);
-            projectedTri.color = lColor;
-            //projectedTri.color = color;
             for (int j = 0; j < 3; j++) {
                 Vec4 cameraSpacePoint = camSpaceTri.verts[j];
                 projectedTri.verts[j] = ProjectPoint(cameraSpacePoint);
             };
+            projectedTri.centroid = ProjectPoint(centroid);
+            projectedTri.color = triColor;
+
             //Add projected tri
             triBuffer->push_back(projectedTri);
         }

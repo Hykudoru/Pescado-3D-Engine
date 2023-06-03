@@ -153,7 +153,6 @@ void OnMouseButtonEvent(GLFWwindow* window, int button, int action, int mods)
     std::cout << "Mouse button:" << button << std::endl;
 }
 
-
 static void Input(GLFWwindow* window)
 {
     CheckMouseMove(window);
@@ -245,7 +244,12 @@ static void Input(GLFWwindow* window)
     }
     if (glfwGetKey(window, GLFW_KEY_M) == GLFW_PRESS) {
         GraphicSettings::fillTriangles = !GraphicSettings::fillTriangles;
+    }
+    if (glfwGetKey(window, GLFW_KEY_3) == GLFW_PRESS) {
         GraphicSettings::displayWireFrames = !GraphicSettings::displayWireFrames;
+    }
+    if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS) {
+        GraphicSettings::lighting = !GraphicSettings::lighting;
     }
     
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
