@@ -77,7 +77,7 @@ bool dampenersActive = true;
 Vec3 moveDir = Vec3(0, 0, 0);
 Vec3 velocity = Vec3(0, 0, 0);
 
-//Camera camera2 = Camera(1, new Vec3(0, 50, 0), new Vec3(-90 * Math.PI / 180, 0, 0));
+Camera* camera2 = new Camera(Vec3(0, 50, 0), Vec3(-90 * PI / 180, 0, 0));
 
 double deltaTime = 0;
 void Time()
@@ -106,6 +106,15 @@ static void Physics(GLFWwindow* window)
     }
 
     Mesh::meshes[0]->rotation = Matrix3x3::RotZ(2*PI * deltaTime) * Mesh::meshes[0]->rotation;// MatrixMultiply(YPR(angle * ((screenWidth / 2)), angle * -((screenWidth / 2)), 0), Mesh.meshes[1].rotation);
+    
+    for (size_t i = 0; i < Mesh::meshes.size(); i++)
+    {
+        if (Mesh::meshes[i])
+        {
+            Mesh::meshes[i]->position += (World::up * deltaTime);
+
+        }
+    }
 }
 
 //-----------------Input----------------------
@@ -294,7 +303,6 @@ void Init(GLFWwindow* window)
     CubeMesh* cube6 = new CubeMesh(1, Vec3(-5, 5, 20));
     CubeMesh* cube7 = new CubeMesh(1, Vec3(5, 5, 30));
     CubeMesh* cube8 = new CubeMesh(10, Vec3(5, -5, 40));
-    CubeMesh* cube9 = new CubeMesh(100, Vec3(0, 0, -400));
 
     cube1->color = Color(255, 0, 0);
     cube2->color = Color(255, 255, 0);

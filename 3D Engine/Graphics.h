@@ -379,20 +379,17 @@ public:
     static int cameraCount;
     
     //string name;
-    Camera(float scale = 1, Vec3 position = Vec3(0, 0, 0), Vec3 rotationEuler = Vec3(0, 0, 0))
-    : Transform(scale, position, rotationEuler)
+    Camera(Vec3 position = Vec3(0, 0, 0), Vec3 rotationEuler = Vec3(0, 0, 0))
+    : Transform(1, position, rotationEuler)
     {
-        if (Camera::cameraCount == 0) {
-            Camera::main = this;
-            Camera::cameras = List<Camera*>({this});
-        }
-        Camera::cameras[Camera::cameraCount++] = this;
-        //this.name = "Camera " + Camera.#cameraCount;
+        cameras.emplace(cameras.begin() + cameraCount++, this);
+        //Camera::cameras[Camera::cameraCount++] = this;
     }
 };
+List<Camera*> Camera::cameras = List<Camera*>(1);
 Camera* cam = new Camera();
-Camera* Camera::main;
-List<Camera*> Camera::cameras;
+Camera* Camera::main = cam;
+
 int Camera::cameraCount = 0;
 
 class Mesh : public Transform
@@ -556,6 +553,8 @@ public:
 List<Mesh*> Mesh::meshes = List<Mesh*>(1000);
 int Mesh::meshCount = 0;
 int Mesh::worldTriangleDrawCount = 0;
+
+
 
 class CubeMesh : public Mesh
 {

@@ -41,9 +41,7 @@ Vector3<T> CrossProduct(Vector3<T> a, Vector3<T> b)
     return u;
 }
 
-//-------------------------------
-// --------- Vector2 ------------
-//-------------------------------
+// ----------------------- Vector2 -------------------------
 template <typename T>
 class Vector2
 {
@@ -296,26 +294,6 @@ public:
     operator Vector4<T>();
 };
 
-// Casting
-template <typename T>
-Vector2<T>::operator Vector3<T>()
-{
-    Vector3<T> vec3;
-    vec3.x = x;
-    vec3.y = y;
-    vec3.z = 0.0;
-    return vec3;
-}
-// Casting
-template <typename T>
-Vector3<T>::operator Vector2<T>()
-{
-    Vector2<T> vec2;
-    vec2.x = x;
-    vec2.y = y;
-    return vec2;
-}
-
 // Constructors
 template <typename T>
 Vector3<T>::Vector3()
@@ -355,34 +333,8 @@ public:
     Vector4(T xyzw[]);
 
     operator Vector3<T>();
+    operator Vector2<T>();
 };
-
-//================================
-// Casting
-template <typename T>
-Vector3<T>::operator Vector4<T>()
-{
-    Vector4<T> vec4;
-    vec4.x = x;
-    vec4.y = y;
-    vec4.z = z;
-    vec4.w = 1.0;
-    return vec4;
-}
-// IMPORTANT - Casting 4D Homogeneous to 3D Cartesian coordinates results in perspective divide --------
-template <typename T>
-Vector4<T>::operator Vector3<T>()
-{
-    /*Vector3<T> vec3;
-    if (w != 0.0) {
-        vec3.x = x/w;
-        vec3.y = y/w;
-        vec3.z = z/w;
-    }*/
-    Vector3<T> vec3(x, y, z);
-
-    return vec3;
-}
 // Constructors
 template <typename T>
 Vector4<T>::Vector4()
@@ -410,26 +362,45 @@ Vector4<T>::Vector4(T xyzw[])
     w = xyzw[3];
 }
 
-#define Vec2 Vector3<float>
+
+//================================
+// Casting
+template <typename T>
+Vector2<T>::operator Vector3<T>()
+{
+    Vector3<T> vec3(x, y, 0);
+    return vec3;
+}
+// Casting
+template <typename T>
+Vector3<T>::operator Vector2<T>()
+{
+    Vector2<T> vec2(x, y);
+    return vec2;
+}
+template <typename T>
+Vector3<T>::operator Vector4<T>()
+{
+    Vector4<T> vec4(x, y, z, 1);
+    return vec4;
+}
+
+template <typename T>
+Vector4<T>::operator Vector3<T>()
+{
+    Vector3<T> vec3(x, y, z);
+
+    return vec3;
+}
+template <typename T>
+Vector4<T>::operator Vector2<T>()
+{
+    Vector2<T> vec2(x, y);
+
+    return vec2;
+}
+#define Vec2 Vector2<float>
 #define Vec3 Vector3<float>
 #define Vec4 Vector4<float>
-
+#define Euler Vec3;
 #endif
-
-/*
-using Vector3f = Vector3<float>;
-float vec3[];
-Vector3f m[3][3] = {
-    {Vector3f()},
-    {Vector3f()},
-    {Vector3f()}
-};
-float identity[3][3] = {
-    {1, 0, 0},
-    {0, 1, 0},
-    {0, 0, 1},
-};
-
-space coordinates xyz
-body coordinates XYZ-++
-*/
