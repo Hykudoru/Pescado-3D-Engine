@@ -413,7 +413,7 @@ public:
     void transformTriangles() 
     {
         // Scale/Distance ratio culling
-        bool tooSmallToSee = scale.SqrMagnitude() / (position - Camera::main->position).SqrMagnitude() < 0.0025*0.0025;
+        bool tooSmallToSee = scale.SqrMagnitude() / (position - Camera::main->position).SqrMagnitude() < 0.00000125;
         if (tooSmallToSee) {
             return;
         }
@@ -422,7 +422,6 @@ public:
         Matrix4x4 worldToViewMatrix = Camera::main->TRInverse();
         //Matrix4x4 projectionMatrix = ProjectionMatrix();
         //Matrix4x4 mvp = projectionMatrix * worldToViewMatrix * modelToWorldMatrix;
-        
         
         //Transform Triangles
         List<Triangle>* tris = MapVertsToTriangles();

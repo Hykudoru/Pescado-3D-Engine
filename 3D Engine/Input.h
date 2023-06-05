@@ -69,10 +69,10 @@ void OnKeyPressEvent(GLFWwindow* window, int key, int scancode, int action, int 
             Camera::main->rotation = Identity3x3;
             Camera::main->position = Vec3();
         }
-        else if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS) {
+        else if (glfwGetKey(window, GLFW_KEY_F1) == GLFW_PRESS) {
             Camera::main = Camera::cameras[0];
         }
-        else if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS) {
+        else if (glfwGetKey(window, GLFW_KEY_F2) == GLFW_PRESS) {
             Camera::main = Camera::cameras[1];
         }
 
@@ -160,10 +160,14 @@ static void Input(GLFWwindow* window)
     else if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS) {
         Camera::main->rotation *= Matrix3x3::RotZ(-rotateSpeed * deltaTime);
     }
-    /*
-    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
-        mouseCameraControlEnabled = !mouseCameraControlEnabled;
-    }*/
+    // Speed 
+    if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
+    {
+        moveSpeed = defaultMoveSpeed * 5;
+    }
+    else {
+        moveSpeed = defaultMoveSpeed;
+    }
 }
 
 #endif
