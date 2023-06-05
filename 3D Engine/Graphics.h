@@ -1,9 +1,17 @@
-
+#pragma once
 #include <Matrix.h>
 #include <math.h>
 #include <vector>
 #include <algorithm>
 #include <string.h>
+#include <iostream>
+#include <fstream>
+#include <sstream>
+using namespace std;
+
+#ifndef GRAPHICS_H
+#define GRAPHICS_H
+
 const float PI = 3.14159265359f;
 #define Color Vector3<float>
 #define List std::vector
@@ -276,9 +284,6 @@ List<Triangle>* triBuffer = new List<Triangle>(10000);
 class Transform
 {
 public:
-    //static List<Transform*> transforms;// = [];
-    //static int transformCount;
-
     Vec3 scale = Vec3(1, 1, 1);
     Vec3 position = Vec3(0, 0, 0);
     Matrix3x3 rotation = Identity3x3;
@@ -297,7 +302,6 @@ public:
         this->scale.z = scale;
         this->position = position;
         this->rotation = YPR(rotationEuler.x, rotationEuler.y, rotationEuler.z);
-        //Transform::transforms[Transform::transformCount++] = this;
     }
 
     Matrix4x4 ScaleMatrix4x4()
@@ -367,9 +371,6 @@ public:
         return Matrix4x4::Transpose(RotationMatrix4x4()) * TranslationMatrix4x4Inverse();
     }
 };
-//Transform** Transform::transforms = new Transform*[100];
-//List<Transform*> Transform::transforms = List<Transform*>(1000);
-//int Transform::transformCount = 0;
 
 class Camera : public Transform
 {
@@ -383,14 +384,12 @@ public:
     : Transform(1, position, rotationEuler)
     {
         cameras.emplace(cameras.begin() + cameraCount++, this);
-        //Camera::cameras[Camera::cameraCount++] = this;
     }
 };
 List<Camera*> Camera::cameras = List<Camera*>(1);
+int Camera::cameraCount = 0;
 Camera* cam = new Camera();
 Camera* Camera::main = cam;
-
-int Camera::cameraCount = 0;
 
 class Mesh : public Transform
 {
@@ -408,53 +407,23 @@ public:
     : Transform(scale, position, rotationEuler)
     {
         Mesh::meshes.emplace(meshes.begin()+meshCount++, this);
-        //Mesh::meshes[Mesh::meshCount++] = this; 
-        //Mesh::worldTriangleCount += (*this->triangles(this->vertices)).length; 
         MapVertsToTriangles();
-    }
-
-    static void DrawMeshes() 
-    {
-        static bool init = false;
-        if (!init) { 
-            meshes.resize(meshCount);
-            init = true;
-        }
-
-        Mesh::worldTriangleDrawCount = 0;
-        
-        // Transform
-        for (int i = 0; i < Mesh::meshCount; i++)
-        {
-            Mesh::meshes[i]->transformTriangles();
-        }
-
-        Mesh::worldTriangleDrawCount = triBuffer->size();
-        std::cout << Mesh::worldTriangleDrawCount << std::endl;
-        
-        // Depth Sort (painting algorithm)
-        sort(triBuffer->begin(), triBuffer->end(), [](const Triangle& triA, const Triangle& triB) -> bool
-        {
-                return triA.centroid.w > triB.centroid.w;
-        });
-
-        //Draw
-        for (int i = 0; i < triBuffer->size(); i++)
-        {
-            Triangle::DrawTriangle(triBuffer->at(i));
-        }
-
-        triBuffer->clear();
     }
 
     void transformTriangles() 
     {
+        // Scale/Distance ratio culling
+        bool tooSmallToSee = scale.SqrMagnitude() / (position - Camera::main->position).SqrMagnitude() < 0.0025*0.0025;
+        if (tooSmallToSee) {
+            return;
+        }
+        
         Matrix4x4 modelToWorldMatrix = TRS();
         Matrix4x4 worldToViewMatrix = Camera::main->TRInverse();
-        Matrix4x4 projectionMatrix = ProjectionMatrix();
-
-        Matrix4x4 mvp = projectionMatrix * worldToViewMatrix * modelToWorldMatrix;
-
+        //Matrix4x4 projectionMatrix = ProjectionMatrix();
+        //Matrix4x4 mvp = projectionMatrix * worldToViewMatrix * modelToWorldMatrix;
+        
+        
         //Transform Triangles
         List<Triangle>* tris = MapVertsToTriangles();
         for (int i = 0; i < tris->size(); i++)
@@ -491,7 +460,7 @@ public:
                 triColor = colorLit;
             }
 
-            //------------------- Normal/Culling ------------------------
+            //------------------- Normal/Frustum Culling ------------------------
             Vec3 p1 = camSpaceTri.verts[0];
             Vec3 p2 = camSpaceTri.verts[1];
             Vec3 p3 = camSpaceTri.verts[2];
@@ -499,7 +468,7 @@ public:
 
             bool tooCloseToCamera = (p1.z >= nearClippingPlane || p2.z >= nearClippingPlane || p3.z >= nearClippingPlane || centroid.z >= nearClippingPlane);
             bool tooFarFromCamera = (p1.z <= farClippingPlane || p2.z <= farClippingPlane || p3.z <= farClippingPlane || centroid.z <= farClippingPlane);
-            bool behindCamera = DotProduct(centroid.Normalized(), World::forward) <= 0;
+            bool behindCamera = DotProduct(centroid.Normalized(), World::forward) <= 0.0;
             if (tooCloseToCamera || tooFarFromCamera || behindCamera) {
                 continue; // Skip triangle if it's out of cam view.
             }
@@ -549,6 +518,40 @@ public:
             triBuffer->push_back(projectedTri);
         }
     }
+
+    static void DrawMeshes()
+    {
+        static bool init = false;
+        if (!init) {
+            meshes.resize(meshCount);
+            init = true;
+        }
+
+        Mesh::worldTriangleDrawCount = 0;
+
+        // Transform
+        for (int i = 0; i < Mesh::meshCount; i++)
+        {
+            Mesh::meshes[i]->transformTriangles();
+        }
+
+        Mesh::worldTriangleDrawCount = triBuffer->size();
+        std::cout << "Triangle draw count:" << Mesh::worldTriangleDrawCount << std::endl;
+
+        // Depth Sort (painting algorithm)
+        sort(triBuffer->begin(), triBuffer->end(), [](const Triangle& triA, const Triangle& triB) -> bool
+            {
+                return triA.centroid.w > triB.centroid.w;
+            });
+
+        //Draw
+        for (int i = 0; i < triBuffer->size(); i++)
+        {
+            Triangle::DrawTriangle(triBuffer->at(i));
+        }
+
+        triBuffer->clear();
+    }
 };
 List<Mesh*> Mesh::meshes = List<Mesh*>(1000);
 int Mesh::meshCount = 0;
@@ -582,33 +585,118 @@ public:
                 Vec3(-1, 1, -1),
                 Vec3(1, 1, -1),
                 Vec3(1, -1, -1)
-            });
+                });
 
             triangles = new List<Triangle>();
             triangles->reserve(36 / 3);
+
+            //south
+            triangles->push_back(Triangle((*vertices)[0], (*vertices)[1], (*vertices)[2]));
+            triangles->push_back(Triangle((*vertices)[0], (*vertices)[2], (*vertices)[3]));
+            //                                                     
+            triangles->push_back(Triangle((*vertices)[7], (*vertices)[6], (*vertices)[5]));
+            triangles->push_back(Triangle((*vertices)[7], (*vertices)[5], (*vertices)[4]));
+
+            triangles->push_back(Triangle((*vertices)[3], (*vertices)[2], (*vertices)[6]));
+            triangles->push_back(Triangle((*vertices)[3], (*vertices)[6], (*vertices)[7]));
+
+            triangles->push_back(Triangle((*vertices)[4], (*vertices)[5], (*vertices)[1]));
+            triangles->push_back(Triangle((*vertices)[4], (*vertices)[1], (*vertices)[0]));
+
+            triangles->push_back(Triangle((*vertices)[1], (*vertices)[5], (*vertices)[6]));
+            triangles->push_back(Triangle((*vertices)[1], (*vertices)[6], (*vertices)[2]));
+
+            triangles->push_back(Triangle((*vertices)[3], (*vertices)[7], (*vertices)[4]));
+            triangles->push_back(Triangle((*vertices)[3], (*vertices)[4], (*vertices)[0]));
         }
-        else {
-            triangles->clear();
-        }
-        //south
-        triangles->push_back(Triangle((*vertices)[0], (*vertices)[1], (*vertices)[2]));
-        triangles->push_back(Triangle((*vertices)[0], (*vertices)[2], (*vertices)[3]));
-        //                                                     
-        triangles->push_back(Triangle((*vertices)[7], (*vertices)[6], (*vertices)[5]));
-        triangles->push_back(Triangle((*vertices)[7], (*vertices)[5], (*vertices)[4]));
-                             
-        triangles->push_back(Triangle((*vertices)[3], (*vertices)[2], (*vertices)[6]));
-        triangles->push_back(Triangle((*vertices)[3], (*vertices)[6], (*vertices)[7]));
-                                
-        triangles->push_back(Triangle((*vertices)[4], (*vertices)[5], (*vertices)[1]));
-        triangles->push_back(Triangle((*vertices)[4], (*vertices)[1], (*vertices)[0]));
-                                                                                    
-        triangles->push_back(Triangle((*vertices)[1], (*vertices)[5], (*vertices)[6]));
-        triangles->push_back(Triangle((*vertices)[1], (*vertices)[6], (*vertices)[2]));
-                                                                                    
-        triangles->push_back(Triangle((*vertices)[3], (*vertices)[7], (*vertices)[4]));
-        triangles->push_back(Triangle((*vertices)[3], (*vertices)[4], (*vertices)[0]));
 
         return triangles;
     }
 };
+
+class Plane : Mesh
+{
+public:
+    Plane(int scale = 1, Vec3 position = Vec3(0, 0, 0), Vec3 rotationEuler = Vec3(0, 0, 0))
+        :Mesh(scale, position, rotationEuler) {}
+
+    List<Triangle>* MapVertsToTriangles()
+    {
+        static int calls = 0;
+        if (calls < 1)
+        {
+            this->vertices = new List<Vec3> {
+                Vec3(-1, -1, 0),
+                Vec3(-1, 1, 0),
+                Vec3(1, 1, 0),
+                Vec3(1, -1, 0)
+            };
+
+            this->triangles = new List<Triangle>{
+                Triangle((*vertices)[0], (*vertices)[1], (*vertices)[2]),
+                Triangle((*vertices)[0], (*vertices)[2], (*vertices)[3])
+            };
+        }
+
+        return triangles;
+    }
+};
+
+Mesh* LoadMeshFromOBJFile(string objFile) {
+    // ----------- Read object file -------------
+    List<string> strings;
+    string line;
+    std::ifstream file;
+
+    file.open(objFile);
+    if (file.is_open())
+    {
+        while (file) {
+            // 1st. Gets the next line.
+            // 2nd. Seperates each word from that line then stores each word into the strings array.
+            getline(file, line);
+            string s;
+            stringstream ss(line);
+            while (getline(ss, s, ' ')) {
+                strings.push_back(s);
+            }
+        }
+    }
+    file.close();
+
+    // -----------------Construct new mesh-------------------
+    // v = vertex
+    // f = face.
+    List<Vec3>* verts = new List<Vec3>();
+    verts->reserve(100);
+    List<Triangle>* triangles = new List<Triangle>();
+    triangles->reserve(100);
+
+    for (size_t i = 0; i < strings.size(); i++)
+    {
+        string str = strings[i];
+
+        if (str == "v") {
+            float x = stof(strings[++i]);
+            float y = stof(strings[++i]);
+            float z = stof(strings[++i]);
+            verts->push_back(Vec3(x, y, z));
+            //std::cout << "(" << x << ", " << y << ", " << z << ")" << endl;
+        }
+        else if (str == "f") { // means the next 3 strings will be the indices for mapping vertices
+            int p3Index = stof(strings[++i]);
+            int p2Index = stof(strings[++i]);
+            int p1Index = stof(strings[++i]);
+            Triangle tri = Triangle(verts->at(p1Index - 1), verts->at(p2Index - 1), verts->at(p3Index - 1));
+            triangles->push_back(tri);
+        }
+    }
+
+    Mesh* mesh = new Mesh();
+    mesh->vertices = verts;
+    mesh->triangles = triangles;
+
+    return mesh;
+}
+
+#endif
