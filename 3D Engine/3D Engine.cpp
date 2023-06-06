@@ -33,7 +33,8 @@ void Debug()
         std::cout << "Triangles Drawn:" << Mesh::worldTriangleDrawCount << std::endl;
     }
 }
-
+Mesh* textHelloWorld;
+Mesh* planet;
 void Init(GLFWwindow* window)
 {
     glfwSetScrollCallback(window, OnScrollEvent);
@@ -43,11 +44,9 @@ void Init(GLFWwindow* window)
     glfwSetCursorPos(window, screenWidth / 2.0, screenHeight / 2.0);
 
     World::SetScale(1);
-    Camera::main->position = World::back * 10;
     CubeMesh* cube1 = new CubeMesh(1, Vec3(-5, -5, -10));
     CubeMesh* cube2 = new CubeMesh(1, Vec3(-5, 5, -20));
     CubeMesh* cube3 = new CubeMesh(1, Vec3(5, 5, -30));
-    CubeMesh* cube4 = new CubeMesh(10, Vec3(5, -5, -40));
     CubeMesh* cube5 = new CubeMesh(1, Vec3(-5, -5, 10));
     CubeMesh* cube6 = new CubeMesh(1, Vec3(-5, 5, 20));
     CubeMesh* cube7 = new CubeMesh(1, Vec3(5, 5, 30));
@@ -56,22 +55,35 @@ void Init(GLFWwindow* window)
     cube1->color = Color(255, 0, 0);
     cube2->color = Color(255, 255, 0);
     cube3->color = Color(0, 255, 255);
-    cube4->color = Color(255, 0, 255);
     cube5->color = Color(0, 0, 255);
 
-    Mesh* mesh = LoadMeshFromOBJFile("Objects/Sphere.obj");
-    mesh->scale = Vec3(500, 500, 500);
-    mesh->position += World::forward * 1000;
-    //mesh = LoadMeshFromOBJFile("Objects/tinker.obj");
+    planet = LoadMeshFromOBJFile("Objects/Sphere.obj");
+    planet->scale = Vec3(500, 500, 500);
+    planet->position += World::forward * 1000;
+    planet->color = Color(0, 255, 0);
+    textHelloWorld = LoadMeshFromOBJFile("Objects/Hello3DWorldText.obj");
+
+    /*    Vertex planetTop;
+        for (size_t i = 0; i < planet->vertices->size(); i++)
+        {
+            Vertex v = planet->ScaleMatrix4x4() * planet->vertices->at(i);
+            if (v.y > planetTop.y) {
+                planetTop = planet->position + v+World::up*100;
+            }
+        }/**/
+    textHelloWorld->scale = Vec3(2, 2, 2);
+    textHelloWorld->position = Vec3(0, 0, -500);
+    textHelloWorld->color = Vec3(255, 255, 255);
     //Mesh* guitar = LoadMeshFromOBJFile("Objects/Guitar.obj");
     //guitar->position += (Camera::main->Forward() * 10) + Camera::main->Right();
     //Mesh* chair = LoadMeshFromOBJFile("Objects/Chair.obj");
     //chair->position += (Camera::main->Forward() * 10) + Camera::main->Left();
 
-    Plane* plane = new Plane(1, Vec3(0,0,0), Vec3(0,0,0));
+    Plane* plane = new Plane(1, Vec3(0, 0, 0), Vec3(0, 0, 0));
     Camera* camera2 = new Camera(Vec3(0, 50, 0), Vec3(-90 * PI / 180, 0, 0));
+
 }
-    
+
 void Draw()
 {
     Mesh::DrawMeshes();

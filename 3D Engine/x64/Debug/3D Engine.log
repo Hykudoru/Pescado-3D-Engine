@@ -43,6 +43,11 @@ Z:\3D Engine\3D Engine\Graphics.h(271,33): warning C4244: 'argument': conversion
           [
               T=float
           ]
+Z:\3D Engine\3D Engine\Graphics.h(456,75): warning C4305: 'argument': truncation from 'double' to 'const T'
+          with
+          [
+              T=float
+          ]
 Z:\3D Engine\3D Engine\Graphics.h(458,71): warning C4305: 'argument': truncation from 'double' to 'float'
 Z:\3D Engine\3D Engine\Graphics.h(467,111): warning C4244: 'argument': conversion from 'double' to 'T', possible loss of data
           with
@@ -90,5 +95,4 @@ Z:\3D Engine\3D Engine\Input.h(35,39): warning C4244: 'argument': conversion fro
 Z:\3D Engine\3D Engine\Input.h(42,24): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
 Z:\3D Engine\3D Engine\Input.h(157,63): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
 Z:\3D Engine\3D Engine\Input.h(161,64): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
-LINK : warning LNK4098: defaultlib 'MSVCRT' conflicts with use of other libs; use /NODEFAULTLIB:library
   3D Engine.vcxproj -> Z:\3D Engine\x64\Debug\3D Engine.exe

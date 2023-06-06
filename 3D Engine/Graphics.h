@@ -453,7 +453,7 @@ public:
             Color triColor = this->color;
             if (GraphicSettings::lighting && GraphicSettings::fillTriangles)
             {
-                Vec3 lightSource = World::up + World::right;
+                Vec3 lightSource = World::up + World::right + World::back*.3;
                 float amountFacingLight = DotProduct((Vec3)worldSpaceTri.Normal(), lightSource);
                 Color colorLit = (triColor * Clamp(amountFacingLight, 0.15, 1));
                 
