@@ -268,14 +268,15 @@ struct Triangle
         }
 
         if (GraphicSettings::fillTriangles)
-        {
+        {   glColor3ub(tri.color.x, tri.color.y, tri.color.z);
             glBegin(GL_TRIANGLES);
-            glColor3ub(tri.color.x, tri.color.y, tri.color.z);
             glVertex2f(p1.x, p1.y);
             glVertex2f(p2.x, p2.y);
             glVertex2f(p3.x, p3.y);
             glEnd();
         }
+
+        glColor3ub(255, 255, 255);
     }
 };
 
@@ -512,7 +513,22 @@ public:
             };
             projectedTri.centroid = ProjectPoint(centroid);
             projectedTri.color = triColor;
+            /*p1 = projectedTri.verts[0];
+            p2 = projectedTri.verts[0];
+            p3 = projectedTri.verts[0];
+            
+            Vec3 screenLeftSide = Vec3(-1, 0, 0);
+            Vec3 screenRightSide = Vec3(1, 0, 0);
+            bool insideX = (DotProduct(screenLeftSide, (p1-screenLeftSide).Normalized()) < -0.5);// && Clamp(DotProduct(screenRightSide, (p1).Normalized()), -1, 1)) < 0;
+            //bool p1Inside = (p1.x > -1 && p1.x < 1) && (p1.y > -1 && p1.y < 1);
+            if (insideX) {
+                projectedTri.color = Color(0, 0, 255);// std::cout << "Inside" << std::endl;
+            }
+            else {
+                projectedTri.color = Color(255, 0, 0);// std::cout << "Inside" << std::endl;
 
+                //std::cout << "Outside" << std::endl;
+            }*/
             //Add projected tri
             triBuffer->push_back(projectedTri);
         }
@@ -526,8 +542,6 @@ public:
             init = true;
         }
 
-        Mesh::worldTriangleDrawCount = 0;
-
         // Transform
         for (int i = 0; i < Mesh::meshCount; i++)
         {
@@ -535,7 +549,6 @@ public:
         }
 
         Mesh::worldTriangleDrawCount = triBuffer->size();
-        std::cout << "Triangle draw count:" << Mesh::worldTriangleDrawCount << std::endl;
 
         // Depth Sort (painting algorithm)
         sort(triBuffer->begin(), triBuffer->end(), [](const Triangle& triA, const Triangle& triB) -> bool

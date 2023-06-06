@@ -1,5 +1,5 @@
 #pragma once
-//#include <GL/glew.h>
+#include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
 #include <fstream>
@@ -11,6 +11,28 @@
 #include <Physics.h>
 #include <Input.h>
 using namespace std;
+
+// Checking if DEBUGGING true in other scripts before using cout also ensures readable slow incremental output.
+bool DEBUGGING;
+void Debug()
+{
+    //debugging
+    DEBUGGING = false;
+    static double coutTimer = 0;
+    coutTimer += deltaTime;
+    if (coutTimer > 0.25 && coutTimer < 0.25 + deltaTime)
+    {
+        DEBUGGING = true;
+        coutTimer = 0;
+    }
+
+    if (DEBUGGING)
+    {
+        std::cout << "FPS:" << fps << std::endl;
+        std::cout << "Frame Time:" << 1.0 / (double)fps << std::endl;
+        std::cout << "Triangles Drawn:" << Mesh::worldTriangleDrawCount << std::endl;
+    }
+}
 
 void Init(GLFWwindow* window)
 {
@@ -48,7 +70,6 @@ void Init(GLFWwindow* window)
 
     Plane* plane = new Plane(1, Vec3(0,0,0), Vec3(0,0,0));
     Camera* camera2 = new Camera(Vec3(0, 50, 0), Vec3(-90 * PI / 180, 0, 0));
-
 }
     
 void Draw()
@@ -91,6 +112,7 @@ int main(void)
         Input(window);
         Physics(window);
         Draw();
+        Debug();
 
         /* Swap front and back buffers */
         glfwSwapBuffers(window);

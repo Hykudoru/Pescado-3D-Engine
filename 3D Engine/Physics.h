@@ -10,6 +10,7 @@ using namespace std;
 
 double deltaTime = 0;
 int fps = 0;
+
 void Time()
 {
     static double prevTime = 0;
@@ -23,7 +24,6 @@ void Time()
     t += deltaTime;
     frames++;
     fps = ((double)frames) / t;
-    std::cout << "FPS:" << fps << std::endl;
     if (t >= 1.0)
     {
         t = 0;
