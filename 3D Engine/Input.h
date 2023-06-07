@@ -77,7 +77,7 @@ void OnKeyPressEvent(GLFWwindow* window, int key, int scancode, int action, int 
         }
 
         //------------------Physics-------------------
-        // 
+
         // Toggle momentum
         else if (key == GLFW_KEY_X) {
             velocity = Vec3(0, 0, 0);//Reset every toggle state
@@ -115,6 +115,10 @@ void OnKeyPressEvent(GLFWwindow* window, int key, int scancode, int action, int 
         else if (key == GLFW_KEY_ESCAPE)
         {
             mouseCameraControlEnabled = !mouseCameraControlEnabled;
+        }
+        else if (key == GLFW_KEY_SLASH)
+        {
+            GraphicSettings::vfx = !GraphicSettings::vfx;
         }
     }
 }

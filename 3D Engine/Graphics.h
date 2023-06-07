@@ -11,10 +11,32 @@ using namespace std;
 
 #ifndef GRAPHICS_H
 #define GRAPHICS_H
-
-const float PI = 3.14159265359f;
 #define Color Vector3<float>
+class RGB : Vector3<float>
+{
+public:
+    static Color black;
+    static Color white;
+    static Color red;
+    static Color green;
+    static Color blue;
+    static Color pink;
+    static Color yellow;
+    static Color turquoise;
+    static Color orange;
+};
+Color RGB::black = Color(0, 0, 0);
+Color RGB::white = Color(255, 255, 255);
+Color RGB::red = Color(255, 0, 0);
+Color RGB::green = Color(0, 255, 0);
+Color RGB::blue = Color(0, 0, 255);
+Color RGB::pink = Color(255, 0, 255);
+Color RGB::yellow = Color(255, 255, 0);
+Color RGB::turquoise = Color(0, 255, 255);
+Color RGB::orange = Color(255, 158, 0);
+
 #define List std::vector
+const float PI = 3.14159265359f;
 
 float Clamp(float value, float min, float max)
 {
@@ -49,6 +71,7 @@ struct GraphicSettings
     static bool fillTriangles;
     static bool displayWireFrames;
     static bool lighting;
+    static bool vfx;
 };
 bool GraphicSettings::culling = true;
 bool GraphicSettings::invertNormals = false;
@@ -58,6 +81,7 @@ bool GraphicSettings::perspective = true;
 bool GraphicSettings::fillTriangles = true;
 bool GraphicSettings::displayWireFrames = false;
 bool GraphicSettings::lighting = true;
+bool GraphicSettings::vfx = false;
 
 struct World
 {
@@ -184,7 +208,7 @@ struct Triangle
 
     Triangle()
     {
-        color = Color(255, 255, 255);
+        color = RGB::white;
         centroid = Vec3(0, 0, 0);
         normal = Vec3(0, 0, 0);
     };
@@ -194,7 +218,7 @@ struct Triangle
         this->verts[0] = p1;
         this->verts[1] = p2;
         this->verts[2] = p3;
-        color = Color(255, 255, 255);
+        color = RGB::white;
         centroid = Vec3(0, 0, 0);
         normal = Vec3(0, 0, 0);
     }
@@ -402,7 +426,7 @@ public:
     List<Vec3>* vertices;
     List<Triangle>* triangles;
     virtual List<Triangle>* MapVertsToTriangles() { return triangles; }
-    Color color = Color(255, 255, 255);
+    Color color = RGB::white;
 
     Mesh(float scale = 1, Vec3 position = Vec3(0, 0, 0), Vec3 rotationEuler = Vec3(0, 0, 0))
     : Transform(scale, position, rotationEuler)
@@ -435,7 +459,7 @@ public:
             {
                 // Homogeneous coords (x, y, z, w=1)
                 Vec4 vert = tri.verts[j];
-                
+
                 // =================== WORLD SPACE ===================
                 // Transform local coords to world-space coords.
 
@@ -453,10 +477,10 @@ public:
             Color triColor = this->color;
             if (GraphicSettings::lighting && GraphicSettings::fillTriangles)
             {
-                Vec3 lightSource = World::up + World::right + World::back*.3;
+                Vec3 lightSource = World::up + World::right + World::back * .3;
                 float amountFacingLight = DotProduct((Vec3)worldSpaceTri.Normal(), lightSource);
                 Color colorLit = (triColor * Clamp(amountFacingLight, 0.15, 1));
-                
+
                 triColor = colorLit;
             }
 
@@ -513,22 +537,21 @@ public:
             };
             projectedTri.centroid = ProjectPoint(centroid);
             projectedTri.color = triColor;
-            /*p1 = projectedTri.verts[0];
-            p2 = projectedTri.verts[0];
-            p3 = projectedTri.verts[0];
             
-            Vec3 screenLeftSide = Vec3(-1, 0, 0);
-            Vec3 screenRightSide = Vec3(1, 0, 0);
-            bool insideX = (DotProduct(screenLeftSide, (p1-screenLeftSide).Normalized()) < -0.5);// && Clamp(DotProduct(screenRightSide, (p1).Normalized()), -1, 1)) < 0;
-            //bool p1Inside = (p1.x > -1 && p1.x < 1) && (p1.y > -1 && p1.y < 1);
-            if (insideX) {
-                projectedTri.color = Color(0, 0, 255);// std::cout << "Inside" << std::endl;
-            }
-            else {
-                projectedTri.color = Color(255, 0, 0);// std::cout << "Inside" << std::endl;
+            if (GraphicSettings::vfx)
+            {
+                Vec3 screenLeftSide = Vec3(-1, 0, 0);
+                Vec3 screenRightSide = Vec3(1, 0, 0);
+                bool leftHalfScreenX = DotProduct(screenLeftSide, (((Vec3)projectedTri.Centroid()) - screenLeftSide).Normalized()) < -0.5;
 
-                //std::cout << "Outside" << std::endl;
-            }*/
+                if (leftHalfScreenX) {
+                    projectedTri.color = Color(0, 0, 255);// std::cout << "Inside" << std::endl;
+                }
+                else {
+                    projectedTri.color = RGB::red;
+                }
+            }
+
             //Add projected tri
             triBuffer->push_back(projectedTri);
         }
