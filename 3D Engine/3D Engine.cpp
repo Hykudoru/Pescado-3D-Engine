@@ -13,7 +13,7 @@
 using namespace std;
 
 // Checking if DEBUGGING true in other scripts before using cout also ensures readable slow incremental output.
-bool DEBUGGING;
+bool DEBUGGING = false;
 void Debug()
 {
     //debugging
@@ -56,24 +56,25 @@ void Init(GLFWwindow* window)
     cube2->color = Color(255, 255, 0);
     cube3->color = Color(0, 255, 255);
     cube5->color = Color(0, 0, 255);
-
+/*
     planet = LoadMeshFromOBJFile("Objects/Sphere.obj");
     planet->scale = Vec3(500, 500, 500);
     planet->position += World::forward * 1000;
     planet->color = Color(0, 255, 0);
     textHelloWorld = LoadMeshFromOBJFile("Objects/Hello3DWorldText.obj");
-
-    /*    Vertex planetTop;
+    
+        Vertex planetTop;
         for (size_t i = 0; i < planet->vertices->size(); i++)
         {
             Vertex v = planet->ScaleMatrix4x4() * planet->vertices->at(i);
             if (v.y > planetTop.y) {
                 planetTop = planet->position + v+World::up*100;
             }
-        }/**/
+        }
     textHelloWorld->scale = Vec3(2, 2, 2);
     textHelloWorld->position = Vec3(0, 0, -500);
     textHelloWorld->color = Vec3(255, 255, 255);
+    */
     //Mesh* guitar = LoadMeshFromOBJFile("Objects/Guitar.obj");
     //guitar->position += (Camera::main->Forward() * 10) + Camera::main->Right();
     //Mesh* chair = LoadMeshFromOBJFile("Objects/Chair.obj");
@@ -83,7 +84,12 @@ void Init(GLFWwindow* window)
     Camera* camera2 = new Camera(Vec3(0, 50, 0), Vec3(-90 * PI / 180, 0, 0));
 
 }
+ 
+void Update()
+{
 
+        
+}
 void Draw()
 {
     Mesh::DrawMeshes();
@@ -123,8 +129,10 @@ int main(void)
         Time();
         Input(window);
         Physics(window);
+        Update();
         Draw();
         Debug();
+
 
         /* Swap front and back buffers */
         glfwSwapBuffers(window);

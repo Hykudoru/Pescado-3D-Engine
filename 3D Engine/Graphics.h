@@ -11,6 +11,7 @@ using namespace std;
 
 #ifndef GRAPHICS_H
 #define GRAPHICS_H
+
 #define Color Vector3<float>
 class RGB : Vector3<float>
 {
@@ -304,6 +305,30 @@ struct Triangle
     }
 };
 
+bool LinePlaneIntersection(Vec3& lineStart, Vec3& lineEnd, Triangle& plane, Vec3* pointIntersecting)
+{
+    Vec3 line = (Vec3)lineEnd - (Vec3)lineStart;
+
+    Vec3 n = plane.Normal();
+    Vec3 pointPlane = plane.Centroid();
+
+    float t = (-DotProduct(n, (Vec3)lineStart) + DotProduct(n, pointPlane)) / DotProduct(n, line);
+    *pointIntersecting = ((Vec3)lineStart) + (line * t);
+
+    return (DotProduct(*pointIntersecting - lineStart, line.Normalized()) > 0);
+}
+
+bool PointInsideTriangle(const Vec3 &p, const Triangle &tri)
+{
+    Vec3 A = tri.verts[0];
+    Vec3 B = tri.verts[1];
+    Vec3 C = tri.verts[2];
+    float w1 = ( ((p.x-A.x)*(C.y-A.y)) - ((p.y-A.y)*(C.x-A.x)) ) / ( ((B.x-A.x)*(C.y-A.y)) - ((B.y-A.y)*(C.x-A.x)) );
+    float w2 = ( (p.y - A.y)-(w1*(B.y-A.y)) ) / (C.y-A.y);
+
+    return (w1 >= 0 && w2 >= 0 && (w1 + w2) <= 1);
+}
+
 List<Triangle>* triBuffer = new List<Triangle>(10000);
 
 class Transform
@@ -422,7 +447,7 @@ public:
     static List<Mesh*> meshes;
     static int meshCount;
     static int worldTriangleDrawCount;
-    
+                                                                                                    static Mesh* meshDebug;
     List<Vec3>* vertices;
     List<Triangle>* triangles;
     virtual List<Triangle>* MapVertsToTriangles() { return triangles; }
@@ -517,6 +542,26 @@ public:
                 }
             }
 
+            Vec3 lineStart = Camera::cameras[0]->position;
+            Vec3 lineEnd = lineStart + (Camera::cameras[0]->Forward() * farClippingPlane);
+            Vec3 p = Vec3();
+            if(LinePlaneIntersection(lineStart, lineEnd, worldSpaceTri, &p))
+            {
+                //if (PointInsideTriangle(p, worldSpaceTri))
+                //{
+                    Vec4 lStartProj = (ProjectionMatrix() * Camera::main->TRInverse()) * lineStart;
+                    Vec4 lEndProj = (ProjectionMatrix() * Camera::main->TRInverse()) * lineEnd;
+                    Line(lStartProj.x, lStartProj.y, lEndProj.x, lEndProj.y);
+
+                    p = (ProjectionMatrix() * Camera::main->TRInverse()) * p;
+                    glPointSize(10);
+                    Point(p.x, p.y);
+                    glPointSize(2);
+
+                    triColor = RGB::pink;
+                //}
+            }
+
             // ================ SCREEN SPACE ==================
             // Project to screen space (image space) 
 
@@ -591,6 +636,7 @@ public:
 List<Mesh*> Mesh::meshes = List<Mesh*>(1000);
 int Mesh::meshCount = 0;
 int Mesh::worldTriangleDrawCount = 0;
+
 
 
 
@@ -733,5 +779,4 @@ Mesh* LoadMeshFromOBJFile(string objFile) {
 
     return mesh;
 }
-
 #endif
