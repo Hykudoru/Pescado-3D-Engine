@@ -45,7 +45,9 @@ void Init(GLFWwindow* window)
     glfwSetCursorPos(window, screenWidth / 2.0, screenHeight / 2.0);
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
 
-    World::SetScale(1);
+    glLineWidth(2);
+    glPointSize(2);
+
     CubeMesh* cube1 = new CubeMesh(1, Vec3(-5, -5, -10));
     CubeMesh* cube2 = new CubeMesh(1, Vec3(-5, 5, -20));
     CubeMesh* cube3 = new CubeMesh(1, Vec3(5, 5, -30));
@@ -61,7 +63,7 @@ void Init(GLFWwindow* window)
 
     planet = LoadMeshFromOBJFile("Objects/Sphere.obj");
     planet->scale = Vec3(500, 500, 500);
-    planet->position += World::forward * 1000;
+    planet->position += Vec3D::forward * 1000;
     planet->color = RGB::white;
     
     textHelloWorld = LoadMeshFromOBJFile("Objects/Hello3DWorldText.obj");
@@ -111,8 +113,7 @@ int main(void)
     //glewInit();
     Init(window);
     
-    glLineWidth(2);
-    glPointSize(2);
+   
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
     {

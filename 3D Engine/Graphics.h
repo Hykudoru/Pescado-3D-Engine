@@ -13,9 +13,8 @@ using namespace std;
 #define GRAPHICS_H
 
 #define Color Vector3<float>
-class RGB : Vector3<float>
+struct RGB : Vector3<float>
 {
-public:
     static Color black;
     static Color white;
     static Color red;
@@ -57,6 +56,7 @@ float ToDeg(float rad) {
 float ToRad(float deg) {
     return deg * PI / 180.0;
 }
+
 int screenWidth = 800;//700;//screen.width - 20;
 int screenHeight = 800; //screen.height - 20; //screen.height;// - 30;
 
@@ -84,39 +84,23 @@ bool GraphicSettings::displayWireFrames = false;
 bool GraphicSettings::lighting = true;
 bool GraphicSettings::vfx = false;
 
-struct World
+static float worldScale = 1;
+
+struct Vec3D
 {
-private:
-    static float worldScale;
-public:
     static Vec3 forward;
     static Vec3 back;
     static Vec3 right;
     static Vec3 left;
     static Vec3 up;
     static Vec3 down;
-    
-    static void SetScale(float val)
-    {
-        if (val <= 0.0)
-        {
-            return;
-        }
-        worldScale = val;
-    }
-
-    static float GetScale()
-    {
-        return worldScale;
-    }
 };
-float World::worldScale = 1;
-Vec3 World::forward = Vec3(0, 0, -1);
-Vec3 World::back = Vec3(0, 0, 1);
-Vec3 World::right = Vec3(1, 0, 0);
-Vec3 World::left = Vec3(-1, 0, 0);
-Vec3 World::up = Vec3(0, 1, 0);
-Vec3 World::down = Vec3(0, -1, 0);
+Vec3 Vec3D::forward = Vec3(0, 0, -1);
+Vec3 Vec3D::back = Vec3(0, 0, 1);
+Vec3 Vec3D::right = Vec3(1, 0, 0);
+Vec3 Vec3D::left = Vec3(-1, 0, 0);
+Vec3 Vec3D::up = Vec3(0, 1, 0);
+Vec3 Vec3D::down = Vec3(0, -1, 0);
 
 float aspectRatio = screenWidth / screenHeight;
 float nearClippingPlane = -0.1;
@@ -162,17 +146,8 @@ void Point(float x, float y)
     glBegin(GL_POINTS);
     glVertex2f(x, y);
     glEnd();
-}/*
-void Points(Vec2 verts[])
-{
-    glBegin(GL_POINTS);
-    glVertex2f(-0.5, -0.5);
-    glVertex2f(-0.5, 0.5);
+}
 
-    glVertex2f(0.5, 0.5);
-    glVertex2f(0.5, -0.5);
-    glEnd();
-}*/
 void Line(float x0, float y0, float x, float y)
 {
     glBegin(GL_LINES);
@@ -195,8 +170,8 @@ Vec4 ProjectPoint(Vec4 point)
 {
     point = ProjectionMatrix() * point;
 
-    point.x *= World::GetScale();
-    point.y *= World::GetScale();
+    point.x *= worldScale;
+    point.y *= worldScale;
     return point;
 }
 
@@ -305,24 +280,22 @@ struct Triangle
     }
 };
 
-bool LinePlaneIntersection(Vec3& lineStart, Vec3& lineEnd, Triangle& plane, Vec3* pointIntersecting)
+bool LinePlaneIntersect(Vec3& lineStart, Vec3& lineEnd, Triangle& plane, Vec3* pointIntersecting)
 {
     Vec3 line = lineEnd - lineStart;
+    Vec3 dir = line.Normalized();
     Vec3 n = plane.Normal();
     Vec3 pointPlane = plane.verts[0];// plane.Centroid();
 
-    double t = (DotProduct(n, pointPlane) - DotProduct(n, lineStart)) / DotProduct(n, line);
-    *pointIntersecting = lineStart + (line * t);
+    double t = (round(DotProduct(n, pointPlane - lineStart))) / DotProduct(n, dir);
+    Vec3 p = lineStart + (dir * t);
     
-    if (DotProduct((pointPlane - lineStart).Normalized(), (lineStart+line).Normalized()) > 0.0)
+    if (round(DotProduct((p - lineStart).Normalized(), dir)) > 0.0)
     {
-        bool equal = round(DotProduct(n, (*pointIntersecting-pointPlane))) == 0.0;
-        if (equal)
-        {
-            return true;
-        }
+        *pointIntersecting = p;
+        return true;
     }
-
+    
     return false;
 }
 
@@ -345,12 +318,12 @@ public:
     Vec3 scale = Vec3(1, 1, 1);
     Vec3 position = Vec3(0, 0, 0);
     Matrix3x3 rotation = Identity3x3;
-    Vec3 Forward() { return this->rotation * World::forward; }
-    Vec3 Back() { return this->rotation * World::back; }
-    Vec3 Right() { return this->rotation * World::right; }
-    Vec3 Left() { return this->rotation * World::left; }
-    Vec3 Up() { return this->rotation * World::up; }
-    Vec3 Down() { return this->rotation * World::down; }
+    Vec3 Forward() { return this->rotation * Vec3D::forward; }
+    Vec3 Back() { return this->rotation * Vec3D::back; }
+    Vec3 Right() { return this->rotation * Vec3D::right; }
+    Vec3 Left() { return this->rotation * Vec3D::left; }
+    Vec3 Up() { return this->rotation * Vec3D::up; }
+    Vec3 Down() { return this->rotation * Vec3D::down; }
     Vec3 LocalPosition() { return Matrix4x4(this->TranslationMatrix4x4Inverse()) * Vec4(position.x, position.y, position.z, 1); }
 
     Transform(float scale = 1, Vec3 position = Vec3(0, 0, 0), Vec3 rotationEuler = Vec3(0, 0, 0))
@@ -449,6 +422,7 @@ int Camera::cameraCount = 0;
 Camera* cam = new Camera();
 Camera* Camera::main = cam;
 
+
 class Mesh : public Transform
 {
 public:
@@ -476,7 +450,7 @@ public:
             return;
         }
         
-        Matrix4x4 modelToWorldMatrix = TRS();
+        Matrix4x4 modelToWorldMatrix = this->TRS();
         Matrix4x4 worldToViewMatrix = Camera::main->TRInverse();
         Matrix4x4 projectionMatrix = ProjectionMatrix();
         //Matrix4x4 mvp = projectionMatrix * worldToViewMatrix * modelToWorldMatrix;
@@ -510,7 +484,7 @@ public:
             Color triColor = this->color;
             if (GraphicSettings::lighting && GraphicSettings::fillTriangles)
             {
-                Vec3 lightSource = World::up + World::right + World::back * .3;
+                Vec3 lightSource = Vec3D::up + Vec3D::right + Vec3D::back * .3;
                 float amountFacingLight = DotProduct((Vec3)worldSpaceTri.Normal(), lightSource);
                 Color colorLit = (triColor * Clamp(amountFacingLight, 0.15, 1));
 
@@ -525,7 +499,7 @@ public:
 
             bool tooCloseToCamera = (p1.z >= nearClippingPlane || p2.z >= nearClippingPlane || p3.z >= nearClippingPlane || centroid.z >= nearClippingPlane);
             bool tooFarFromCamera = (p1.z <= farClippingPlane || p2.z <= farClippingPlane || p3.z <= farClippingPlane || centroid.z <= farClippingPlane);
-            bool behindCamera = DotProduct(centroid.Normalized(), World::forward) <= 0.0;
+            bool behindCamera = DotProduct(centroid.Normalized(), Vec3D::forward) <= 0.0;
             if (tooCloseToCamera || tooFarFromCamera || behindCamera) {
                 continue; // Skip triangle if it's out of cam view.
             }
@@ -585,18 +559,26 @@ public:
                 }
             }
 
-            Vec3 lineStart = Vec3();
-            Vec3 lineEnd = lineStart + World::forward * farClippingPlane;
+            Vec3 lineStart = Camera::cameras[1]->position;
+            Vec3 lineEnd = lineStart + Camera::cameras[1]->Forward() * abs(farClippingPlane);
             Vec3 pointOfIntersection;
-            LinePlaneIntersection(lineStart, lineEnd, camSpaceTri, &pointOfIntersection);
-            Vec4 pointOfIntersectionProj = projectionMatrix * pointOfIntersection;
-            if (PointInsideTriangle(pointOfIntersectionProj, projectedTri))
+            if (LinePlaneIntersect(lineStart, lineEnd, worldSpaceTri, &pointOfIntersection))
             {
-                Vec4 lStartProj = projectionMatrix * worldToViewMatrix * lineStart;
-                Vec4 lEndProj = projectionMatrix * worldToViewMatrix * lineEnd;
-                Line(lStartProj.x, lStartProj.y, lEndProj.x, lEndProj.y);
-                Point(pointOfIntersectionProj.x, pointOfIntersectionProj.y);
-                projectedTri.color = RGB::white;
+
+                Vec4 pointOfIntersectionProj = projectionMatrix * worldToViewMatrix * pointOfIntersection;
+                if (PointInsideTriangle(pointOfIntersectionProj, projectedTri))
+                {
+                    Vec4 lStartProj = projectionMatrix * worldToViewMatrix * lineStart;
+                    Vec4 lEndProj = projectionMatrix * worldToViewMatrix * lineEnd;
+                    Line(lStartProj.x, lStartProj.y, lEndProj.x, lEndProj.y);
+                    glLineWidth(2);
+                    glPointSize(10);
+                    glColor3b(0, 255, 255);
+                    Point(pointOfIntersectionProj.x, pointOfIntersectionProj.y);
+                    glLineWidth(2);
+                    glPointSize(2);
+                    projectedTri.color = RGB::white;
+                }
             }
 
             //Add projected tri
@@ -638,9 +620,6 @@ public:
 List<Mesh*> Mesh::meshes = List<Mesh*>(1000);
 int Mesh::meshCount = 0;
 int Mesh::worldTriangleDrawCount = 0;
-
-
-
 
 class CubeMesh : public Mesh
 {
