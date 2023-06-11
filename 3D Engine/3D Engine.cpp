@@ -43,6 +43,7 @@ void Init(GLFWwindow* window)
     glfwSetKeyCallback(window, OnKeyPressEvent);
     glfwGetWindowSize(window, &screenWidth, &screenHeight);
     glfwSetCursorPos(window, screenWidth / 2.0, screenHeight / 2.0);
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
 
     World::SetScale(1);
     CubeMesh* cube1 = new CubeMesh(1, Vec3(-5, -5, -10));
