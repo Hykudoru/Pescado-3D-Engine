@@ -41,6 +41,7 @@ bool dampenersActive = true;
 Vec3 moveDir = Vec3(0, 0, 0);
 Vec3 velocity = Vec3(0, 0, 0);
 
+extern Mesh* planet;
 static void Physics(GLFWwindow* window)
 {
     //---------- Physics Update ------------
@@ -56,7 +57,8 @@ static void Physics(GLFWwindow* window)
         Camera::main->position += moveDir * moveSpeed * deltaTime;
     }
 
-    Mesh::meshes[0]->rotation = Matrix3x3::RotZ(2 * PI * deltaTime) * Mesh::meshes[0]->rotation;// MatrixMultiply(YPR(angle * ((screenWidth / 2)), angle * -((screenWidth / 2)), 0), Mesh.meshes[1].rotation);
+    float planetRotationSpeed = 1.5*PI / 180 * deltaTime;
+    planet->rotation = Matrix3x3::RotX(-planetRotationSpeed) * Matrix3x3::RotY(planetRotationSpeed+0.000001) * planet->rotation;// MatrixMultiply(YPR(angle * ((screenWidth / 2)), angle * -((screenWidth / 2)), 0), Mesh.meshes[1].rotation);
 
     for (size_t i = 0; i < Mesh::meshes.size(); i++)
     {

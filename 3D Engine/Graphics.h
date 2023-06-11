@@ -307,15 +307,23 @@ struct Triangle
 
 bool LinePlaneIntersection(Vec3& lineStart, Vec3& lineEnd, Triangle& plane, Vec3* pointIntersecting)
 {
-    Vec3 line = (Vec3)lineEnd - (Vec3)lineStart;
-
+    Vec3 line = lineEnd - lineStart;
     Vec3 n = plane.Normal();
-    Vec3 pointPlane = plane.Centroid();
+    Vec3 pointPlane = plane.verts[0];// plane.Centroid();
 
-    float t = (-DotProduct(n, (Vec3)lineStart) + DotProduct(n, pointPlane)) / DotProduct(n, line);
-    *pointIntersecting = ((Vec3)lineStart) + (line * t);
+    double t = (DotProduct(n, pointPlane) - DotProduct(n, lineStart)) / DotProduct(n, line);
+    *pointIntersecting = lineStart + (line * t);
+    
+    if (DotProduct((pointPlane - lineStart).Normalized(), (lineStart+line).Normalized()) > 0.0)
+    {
+        bool equal = round(DotProduct(n, (*pointIntersecting-pointPlane))) == 0.0;
+        if (equal)
+        {
+            return true;
+        }
+    }
 
-    return (DotProduct(*pointIntersecting - lineStart, line.Normalized()) > 0);
+    return false;
 }
 
 bool PointInsideTriangle(const Vec3 &p, const Triangle &tri)
@@ -324,9 +332,9 @@ bool PointInsideTriangle(const Vec3 &p, const Triangle &tri)
     Vec3 B = tri.verts[1];
     Vec3 C = tri.verts[2];
     float w1 = ( ((p.x-A.x)*(C.y-A.y)) - ((p.y-A.y)*(C.x-A.x)) ) / ( ((B.x-A.x)*(C.y-A.y)) - ((B.y-A.y)*(C.x-A.x)) );
-    float w2 = ( (p.y - A.y)-(w1*(B.y-A.y)) ) / (C.y-A.y);
+    float w2 = ( (p.y - A.y) - (w1*(B.y-A.y)) ) / (C.y-A.y);
 
-    return (w1 >= 0 && w2 >= 0 && (w1 + w2) <= 1);
+    return ((w1 >= 0.0 && w2 >= 0.0) && (w1 + w2) <= 1.0);
 }
 
 List<Triangle>* triBuffer = new List<Triangle>(10000);
@@ -470,7 +478,7 @@ public:
         
         Matrix4x4 modelToWorldMatrix = TRS();
         Matrix4x4 worldToViewMatrix = Camera::main->TRInverse();
-        //Matrix4x4 projectionMatrix = ProjectionMatrix();
+        Matrix4x4 projectionMatrix = ProjectionMatrix();
         //Matrix4x4 mvp = projectionMatrix * worldToViewMatrix * modelToWorldMatrix;
         
         //Transform Triangles
@@ -534,32 +542,12 @@ public:
             if (GraphicSettings::culling)
             {
                 // Back-face culling - Checks if the triangles backside is facing the camera.
-                Vec3 normalizedFromCamPos = centroid.Normalized();// Since camera is (0,0,0) in view space, the displacement vector from camera to centroid IS the centroid itself.
-                bool camVisible = DotProduct(normalizedFromCamPos, normal) <= 0;
+                Vec3 posRelativeToCam = centroid.Normalized();// Since camera is (0,0,0) in view space, the displacement vector from camera to centroid IS the centroid itself.
+                bool faceVisibleToCamera = DotProduct(posRelativeToCam.Normalized(), normal) <= 0;
 
-                if (!camVisible) {
+                if (!faceVisibleToCamera) {
                     continue;// Skip triangle if it's out of cam view or it's part of the other side of the mesh.
                 }
-            }
-
-            Vec3 lineStart = Camera::cameras[0]->position;
-            Vec3 lineEnd = lineStart + (Camera::cameras[0]->Forward() * farClippingPlane);
-            Vec3 p = Vec3();
-            if(LinePlaneIntersection(lineStart, lineEnd, worldSpaceTri, &p))
-            {
-                //if (PointInsideTriangle(p, worldSpaceTri))
-                //{
-                    Vec4 lStartProj = (ProjectionMatrix() * Camera::main->TRInverse()) * lineStart;
-                    Vec4 lEndProj = (ProjectionMatrix() * Camera::main->TRInverse()) * lineEnd;
-                    Line(lStartProj.x, lStartProj.y, lEndProj.x, lEndProj.y);
-
-                    p = (ProjectionMatrix() * Camera::main->TRInverse()) * p;
-                    glPointSize(10);
-                    Point(p.x, p.y);
-                    glPointSize(2);
-
-                    triColor = RGB::pink;
-                //}
             }
 
             // ================ SCREEN SPACE ==================
@@ -595,6 +583,20 @@ public:
                 else {
                     projectedTri.color = RGB::red;
                 }
+            }
+
+            Vec3 lineStart = Vec3();
+            Vec3 lineEnd = lineStart + World::forward * farClippingPlane;
+            Vec3 pointOfIntersection;
+            LinePlaneIntersection(lineStart, lineEnd, camSpaceTri, &pointOfIntersection);
+            Vec4 pointOfIntersectionProj = projectionMatrix * pointOfIntersection;
+            if (PointInsideTriangle(pointOfIntersectionProj, projectedTri))
+            {
+                Vec4 lStartProj = projectionMatrix * worldToViewMatrix * lineStart;
+                Vec4 lEndProj = projectionMatrix * worldToViewMatrix * lineEnd;
+                Line(lStartProj.x, lStartProj.y, lEndProj.x, lEndProj.y);
+                Point(pointOfIntersectionProj.x, pointOfIntersectionProj.y);
+                projectedTri.color = RGB::white;
             }
 
             //Add projected tri

@@ -6,36 +6,35 @@
 #include <Physics.h>
 //-----------------Input----------------------
 
-static double prevMouseX;
-static double prevMouseY;
+//static double prevMouseX;
+//static double prevMouseY;
 static double deltaMouseX;
 static double deltaMouseY;
-static double mouseX;
-static double mouseY;
-float mouseSensitivity = .1;
+float mouseSensitivity = .25;
 bool mouseCameraControlEnabled = true;
 
-static void CheckMouseMove(GLFWwindow* window)
+void OnMouseMoveEvent(GLFWwindow* window, double mouseX, double mouseY)
 {
     if (mouseCameraControlEnabled)
     {
-        static  double centerX = (screenWidth / 2.0);
-        static  double centerY = (screenHeight / 2.0);
+        static  double screenCenterX = (screenWidth / 2.0);
+        static  double screenCenterY = (screenHeight / 2.0);
 
-        // Read mouse displacement.
-        // Also subtract centerX and centerY since the mouse will move back to center before next frame.
         glfwGetCursorPos(window, &mouseX, &mouseY);
-        deltaMouseX = mouseX - centerX;
-        deltaMouseY = mouseY - centerY;
-        // Reset cursor to center of screen
-        glfwSetCursorPos(window, centerX, centerY);
 
-        double xAngle = mouseSensitivity * deltaTime * -deltaMouseY;
-        double yAngle = 0.00001 + mouseSensitivity * deltaTime * -deltaMouseX;
+        // Subtract centerX and centerY since the mouse will be forced to move back to the center of the screen before the next frame.
+        deltaMouseX = mouseX - screenCenterX;
+        deltaMouseY = mouseY - screenCenterY;
+
+        // Reset cursor to the center of the screen
+        glfwSetCursorPos(window, screenCenterX, screenCenterY);
+
+        double xAngle = mouseSensitivity * -deltaMouseY * deltaTime;
+        double yAngle = 0.0000001 + mouseSensitivity * -deltaMouseX * deltaTime; // 0.0000001 so no gimbal lock
         Camera::main->rotation *= YPR(xAngle, yAngle, 0);
         //Camera::main->rotation = Matrix3x3::RotX(rotateSpeed * -deltaMouseY) * Camera::main->rotation * Matrix3x3::RotY((0.00001 + rotateSpeed) * -deltaMouseX);
     }
-};
+}
 
 void OnScrollEvent(GLFWwindow* window, double xOffset, double yOffset)
 {
@@ -125,7 +124,7 @@ void OnKeyPressEvent(GLFWwindow* window, int key, int scancode, int action, int 
 
 static void Input(GLFWwindow* window)
 {
-    CheckMouseMove(window);
+    //CheckMouseMove(window);
 
     moveDir = Vec3(0, 0, 0);
     //----------Camera Controls-------

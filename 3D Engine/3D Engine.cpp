@@ -37,6 +37,7 @@ Mesh* textHelloWorld;
 Mesh* planet;
 void Init(GLFWwindow* window)
 {
+    glfwSetCursorPosCallback(window, OnMouseMoveEvent);
     glfwSetScrollCallback(window, OnScrollEvent);
     glfwSetMouseButtonCallback(window, OnMouseButtonEvent);
     glfwSetKeyCallback(window, OnKeyPressEvent);
@@ -56,25 +57,17 @@ void Init(GLFWwindow* window)
     cube2->color = Color(255, 255, 0);
     cube3->color = Color(0, 255, 255);
     cube5->color = Color(0, 0, 255);
-/*
+
     planet = LoadMeshFromOBJFile("Objects/Sphere.obj");
     planet->scale = Vec3(500, 500, 500);
     planet->position += World::forward * 1000;
-    planet->color = Color(0, 255, 0);
-    textHelloWorld = LoadMeshFromOBJFile("Objects/Hello3DWorldText.obj");
+    planet->color = RGB::white;
     
-        Vertex planetTop;
-        for (size_t i = 0; i < planet->vertices->size(); i++)
-        {
-            Vertex v = planet->ScaleMatrix4x4() * planet->vertices->at(i);
-            if (v.y > planetTop.y) {
-                planetTop = planet->position + v+World::up*100;
-            }
-        }
+    textHelloWorld = LoadMeshFromOBJFile("Objects/Hello3DWorldText.obj");
     textHelloWorld->scale = Vec3(2, 2, 2);
     textHelloWorld->position = Vec3(0, 0, -500);
-    textHelloWorld->color = Vec3(255, 255, 255);
-    */
+    textHelloWorld->color = RGB::green;
+    
     //Mesh* guitar = LoadMeshFromOBJFile("Objects/Guitar.obj");
     //guitar->position += (Camera::main->Forward() * 10) + Camera::main->Right();
     //Mesh* chair = LoadMeshFromOBJFile("Objects/Chair.obj");
