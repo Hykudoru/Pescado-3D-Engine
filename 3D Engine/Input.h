@@ -160,8 +160,24 @@ static void Input(GLFWwindow* window)
         Camera::main->rotation *= Matrix3x3::RotZ(rotateSpeed * deltaTime);
     }
     // ROTATE CW
-    else if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS) {
+    if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS) {
         Camera::main->rotation *= Matrix3x3::RotZ(-rotateSpeed * deltaTime);
+    }
+    // LOOK UP
+    if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
+        Camera::main->rotation *= Matrix3x3::RotX(rotateSpeed * deltaTime);
+    }
+    // LOOK DOWN
+    if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
+        Camera::main->rotation *= Matrix3x3::RotX(-rotateSpeed * deltaTime);
+    }
+    // TURN LEFT
+    if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
+        Camera::main->rotation *= Matrix3x3::RotY(rotateSpeed * deltaTime);
+    }
+    // TURN RIGHT
+    if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
+        Camera::main->rotation *= Matrix3x3::RotY(-rotateSpeed * deltaTime);
     }
     // Speed 
     if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
