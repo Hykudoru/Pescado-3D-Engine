@@ -408,12 +408,13 @@ public:
     static Camera* main;
     static List<Camera*> cameras;
     static int cameraCount;
-    
-    //string name;
+
+    string name;
     Camera(Vec3 position = Vec3(0, 0, 0), Vec3 rotationEuler = Vec3(0, 0, 0))
     : Transform(1, position, rotationEuler)
     {
         cameras.emplace(cameras.begin() + cameraCount++, this);
+        name = "Camera " + cameraCount;
     }
 };
 List<Camera*> Camera::cameras = List<Camera*>(1);
@@ -428,7 +429,7 @@ public:
     static List<Mesh*> meshes;
     static int meshCount;
     static int worldTriangleDrawCount;
-                                                                                                    static Mesh* meshDebug;
+    
     List<Vec3>* vertices;
     List<Triangle>* triangles;
     virtual List<Triangle>* MapVertsToTriangles() { return triangles; }
@@ -441,6 +442,55 @@ public:
         MapVertsToTriangles();
     }
 
+    ~Mesh()
+    {
+        delete vertices;
+        delete triangles;
+
+        for (size_t i = 0; i < meshes.size(); i++)
+        {
+            if (this == meshes.at(i)) {
+                meshes.erase(meshes.begin() + i);
+                break;
+            }
+        }
+        meshes.resize(meshCount--);
+        meshes.shrink_to_fit();
+    }
+
+    static void DrawMeshes()
+    {
+        static bool init = false;
+        if (!init) {
+            meshes.resize(meshCount);
+            meshes.shrink_to_fit();
+            init = true;
+        }
+
+        // Transform
+        for (int i = 0; i < Mesh::meshCount; i++)
+        {
+            Mesh::meshes[i]->transformTriangles();
+        }
+
+        Mesh::worldTriangleDrawCount = triBuffer->size();
+
+        // Depth Sort (painting algorithm)
+        sort(triBuffer->begin(), triBuffer->end(), [](const Triangle& triA, const Triangle& triB) -> bool
+            {
+                return triA.centroid.w > triB.centroid.w;
+            });
+
+        //Draw
+        for (int i = 0; i < triBuffer->size(); i++)
+        {
+            Triangle::DrawTriangle(triBuffer->at(i));
+        }
+
+        triBuffer->clear();
+    }
+
+private:
     void transformTriangles() 
     {
         // Scale/Distance ratio culling
@@ -585,37 +635,6 @@ public:
             triBuffer->push_back(projectedTri);
         }
     }
-
-    static void DrawMeshes()
-    {
-        static bool init = false;
-        if (!init) {
-            meshes.resize(meshCount);
-            init = true;
-        }
-
-        // Transform
-        for (int i = 0; i < Mesh::meshCount; i++)
-        {
-            Mesh::meshes[i]->transformTriangles();
-        }
-
-        Mesh::worldTriangleDrawCount = triBuffer->size();
-
-        // Depth Sort (painting algorithm)
-        sort(triBuffer->begin(), triBuffer->end(), [](const Triangle& triA, const Triangle& triB) -> bool
-            {
-                return triA.centroid.w > triB.centroid.w;
-            });
-
-        //Draw
-        for (int i = 0; i < triBuffer->size(); i++)
-        {
-            Triangle::DrawTriangle(triBuffer->at(i));
-        }
-
-        triBuffer->clear();
-    }
 };
 List<Mesh*> Mesh::meshes = List<Mesh*>(1000);
 int Mesh::meshCount = 0;
@@ -625,10 +644,7 @@ class CubeMesh : public Mesh
 {
 public:
     CubeMesh(int scale = 1, Vec3 position = Vec3(0, 0, 0), Vec3 rotationEuler = Vec3(0, 0, 0))
-        :Mesh(scale, position, rotationEuler)
-    {
-        
-    }
+        :Mesh(scale, position, rotationEuler) { }
 
     List<Triangle>* MapVertsToTriangles()
     {
@@ -647,7 +663,7 @@ public:
                 Vec3(-1, 1, -1),
                 Vec3(1, 1, -1),
                 Vec3(1, -1, -1)
-                });
+            });
 
             triangles = new List<Triangle>();
             triangles->reserve(36 / 3);
@@ -681,7 +697,7 @@ class Plane : Mesh
 public:
     Plane(int scale = 1, Vec3 position = Vec3(0, 0, 0), Vec3 rotationEuler = Vec3(0, 0, 0))
         :Mesh(scale, position, rotationEuler) {}
-
+    
     List<Triangle>* MapVertsToTriangles()
     {
         static int calls = 0;

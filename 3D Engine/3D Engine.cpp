@@ -48,7 +48,7 @@ void Init(GLFWwindow* window)
     glLineWidth(2);
     glPointSize(2);
 
-    CubeMesh* cube1 = new CubeMesh(1, Vec3(-5, -5, -10));
+    Mesh* cube1 = new CubeMesh(1, Vec3(-5, -5, -10));
     CubeMesh* cube2 = new CubeMesh(1, Vec3(-5, 5, -20));
     CubeMesh* cube3 = new CubeMesh(1, Vec3(5, 5, -30));
     CubeMesh* cube5 = new CubeMesh(1, Vec3(-5, -5, 10));
@@ -78,7 +78,7 @@ void Init(GLFWwindow* window)
 
     Plane* plane = new Plane(1, Vec3(0, 0, 0), Vec3(0, 0, 0));
     Camera* camera2 = new Camera(Vec3(0, 50, 0), Vec3(-90 * PI / 180, 0, 0));
-
+    
 }
  
 void Update()
