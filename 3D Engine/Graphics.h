@@ -283,14 +283,13 @@ struct Triangle
 bool LinePlaneIntersect(Vec3& lineStart, Vec3& lineEnd, Triangle& plane, Vec3* pointIntersecting)
 {
     Vec3 line = lineEnd - lineStart;
-    Vec3 dir = line.Normalized();
     Vec3 n = plane.Normal();
     Vec3 pointPlane = plane.verts[0];// plane.Centroid();
 
-    double t = (round(DotProduct(n, pointPlane - lineStart))) / DotProduct(n, dir);
-    Vec3 p = lineStart + (dir * t);
+    double t = (round(DotProduct(n, pointPlane - lineStart))) / DotProduct(n, line);
+    Vec3 p = lineStart + (line * t);
     
-    if (round(DotProduct((p - lineStart).Normalized(), dir)) > 0.0)
+    if (round(DotProduct((p - lineStart), line)) > 0.0)
     {
         *pointIntersecting = p;
         return true;
@@ -480,18 +479,7 @@ public:
                 camSpaceTri.verts[j] = cameraSpacePoint;
             };
 
-            //------------------------ Lighting ------------------------
-            Color triColor = this->color;
-            if (GraphicSettings::lighting && GraphicSettings::fillTriangles)
-            {
-                Vec3 lightSource = Vec3D::up + Vec3D::right + Vec3D::back * .3;
-                float amountFacingLight = DotProduct((Vec3)worldSpaceTri.Normal(), lightSource);
-                Color colorLit = (triColor * Clamp(amountFacingLight, 0.15, 1));
-
-                triColor = colorLit;
-            }
-
-            //------------------- Normal/Frustum Culling ------------------------
+            //------------------- Normal/Frustum Culling (view space)------------------------
             Vec3 p1 = camSpaceTri.verts[0];
             Vec3 p2 = camSpaceTri.verts[1];
             Vec3 p3 = camSpaceTri.verts[2];
@@ -524,6 +512,17 @@ public:
                 }
             }
 
+            //------------------------ Lighting (world space)------------------------
+            Color triColor = this->color;
+            if (GraphicSettings::lighting && GraphicSettings::fillTriangles)
+            {
+                Vec3 lightSource = Vec3D::up + Vec3D::right + Vec3D::back * .3;
+                float amountFacingLight = DotProduct((Vec3)worldSpaceTri.Normal(), lightSource);
+                Color colorLit = (triColor * Clamp(amountFacingLight, 0.15, 1));
+
+                triColor = colorLit;
+            }
+
             // ================ SCREEN SPACE ==================
             // Project to screen space (image space) 
 
@@ -545,6 +544,29 @@ public:
             projectedTri.centroid = ProjectPoint(centroid);
             projectedTri.color = triColor;
             
+            //------------------Ray casting (world & view space)-------------------------------------------------------------
+            Vec3 lineStart = Camera::cameras[1]->position;
+            Vec3 lineEnd = lineStart + Camera::cameras[1]->Forward() * abs(farClippingPlane);
+            Vec3 pointOfIntersection;
+            if (LinePlaneIntersect(lineStart, lineEnd, worldSpaceTri, &pointOfIntersection))
+            {
+                Vec4 pointOfIntersectionProj = projectionMatrix * worldToViewMatrix * pointOfIntersection;
+                if (PointInsideTriangle(pointOfIntersectionProj, projectedTri))
+                {
+                    Vec4 lStartProj = projectionMatrix * worldToViewMatrix * lineStart;
+                    Vec4 lEndProj = projectionMatrix * worldToViewMatrix * lineEnd;
+                    Line(lStartProj.x, lStartProj.y, lEndProj.x, lEndProj.y);
+                    glColor3f(0, 255, 255);
+                    glLineWidth(2);
+                    glPointSize(100);
+                    
+                    Point(pointOfIntersectionProj.x, pointOfIntersectionProj.y);
+                    glLineWidth(2);
+                    glPointSize(2);
+                    projectedTri.color = RGB::white;
+                }
+            }
+
             if (GraphicSettings::vfx)
             {
                 Vec3 screenLeftSide = Vec3(-1, 0, 0);
@@ -556,28 +578,6 @@ public:
                 }
                 else {
                     projectedTri.color = RGB::red;
-                }
-            }
-
-            Vec3 lineStart = Camera::cameras[1]->position;
-            Vec3 lineEnd = lineStart + Camera::cameras[1]->Forward() * abs(farClippingPlane);
-            Vec3 pointOfIntersection;
-            if (LinePlaneIntersect(lineStart, lineEnd, worldSpaceTri, &pointOfIntersection))
-            {
-
-                Vec4 pointOfIntersectionProj = projectionMatrix * worldToViewMatrix * pointOfIntersection;
-                if (PointInsideTriangle(pointOfIntersectionProj, projectedTri))
-                {
-                    Vec4 lStartProj = projectionMatrix * worldToViewMatrix * lineStart;
-                    Vec4 lEndProj = projectionMatrix * worldToViewMatrix * lineEnd;
-                    Line(lStartProj.x, lStartProj.y, lEndProj.x, lEndProj.y);
-                    glLineWidth(2);
-                    glPointSize(10);
-                    glColor3b(0, 255, 255);
-                    Point(pointOfIntersectionProj.x, pointOfIntersectionProj.y);
-                    glLineWidth(2);
-                    glPointSize(2);
-                    projectedTri.color = RGB::white;
                 }
             }
 
