@@ -282,16 +282,23 @@ struct Triangle
 
 bool LinePlaneIntersect(Vec3& lineStart, Vec3& lineEnd, Triangle& plane, Vec3* pointIntersecting)
 {
-    Vec3 line = lineEnd - lineStart;
+    // Plane: A*x + B*y + C*z + D = 0 ---> N_x(x-x0) + N_y(y-y0) + N_z(z-z0) = 0
+    // Point on plane: x0,y0,z0
+    // Point on line: x,y,z
+    // Parametric Line: P = P0 + Vt ---> lineEnd = lineStart + (lineEnd-lineStart)t
+    // 1st. Paramiterize line like this ---> x = (P0_x + V_x*t), y =, z = ... 
+    // 2nd. Plugin x,y,z it into plane equation and solve for t.
+    // 3rd. Use t to find the point intersecting both the line and plane.
     Vec3 n = plane.Normal();
     Vec3 pointPlane = plane.verts[0];// plane.Centroid();
+    Vec3 v = lineEnd - lineStart;
 
-    double t = (round(DotProduct(n, pointPlane - lineStart))) / DotProduct(n, line);
-    Vec3 p = lineStart + (line * t);
+    double t = (round(DotProduct(n, pointPlane - lineStart))) / DotProduct(n, v);
+    Vec3 pIntersect = lineStart + (v * t);
     
-    if (round(DotProduct((p - lineStart), line)) > 0.0)
+    if (round(DotProduct((pIntersect - lineStart), v)) > 0.0)
     {
-        *pointIntersecting = p;
+        *pointIntersecting = pIntersect;
         return true;
     }
     
