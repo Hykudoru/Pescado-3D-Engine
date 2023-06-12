@@ -572,28 +572,28 @@ private:
 
                 triColor = colorLit;
             }
-
-            // ================ SCREEN SPACE ==================
-            // Project to screen space (image space) 
-
+            
             if (GraphicSettings::debugNormals)
             {
-                //---------Draw point at centroid and a line from centroid to normal-----------
+                //---------Draw point at centroid and a line from centroid to normal (view space & projected space)-----------
                 Vec2 projectedNormal = ProjectPoint(centroid + normal);
                 Vec2 projectedCentroid = ProjectPoint(centroid);
                 Point(projectedCentroid.x, projectedCentroid.y);
                 Line(projectedCentroid.x, projectedCentroid.y, projectedNormal.x, projectedNormal.y);
             }
 
+            // ================ SCREEN SPACE ==================
+            // Project to screen space (image space) 
+
             //Project single triangle from 3D to 2D
-            Triangle projectedTri = camSpaceTri;
+            Triangle projectedTri;
             for (int j = 0; j < 3; j++) {
                 Vec4 cameraSpacePoint = camSpaceTri.verts[j];
                 projectedTri.verts[j] = ProjectPoint(cameraSpacePoint);
             };
             projectedTri.centroid = ProjectPoint(centroid);
-            projectedTri.color = triColor;
-            
+            projectedTri.color = triColor;  
+
             //------------------Ray casting (world & view space)-------------------------------------------------------------
             Vec3 lineStart = Camera::cameras[1]->position;
             Vec3 lineEnd = lineStart + Camera::cameras[1]->Forward() * abs(farClippingPlane);

@@ -90,7 +90,7 @@ void OnKeyPressEvent(GLFWwindow* window, int key, int scancode, int action, int 
 
         //-------------------Debugging------------------------
 
-        else if (key == GLFW_KEY_MINUS) {
+        else if (key == GLFW_KEY_I) {
             GraphicSettings::invertNormals = !GraphicSettings::invertNormals;
         }
         else if (key == GLFW_KEY_N) {
