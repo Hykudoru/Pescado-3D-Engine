@@ -141,18 +141,18 @@ void FOV(int deg)
     perspectiveProjectionMatrix = newPerspectiveProjectionMatrix;
 }
 
-void Point(float x, float y)
+void Point(Vec2 point)
 {
     glBegin(GL_POINTS);
-    glVertex2f(x, y);
+    glVertex2f(point.x, point.y);
     glEnd();
 }
 
-void Line(float x0, float y0, float x, float y)
+void Line(Vec2 from, Vec2 to)
 {
     glBegin(GL_LINES);
-    glVertex2f(x0, y0);
-    glVertex2f(x, y);
+    glVertex2f(from.y, from.y);
+    glVertex2f(to.x, to.y);
     glEnd();
 }
 
@@ -231,14 +231,14 @@ struct Triangle
             float c = Clamp(1.0 / (0.000001 + (tri.color.x + tri.color.y + tri.color.z) / 3), 0, 255);
             glColor3ub(c, c, c);
 
-            Point(p1.x, p1.y);
-            Point(p2.x, p2.y);
+            Point(p1);
+            Point(p2);
 
-            Point(p2.x, p2.y);
-            Point(p3.x, p3.y);
+            Point(p2);
+            Point(p3);
 
-            Point(p3.x, p3.y);
-            Point(p1.x, p1.y);
+            Point(p3);
+            Point(p1);
         }
 
         if (GraphicSettings::fillTriangles == false) 
@@ -280,9 +280,11 @@ struct Triangle
     }
 };
 
+List<Triangle>* triBuffer = new List<Triangle>(10000);
+
 bool LinePlaneIntersect(Vec3& lineStart, Vec3& lineEnd, Triangle& plane, Vec3* pointIntersecting)
 {
-    // Plane: A*x + B*y + C*z + D = 0 ---> N_x(x-x0) + N_y(y-y0) + N_z(z-z0) = 0
+    // Plane: N_x(x-x0) + N_y(y-y0) + N_z(z-z0) = 0
     // Point on plane: x0,y0,z0
     // Point on line: x,y,z
     // Parametric Line: P = P0 + Vt ---> lineEnd = lineStart + (lineEnd-lineStart)t
@@ -290,7 +292,7 @@ bool LinePlaneIntersect(Vec3& lineStart, Vec3& lineEnd, Triangle& plane, Vec3* p
     // 2nd. Plugin x,y,z it into plane equation and solve for t.
     // 3rd. Use t to find the point intersecting both the line and plane.
     Vec3 n = plane.Normal();
-    Vec3 pointPlane = plane.verts[0];// plane.Centroid();
+    Vec3 pointPlane = plane.verts[0];
     Vec3 v = lineEnd - lineStart;
 
     double t = (round(DotProduct(n, pointPlane - lineStart))) / DotProduct(n, v);
@@ -316,8 +318,7 @@ bool PointInsideTriangle(const Vec3 &p, const Triangle &tri)
     return ((w1 >= 0.0 && w2 >= 0.0) && (w1 + w2) <= 1.0);
 }
 
-List<Triangle>* triBuffer = new List<Triangle>(10000);
-
+//----------------------------------------------------------------------------
 class Transform
 {
 public:
@@ -409,6 +410,7 @@ public:
     }
 };
 
+//------------------------------------------------------------------------------
 class Camera : public Transform
 {
 public:
@@ -429,7 +431,7 @@ int Camera::cameraCount = 0;
 Camera* cam = new Camera();
 Camera* Camera::main = cam;
 
-
+//------------------------------------------------------------------------------
 class Mesh : public Transform
 {
 public:
@@ -585,8 +587,8 @@ private:
                 //---------Draw point at centroid and a line from centroid to normal (view space & projected space)-----------
                 Vec2 projectedNormal = projectionMatrix * (centroid_c + normal_c);
                 Vec2 projectedCentroid = projectionMatrix * centroid_c;
-                Point(projectedCentroid.x, projectedCentroid.y);
-                Line(projectedCentroid.x, projectedCentroid.y, projectedNormal.x, projectedNormal.y);
+                Point(projectedCentroid);
+                Line(projectedCentroid, projectedNormal);
             }
 
             // ================ SCREEN SPACE ==================
@@ -612,8 +614,8 @@ private:
                 {
                     Vec4 lStartProj = projectionMatrix * worldToViewMatrix * lineStart;
                     Vec4 lEndProj = projectionMatrix * worldToViewMatrix * lineEnd;
-                    Line(lStartProj.x, lStartProj.y, lEndProj.x, lEndProj.y); 
-                    Point(pointOfIntersectionProj.x, pointOfIntersectionProj.y);
+                    Line(lStartProj, lEndProj); 
+                    Point(pointOfIntersectionProj);
                     projectedTri.color = RGB::white;
                 }
             }
@@ -641,6 +643,7 @@ List<Mesh*> Mesh::meshes = List<Mesh*>(1000);
 int Mesh::meshCount = 0;
 int Mesh::worldTriangleDrawCount = 0;
 
+//------------------------------------------------------------------------------
 class CubeMesh : public Mesh
 {
 public:
@@ -693,6 +696,7 @@ public:
     }
 };
 
+//------------------------------------------------------------------------------
 class Plane : Mesh
 {
 public:
@@ -721,7 +725,10 @@ public:
     }
 };
 
-Mesh* LoadMeshFromOBJFile(string objFile) {
+//------------------------------------------------------------------------------
+
+Mesh* LoadMeshFromOBJFile(string objFile) 
+{
     // ----------- Read object file -------------
     List<string> strings;
     string line;
@@ -742,14 +749,13 @@ Mesh* LoadMeshFromOBJFile(string objFile) {
         }
     }
     file.close();
-
     // -----------------Construct new mesh-------------------
     // v = vertex
     // f = face.
     List<Vec3>* verts = new List<Vec3>();
-    verts->reserve(100);
+    verts->reserve(10);
     List<Triangle>* triangles = new List<Triangle>();
-    triangles->reserve(100);
+    triangles->reserve(10);
 
     for (size_t i = 0; i < strings.size(); i++)
     {
@@ -762,7 +768,7 @@ Mesh* LoadMeshFromOBJFile(string objFile) {
             verts->push_back(Vec3(x, y, z));
             //std::cout << "(" << x << ", " << y << ", " << z << ")" << endl;
         }
-        else if (str == "f") { // means the next 3 strings will be the indices for mapping vertices
+        else if (str == "f") { //f means the next 3 strings will be the indices for mapping vertices
             int p3Index = stof(strings[++i]);
             int p2Index = stof(strings[++i]);
             int p1Index = stof(strings[++i]);

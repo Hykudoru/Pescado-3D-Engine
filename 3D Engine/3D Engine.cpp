@@ -35,7 +35,6 @@ void Debug()
 }
 Mesh* textHelloWorld;
 Mesh* planet;
-static Mesh meshCopy;
 void Init(GLFWwindow* window)
 {
     glfwSetCursorPosCallback(window, OnMouseMoveEvent);
