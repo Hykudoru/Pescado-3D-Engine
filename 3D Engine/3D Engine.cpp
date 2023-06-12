@@ -35,6 +35,7 @@ void Debug()
 }
 Mesh* textHelloWorld;
 Mesh* planet;
+static Mesh meshCopy;
 void Init(GLFWwindow* window)
 {
     glfwSetCursorPosCallback(window, OnMouseMoveEvent);
@@ -68,7 +69,7 @@ void Init(GLFWwindow* window)
     
     textHelloWorld = LoadMeshFromOBJFile("Objects/Hello3DWorldText.obj");
     textHelloWorld->scale = Vec3(2, 2, 2);
-    textHelloWorld->position = Vec3(0, 0, -500);
+    textHelloWorld->position = Vec3(0, 0, -490);
     textHelloWorld->color = RGB::green;
     
     //Mesh* guitar = LoadMeshFromOBJFile("Objects/Guitar.obj");
@@ -77,17 +78,11 @@ void Init(GLFWwindow* window)
     //chair->position += (Camera::main->Forward() * 10) + Camera::main->Left();
 
     Plane* plane = new Plane(1, Vec3(0, 0, 0), Vec3(0, 0, 0));
-    Camera* camera2 = new Camera(Vec3(0, 50, 0), Vec3(-90 * PI / 180, 0, 0));
-    Triangle* tri = new Triangle;
-    Triangle triCopy = *tri;
-    delete tri;
-    std::cout << triCopy.verts[0].y << std::endl;
+    Camera* camera2 = new Camera(Vec3(0, 50, 0), Vec3(-90 * PI / 180, 0, 0)); 
 }
  
 void Update()
 {
-
-        
 }
 void Draw()
 {

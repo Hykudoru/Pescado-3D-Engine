@@ -537,32 +537,32 @@ private:
             };
 
             //------------------- Normal/Frustum Culling (view space)------------------------
-            Vec3 p1 = camSpaceTri.verts[0];
-            Vec3 p2 = camSpaceTri.verts[1];
-            Vec3 p3 = camSpaceTri.verts[2];
-            Vec3 centroid = Vec3((p1.x + p2.x + p3.x) / 3.0, (p1.y + p2.y + p3.y) / 3.0, (p1.z + p2.z + p3.z) / 3.0);
+            Vec3 p1_c = camSpaceTri.verts[0];
+            Vec3 p2_c = camSpaceTri.verts[1];
+            Vec3 p3_c = camSpaceTri.verts[2];
+            Vec3 centroid_c = camSpaceTri.Centroid();
 
-            bool tooCloseToCamera = (p1.z >= nearClippingPlane || p2.z >= nearClippingPlane || p3.z >= nearClippingPlane || centroid.z >= nearClippingPlane);
-            bool tooFarFromCamera = (p1.z <= farClippingPlane || p2.z <= farClippingPlane || p3.z <= farClippingPlane || centroid.z <= farClippingPlane);
-            bool behindCamera = DotProduct(centroid.Normalized(), Vec3D::forward) <= 0.0;
+            bool tooCloseToCamera = (p1_c.z >= nearClippingPlane || p2_c.z >= nearClippingPlane || p3_c.z >= nearClippingPlane || centroid_c.z >= nearClippingPlane);
+            bool tooFarFromCamera = (p1_c.z <= farClippingPlane || p2_c.z <= farClippingPlane || p3_c.z <= farClippingPlane || centroid_c.z <= farClippingPlane);
+            bool behindCamera = DotProduct(centroid_c.Normalized(), Vec3D::forward) <= 0.0;
             if (tooCloseToCamera || tooFarFromCamera || behindCamera) {
                 continue; // Skip triangle if it's out of cam view.
             }
 
             // Calculate triangle suface Normal
-            Vec3 a = p3 - p1;
-            Vec3 b = p2 - p1;
-            Vec3 normal = (CrossProduct(a, b)).Normalized();
+            Vec3 a = p3_c - p1_c;
+            Vec3 b = p2_c - p1_c;
+            Vec3 normal_c = (CrossProduct(a, b)).Normalized();
 
             if (GraphicSettings::invertNormals) {
-                normal = normal * -1.0;
+                normal_c = normal_c * -1.0;
             }
 
             if (GraphicSettings::culling)
             {
                 // Back-face culling - Checks if the triangles backside is facing the camera.
-                Vec3 posRelativeToCam = centroid.Normalized();// Since camera is (0,0,0) in view space, the displacement vector from camera to centroid IS the centroid itself.
-                bool faceVisibleToCamera = DotProduct(posRelativeToCam.Normalized(), normal) <= 0;
+                Vec3 posRelativeToCam = centroid_c;// Since camera is (0,0,0) in view space, the displacement vector from camera to centroid IS the centroid itself.
+                bool faceVisibleToCamera = DotProduct(posRelativeToCam.Normalized(), normal_c) <= 0;
 
                 if (!faceVisibleToCamera) {
                     continue;// Skip triangle if it's out of cam view or it's part of the other side of the mesh.
@@ -583,8 +583,8 @@ private:
             if (GraphicSettings::debugNormals)
             {
                 //---------Draw point at centroid and a line from centroid to normal (view space & projected space)-----------
-                Vec2 projectedNormal = ProjectPoint(centroid + normal);
-                Vec2 projectedCentroid = ProjectPoint(centroid);
+                Vec2 projectedNormal = projectionMatrix * (centroid_c + normal_c);
+                Vec2 projectedCentroid = projectionMatrix * centroid_c;
                 Point(projectedCentroid.x, projectedCentroid.y);
                 Line(projectedCentroid.x, projectedCentroid.y, projectedNormal.x, projectedNormal.y);
             }
@@ -596,9 +596,9 @@ private:
             Triangle projectedTri;
             for (int j = 0; j < 3; j++) {
                 Vec4 cameraSpacePoint = camSpaceTri.verts[j];
-                projectedTri.verts[j] = ProjectPoint(cameraSpacePoint);
+                projectedTri.verts[j] = projectionMatrix * cameraSpacePoint;
             };
-            projectedTri.centroid = ProjectPoint(centroid);
+            projectedTri.centroid = projectionMatrix * centroid_c;
             projectedTri.color = triColor;  
 
             //------------------Ray casting (world & view space)-------------------------------------------------------------
@@ -612,14 +612,8 @@ private:
                 {
                     Vec4 lStartProj = projectionMatrix * worldToViewMatrix * lineStart;
                     Vec4 lEndProj = projectionMatrix * worldToViewMatrix * lineEnd;
-                    Line(lStartProj.x, lStartProj.y, lEndProj.x, lEndProj.y);
-                    glColor3f(0, 255, 255);
-                    glLineWidth(2);
-                    glPointSize(100);
-                    
+                    Line(lStartProj.x, lStartProj.y, lEndProj.x, lEndProj.y); 
                     Point(pointOfIntersectionProj.x, pointOfIntersectionProj.y);
-                    glLineWidth(2);
-                    glPointSize(2);
                     projectedTri.color = RGB::white;
                 }
             }
