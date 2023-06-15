@@ -505,7 +505,7 @@ public:
         //Draw
         for (int i = 0; i < triBuffer->size(); i++)
         {
-            Triangle::DrawTriangle(triBuffer->at(i));
+            Triangle::DrawTriangle((*triBuffer)[i]);
         }
 
         triBuffer->clear();
@@ -531,7 +531,7 @@ private:
         {
             Triangle worldSpaceTri;
             Triangle camSpaceTri;
-            Triangle tri = tris->at(i);
+            Triangle tri = (*tris)[i];
             for (int j = 0; j < 3; j++)
             {
                 // Homogeneous coords (x, y, z, w=1)
@@ -647,8 +647,7 @@ private:
             }
 
             //Add projected tri
-            triBuffer->push_back(projectedTri);
-            //triBuffer->emplace_back(projectedTri);
+            triBuffer->emplace_back(projectedTri);
         }
     }
 };
@@ -686,23 +685,23 @@ public:
             triangles->reserve(36 / 3);
 
             //south
-            triangles->push_back(Triangle((*vertices)[0], (*vertices)[1], (*vertices)[2]));
-            triangles->push_back(Triangle((*vertices)[0], (*vertices)[2], (*vertices)[3]));
-            //                                                     
-            triangles->push_back(Triangle((*vertices)[7], (*vertices)[6], (*vertices)[5]));
-            triangles->push_back(Triangle((*vertices)[7], (*vertices)[5], (*vertices)[4]));
-
-            triangles->push_back(Triangle((*vertices)[3], (*vertices)[2], (*vertices)[6]));
-            triangles->push_back(Triangle((*vertices)[3], (*vertices)[6], (*vertices)[7]));
-
-            triangles->push_back(Triangle((*vertices)[4], (*vertices)[5], (*vertices)[1]));
-            triangles->push_back(Triangle((*vertices)[4], (*vertices)[1], (*vertices)[0]));
-
-            triangles->push_back(Triangle((*vertices)[1], (*vertices)[5], (*vertices)[6]));
-            triangles->push_back(Triangle((*vertices)[1], (*vertices)[6], (*vertices)[2]));
-
-            triangles->push_back(Triangle((*vertices)[3], (*vertices)[7], (*vertices)[4]));
-            triangles->push_back(Triangle((*vertices)[3], (*vertices)[4], (*vertices)[0]));
+            triangles->emplace_back((*vertices)[0], (*vertices)[1], (*vertices)[2]);
+            triangles->emplace_back((*vertices)[0], (*vertices)[2], (*vertices)[3]);
+                                       
+            triangles->emplace_back((*vertices)[7], (*vertices)[6], (*vertices)[5]);
+            triangles->emplace_back((*vertices)[7], (*vertices)[5], (*vertices)[4]);
+            
+            triangles->emplace_back((*vertices)[3], (*vertices)[2], (*vertices)[6]);
+            triangles->emplace_back((*vertices)[3], (*vertices)[6], (*vertices)[7]);
+            
+            triangles->emplace_back((*vertices)[4], (*vertices)[5], (*vertices)[1]);
+            triangles->emplace_back((*vertices)[4], (*vertices)[1], (*vertices)[0]);
+            
+            triangles->emplace_back((*vertices)[1], (*vertices)[5], (*vertices)[6]);
+            triangles->emplace_back((*vertices)[1], (*vertices)[6], (*vertices)[2]);
+            
+            triangles->emplace_back((*vertices)[3], (*vertices)[7], (*vertices)[4]);
+            triangles->emplace_back((*vertices)[3], (*vertices)[4], (*vertices)[0]);
         }
 
         return triangles;
