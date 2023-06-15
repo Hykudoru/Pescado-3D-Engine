@@ -195,8 +195,8 @@ struct Triangle
         this->verts[1] = p2;
         this->verts[2] = p3;
         color = RGB::white;
-        centroid = Vec3(0, 0, 0);
-        normal = Vec3(0, 0, 0);
+        centroid = Centroid();// Vec3(0, 0, 0);
+        normal = Normal();// Vec3(0, 0, 0);
     }
 
     Vec4 Normal()
@@ -316,6 +316,18 @@ bool PointInsideTriangle(const Vec3 &p, const Triangle &tri)
     float w2 = ( (p.y - A.y) - (w1*(B.y-A.y)) ) / (C.y-A.y);
 
     return ((w1 >= 0.0 && w2 >= 0.0) && (w1 + w2) <= 1.0);
+}
+
+bool LineOnPlanesIntersection(Vec3& normal1, Vec3& p1, Vec3& normal2, Vec3& p2)
+{
+    float D1 = DotProduct(normal1, p1);
+    float D2 = DotProduct(normal2, p2);
+    Vec3 v = CrossProduct(normal1, normal2);
+    float y = (D2 * normal1.x - D1 * normal2.x) / (-normal2.x * normal1.y + normal2.y);
+    float x = (D1 - normal1.y * y) / normal1.x;
+
+    float t = 0;
+    Vec3 line = Vec3(x, y, 0) + v * t;
 }
 
 //----------------------------------------------------------------------------
