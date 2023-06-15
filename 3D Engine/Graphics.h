@@ -280,7 +280,7 @@ struct Triangle
     }
 };
 
-List<Triangle>* triBuffer = new List<Triangle>(10000);
+List<Triangle>* triBuffer = new List<Triangle>(100000);
 
 bool LinePlaneIntersect(Vec3& lineStart, Vec3& lineEnd, Triangle& plane, Vec3* pointIntersecting)
 {
@@ -318,7 +318,7 @@ bool PointInsideTriangle(const Vec3 &p, const Triangle &tri)
     return ((w1 >= 0.0 && w2 >= 0.0) && (w1 + w2) <= 1.0);
 }
 
-bool LineOnPlanesIntersection(Vec3& normal1, Vec3& p1, Vec3& normal2, Vec3& p2)
+void LineOnPlanesIntersection(Vec3& normal1, Vec3& p1, Vec3& normal2, Vec3& p2)
 {
     float D1 = DotProduct(normal1, p1);
     float D2 = DotProduct(normal2, p2);
@@ -648,6 +648,7 @@ private:
 
             //Add projected tri
             triBuffer->push_back(projectedTri);
+            //triBuffer->emplace_back(projectedTri);
         }
     }
 };
@@ -756,7 +757,7 @@ Mesh* LoadMeshFromOBJFile(string objFile)
             string s;
             stringstream ss(line);
             while (getline(ss, s, ' ')) {
-                strings.push_back(s);
+                strings.emplace_back(s);
             }
         }
     }
@@ -777,7 +778,7 @@ Mesh* LoadMeshFromOBJFile(string objFile)
             float x = stof(strings[++i]);
             float y = stof(strings[++i]);
             float z = stof(strings[++i]);
-            verts->push_back(Vec3(x, y, z));
+            verts->emplace_back(Vec3(x, y, z));
             //std::cout << "(" << x << ", " << y << ", " << z << ")" << endl;
         }
         else if (str == "f") { //f means the next 3 strings will be the indices for mapping vertices
@@ -785,7 +786,7 @@ Mesh* LoadMeshFromOBJFile(string objFile)
             int p2Index = stof(strings[++i]);
             int p1Index = stof(strings[++i]);
             Triangle tri = Triangle(verts->at(p1Index - 1), verts->at(p2Index - 1), verts->at(p3Index - 1));
-            triangles->push_back(tri);
+            triangles->emplace_back(tri);
         }
     }
 
