@@ -502,6 +502,7 @@ public:
                 return triA.centroid.w > triB.centroid.w;
             });
 
+
         //Draw
         for (int i = 0; i < triBuffer->size(); i++)
         {
@@ -684,27 +685,42 @@ public:
             triangles = new List<Triangle>();
             triangles->reserve(36 / 3);
 
-            //south
+            //South
             triangles->emplace_back((*vertices)[0], (*vertices)[1], (*vertices)[2]);
             triangles->emplace_back((*vertices)[0], (*vertices)[2], (*vertices)[3]);
-                                       
+            //North                           
             triangles->emplace_back((*vertices)[7], (*vertices)[6], (*vertices)[5]);
             triangles->emplace_back((*vertices)[7], (*vertices)[5], (*vertices)[4]);
-            
+            //Right
             triangles->emplace_back((*vertices)[3], (*vertices)[2], (*vertices)[6]);
             triangles->emplace_back((*vertices)[3], (*vertices)[6], (*vertices)[7]);
-            
+            //Left
             triangles->emplace_back((*vertices)[4], (*vertices)[5], (*vertices)[1]);
             triangles->emplace_back((*vertices)[4], (*vertices)[1], (*vertices)[0]);
-            
+            //Top
             triangles->emplace_back((*vertices)[1], (*vertices)[5], (*vertices)[6]);
             triangles->emplace_back((*vertices)[1], (*vertices)[6], (*vertices)[2]);
-            
+            //Bottom
             triangles->emplace_back((*vertices)[3], (*vertices)[7], (*vertices)[4]);
             triangles->emplace_back((*vertices)[3], (*vertices)[4], (*vertices)[0]);
         }
 
         return triangles;
+    }
+
+    List<Vec3> WorldXYZNormals()
+    {
+        List<Vec3> normals = {
+            (Vec3)Triangle(TRS()*(Vec4)(*vertices)[3], TRS() * (Vec4)(*vertices)[2], TRS() * (Vec4)(*vertices)[6]).Normal(),
+            (Vec3)Triangle(TRS() * (Vec4)(*vertices)[1], TRS() * (Vec4)(*vertices)[5], TRS() * (Vec4)(*vertices)[6]).Normal(),
+            (Vec3)Triangle(TRS() * (Vec4)(*vertices)[0], TRS() * (Vec4)(*vertices)[1], TRS() * (Vec4)(*vertices)[2]).Normal()
+        };
+        return normals;
+    }
+
+    Triangle RightFace()
+    {
+        return Triangle((*vertices)[3], (*vertices)[2], (*vertices)[6]);
     }
 };
 

@@ -61,6 +61,7 @@ void Init(GLFWwindow* window)
     cube3->color = Color(0, 255, 255);
     cube5->color = Color(0, 0, 255);
 
+    /*
     planet = LoadMeshFromOBJFile("Objects/Sphere.obj");
     planet->scale = Vec3(500, 500, 500);
     planet->position += Vec3D::forward * 1000;
@@ -70,13 +71,13 @@ void Init(GLFWwindow* window)
     textHelloWorld->scale = Vec3(2, 2, 2);
     textHelloWorld->position = Vec3(0, 0, -490);
     textHelloWorld->color = RGB::green;
-    
+    */
     //Mesh* guitar = LoadMeshFromOBJFile("Objects/Guitar.obj");
     //guitar->position += (Camera::main->Forward() * 10) + Camera::main->Right();
     //Mesh* chair = LoadMeshFromOBJFile("Objects/Chair.obj");
     //chair->position += (Camera::main->Forward() * 10) + Camera::main->Left();
 
-    Plane* plane = new Plane(1, Vec3(0, 0, 0), Vec3(0, 0, 0));
+    //Plane* plane = new Plane(1, Vec3(0, 0, 0), Vec3(0, 0, 0));
     Camera* camera2 = new Camera(Vec3(0, 50, 0), Vec3(-90 * PI / 180, 0, 0)); 
 }
  
