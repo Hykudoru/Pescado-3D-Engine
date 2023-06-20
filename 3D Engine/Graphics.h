@@ -711,16 +711,11 @@ public:
     List<Vec3> WorldXYZNormals()
     {
         List<Vec3> normals = {
-            (Vec3)Triangle(TRS()*(Vec4)(*vertices)[3], TRS() * (Vec4)(*vertices)[2], TRS() * (Vec4)(*vertices)[6]).Normal(),
-            (Vec3)Triangle(TRS() * (Vec4)(*vertices)[1], TRS() * (Vec4)(*vertices)[5], TRS() * (Vec4)(*vertices)[6]).Normal(),
-            (Vec3)Triangle(TRS() * (Vec4)(*vertices)[0], TRS() * (Vec4)(*vertices)[1], TRS() * (Vec4)(*vertices)[2]).Normal()
+            Triangle(TRS() * (Vec4)(*vertices)[3], TRS() * (Vec4)(*vertices)[2], TRS() * (Vec4)(*vertices)[6]).Normal(),
+            Triangle(TRS() * (Vec4)(*vertices)[1], TRS() * (Vec4)(*vertices)[5], TRS() * (Vec4)(*vertices)[6]).Normal(),
+            Triangle(TRS() * (Vec4)(*vertices)[0], TRS() * (Vec4)(*vertices)[1], TRS() * (Vec4)(*vertices)[2]).Normal()
         };
         return normals;
-    }
-
-    Triangle RightFace()
-    {
-        return Triangle((*vertices)[3], (*vertices)[2], (*vertices)[6]);
     }
 };
 
