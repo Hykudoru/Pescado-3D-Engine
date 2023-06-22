@@ -343,7 +343,6 @@ public:
     Vec3 Left() { return this->rotation * Vec3D::left; }
     Vec3 Up() { return this->rotation * Vec3D::up; }
     Vec3 Down() { return this->rotation * Vec3D::down; }
-    Vec3 LocalPosition() { return Matrix4x4(this->TranslationMatrix4x4Inverse()) * Vec4(position.x, position.y, position.z, 1); }
 
     Transform(float scale = 1, Vec3 position = Vec3(0, 0, 0), Vec3 rotationEuler = Vec3(0, 0, 0))
     {
@@ -416,6 +415,7 @@ public:
         return TranslationMatrix4x4() * RotationMatrix4x4();
     }
 
+    // RT^-1
     Matrix4x4 TRInverse() 
     {
         return Matrix4x4::Transpose(RotationMatrix4x4()) * TranslationMatrix4x4Inverse();

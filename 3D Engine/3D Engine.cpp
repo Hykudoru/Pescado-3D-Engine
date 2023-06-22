@@ -48,6 +48,8 @@ void Init(GLFWwindow* window)
     glLineWidth(2);
     glPointSize(2);
 
+    Physics::collisionDetection = false;
+
     Mesh* cube1 = new CubeMesh(1, Vec3(-5, -5, -10));
     CubeMesh* cube2 = new CubeMesh(1, Vec3(-5, 5, -20));
     CubeMesh* cube3 = new CubeMesh(1, Vec3(5, 5, -30));
@@ -61,7 +63,7 @@ void Init(GLFWwindow* window)
     cube3->color = Color(0, 255, 255);
     cube5->color = Color(0, 0, 255);
 
-    /*
+    
     planet = LoadMeshFromOBJFile("Objects/Sphere.obj");
     planet->scale = Vec3(500, 500, 500);
     planet->position += Vec3D::forward * 1000;
@@ -71,7 +73,7 @@ void Init(GLFWwindow* window)
     textHelloWorld->scale = Vec3(2, 2, 2);
     textHelloWorld->position = Vec3(0, 0, -490);
     textHelloWorld->color = RGB::green;
-    */
+    
     //Mesh* guitar = LoadMeshFromOBJFile("Objects/Guitar.obj");
     //guitar->position += (Camera::main->Forward() * 10) + Camera::main->Right();
     //Mesh* chair = LoadMeshFromOBJFile("Objects/Chair.obj");

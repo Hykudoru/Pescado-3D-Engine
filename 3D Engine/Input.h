@@ -88,6 +88,11 @@ void OnKeyPressEvent(GLFWwindow* window, int key, int scancode, int action, int 
             dampenersActive = !dampenersActive;
         }
 
+        // Toggle Collision Detection
+        else if (key == GLFW_KEY_P) {
+            Physics::collisionDetection = !Physics::collisionDetection;
+        }
+
         //-------------------Debugging------------------------
 
         else if (key == GLFW_KEY_I) {
@@ -98,9 +103,6 @@ void OnKeyPressEvent(GLFWwindow* window, int key, int scancode, int action, int 
         }
         else if (key == GLFW_KEY_V) {
             GraphicSettings::culling = !GraphicSettings::culling;
-        }
-        else if (key == GLFW_KEY_P) {
-            GraphicSettings::perspective = !GraphicSettings::perspective;
         }
         else if (key == GLFW_KEY_M) {
             GraphicSettings::fillTriangles = !GraphicSettings::fillTriangles;
