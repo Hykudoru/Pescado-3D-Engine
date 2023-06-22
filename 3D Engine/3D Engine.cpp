@@ -28,6 +28,7 @@ void Debug()
 
     if (DEBUGGING)
     {
+        std::cout << "--------GRAPHICS-------" << endl;
         std::cout << "FPS:" << fps << std::endl;
         std::cout << "Frame Time:" << 1.0 / (double)fps << std::endl;
         std::cout << "Triangles Drawn:" << Mesh::worldTriangleDrawCount << std::endl;

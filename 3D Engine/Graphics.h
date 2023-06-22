@@ -12,29 +12,6 @@ using namespace std;
 #ifndef GRAPHICS_H
 #define GRAPHICS_H
 
-#define Color Vector3<float>
-struct RGB : Vector3<float>
-{
-    static Color black;
-    static Color white;
-    static Color red;
-    static Color green;
-    static Color blue;
-    static Color pink;
-    static Color yellow;
-    static Color turquoise;
-    static Color orange;
-};
-Color RGB::black = Color(0, 0, 0);
-Color RGB::white = Color(255, 255, 255);
-Color RGB::red = Color(255, 0, 0);
-Color RGB::green = Color(0, 255, 0);
-Color RGB::blue = Color(0, 0, 255);
-Color RGB::pink = Color(255, 0, 255);
-Color RGB::yellow = Color(255, 255, 0);
-Color RGB::turquoise = Color(0, 255, 255);
-Color RGB::orange = Color(255, 158, 0);
-
 #define List std::vector
 const float PI = 3.14159265359f;
 
@@ -56,9 +33,6 @@ float ToDeg(float rad) {
 float ToRad(float deg) {
     return deg * PI / 180.0;
 }
-
-int screenWidth = 800;//700;//screen.width - 20;
-int screenHeight = 800; //screen.height - 20; //screen.height;// - 30;
 
 //-----------GRAPHICS---------------
 
@@ -84,7 +58,28 @@ bool GraphicSettings::displayWireFrames = false;
 bool GraphicSettings::lighting = true;
 bool GraphicSettings::vfx = false;
 
-static float worldScale = 1;
+#define Color Vector3<float>
+struct RGB : Vector3<float>
+{
+    static Color black;
+    static Color white;
+    static Color red;
+    static Color green;
+    static Color blue;
+    static Color pink;
+    static Color yellow;
+    static Color turquoise;
+    static Color orange;
+};
+Color RGB::black = Color(0, 0, 0);
+Color RGB::white = Color(255, 255, 255);
+Color RGB::red = Color(255, 0, 0);
+Color RGB::green = Color(0, 255, 0);
+Color RGB::blue = Color(0, 0, 255);
+Color RGB::pink = Color(255, 0, 255);
+Color RGB::yellow = Color(255, 255, 0);
+Color RGB::turquoise = Color(0, 255, 255);
+Color RGB::orange = Color(255, 158, 0);
 
 struct Vec3D
 {
@@ -102,6 +97,9 @@ Vec3 Vec3D::left = Vec3(-1, 0, 0);
 Vec3 Vec3D::up = Vec3(0, 1, 0);
 Vec3 Vec3D::down = Vec3(0, -1, 0);
 
+static float worldScale = 1;
+int screenWidth = 800;//700;//screen.width - 20;
+int screenHeight = 800; //screen.height - 20; //screen.height;// - 30;
 float aspectRatio = screenWidth / screenHeight;
 float nearClippingPlane = -0.1;
 float farClippingPlane = -10000.0;
@@ -141,14 +139,14 @@ void FOV(int deg)
     perspectiveProjectionMatrix = newPerspectiveProjectionMatrix;
 }
 
-void Point(Vec2 point)
+void DrawPoint(Vec2 point)
 {
     glBegin(GL_POINTS);
     glVertex2f(point.x, point.y);
     glEnd();
 }
 
-void Line(Vec2 from, Vec2 to)
+void DrawLine(Vec2 from, Vec2 to)
 {
     glBegin(GL_LINES);
     glVertex2f(from.y, from.y);
@@ -231,14 +229,14 @@ struct Triangle
             float c = Clamp(1.0 / (0.000001 + (tri.color.x + tri.color.y + tri.color.z) / 3), 0, 255);
             glColor3ub(c, c, c);
 
-            Point(p1);
-            Point(p2);
-
-            Point(p2);
-            Point(p3);
-
-            Point(p3);
-            Point(p1);
+            DrawPoint(p1);
+            DrawPoint(p2);
+            
+            DrawPoint(p2);
+            DrawPoint(p3);
+            
+            DrawPoint(p3);
+            DrawPoint(p1);
         }
 
         if (GraphicSettings::fillTriangles == false) 
@@ -330,7 +328,7 @@ void LineOnPlanesIntersection(Vec3& normal1, Vec3& p1, Vec3& normal2, Vec3& p2)
     Vec3 line = Vec3(x, y, 0) + v * t;
 }
 
-//----------------------------------------------------------------------------
+//-------------------------------TRANSFORM---------------------------------------------
 class Transform
 {
 public:
@@ -422,7 +420,7 @@ public:
     }
 };
 
-//------------------------------------------------------------------------------
+//-----------------------------CAMERA-------------------------------------------------
 class Camera : public Transform
 {
 public:
@@ -443,7 +441,7 @@ int Camera::cameraCount = 0;
 Camera* cam = new Camera();
 Camera* Camera::main = cam;
 
-//------------------------------------------------------------------------------
+//---------------------------------MESH---------------------------------------------
 class Mesh : public Transform
 {
 public:
@@ -600,8 +598,8 @@ private:
                 //---------Draw point at centroid and a line from centroid to normal (view space & projected space)-----------
                 Vec2 projectedNormal = projectionMatrix * (centroid_c + normal_c);
                 Vec2 projectedCentroid = projectionMatrix * centroid_c;
-                Point(projectedCentroid);
-                Line(projectedCentroid, projectedNormal);
+                DrawPoint(projectedCentroid);
+                DrawLine(projectedCentroid, projectedNormal);
             }
 
             // ================ SCREEN SPACE ==================
@@ -627,8 +625,8 @@ private:
                 {
                     Vec4 lStartProj = projectionMatrix * worldToViewMatrix * lineStart;
                     Vec4 lEndProj = projectionMatrix * worldToViewMatrix * lineEnd;
-                    Line(lStartProj, lEndProj); 
-                    Point(pointOfIntersectionProj);
+                    DrawLine(lStartProj, lEndProj); 
+                    DrawPoint(pointOfIntersectionProj);
                     projectedTri.color = RGB::white;
                 }
             }
@@ -656,7 +654,7 @@ List<Mesh*> Mesh::meshes = List<Mesh*>(1000);
 int Mesh::meshCount = 0;
 int Mesh::worldTriangleDrawCount = 0;
 
-//------------------------------------------------------------------------------
+//------------------------------------CUBE MESH------------------------------------------
 class CubeMesh : public Mesh
 {
 public:
@@ -719,7 +717,7 @@ public:
     }
 };
 
-//------------------------------------------------------------------------------
+//---------------------------------PLANE---------------------------------------------
 class Plane : Mesh
 {
 public:
@@ -748,7 +746,7 @@ public:
     }
 };
 
-//------------------------------------------------------------------------------
+//------------------------------HELPER FUNCTIONS------------------------------------------------
 
 Mesh* LoadMeshFromOBJFile(string objFile) 
 {
@@ -773,15 +771,18 @@ Mesh* LoadMeshFromOBJFile(string objFile)
     }
     file.close();
     // -----------------Construct new mesh-------------------
-    // v = vertex
-    // f = face.
+    Mesh* mesh = new Mesh();
+
     List<Vec3>* verts = new List<Vec3>();
     verts->reserve(10);
+
     List<Triangle>* triangles = new List<Triangle>();
     triangles->reserve(10);
 
     for (size_t i = 0; i < strings.size(); i++)
     {
+        // v = vertex
+        // f = face.
         string str = strings[i];
 
         if (str == "v") {
@@ -800,7 +801,6 @@ Mesh* LoadMeshFromOBJFile(string objFile)
         }
     }
 
-    Mesh* mesh = new Mesh();
     mesh->vertices = verts;
     mesh->triangles = triangles;
 

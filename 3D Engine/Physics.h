@@ -7,13 +7,16 @@ using namespace std;
 
 #ifndef PHYSICS_H
 #define PHYSICS_H
+extern bool DEBUGGING;
 
 class Physics
 {
 public:
     static bool collisionDetection;
+    static bool gravity;
 };
 bool Physics::collisionDetection = true;
+bool Physics::gravity = false;
 
 double deltaTime = 0;
 int fps = 0;
@@ -64,20 +67,6 @@ public:
         }
     }
 };
-
-const float accel = 0.1;
-const float deccel = 0.95;
-const float defaultMoveSpeed = 50;
-float moveSpeed = defaultMoveSpeed;
-float rotateSpeed = PI / 2;
-bool isKinematic = false;
-bool dampenersActive = true;
-Vec3 moveDir = Vec3(0, 0, 0);
-Vec3 velocity = Vec3(0, 0, 0);
-
-extern Mesh* planet; 
-//PhysicsObject physicsCube1 = PhysicsObject(new CubeMesh());// PhysicsObject();
-//PhysicsObject physicsCube2 = PhysicsObject(new CubeMesh());// PhysicsObject();
 
 struct Range
 {
@@ -224,12 +213,31 @@ void DetectCollisions()
     }
 }
 
+Vec3 gravity = Vec3(0, -9.81, 0);
+const float accel = 0.1;
+const float deccel = 0.95;
+const float defaultMoveSpeed = 50;
+float moveSpeed = defaultMoveSpeed;
+float rotateSpeed = PI / 2;
+bool isKinematic = false;
+bool dampenersActive = true;
+Vec3 moveDir = Vec3(0, 0, 0);
+Vec3 velocity = Vec3(0, 0, 0);
+
+extern Mesh* planet;
+//PhysicsObject physicsCube1 = PhysicsObject(new CubeMesh());// PhysicsObject();
+//PhysicsObject physicsCube2 = PhysicsObject(new CubeMesh());// PhysicsObject();
+
+
 static void Physics(GLFWwindow* window)
 {
     //---------- Physics Update ------------
     if (!isKinematic) {
         velocity += moveDir * moveSpeed * accel;
-        if (dampenersActive) {
+        if (Physics::gravity) {
+            velocity += gravity * deltaTime;
+        }
+        else if (dampenersActive) {
             velocity *= 0.95;
         }
         Camera::main->position += velocity * deltaTime;
@@ -255,6 +263,27 @@ static void Physics(GLFWwindow* window)
     if (Physics::collisionDetection)
     {
         DetectCollisions();
+    }
+
+    if (DEBUGGING) 
+    { 
+        std::cout << "--------PHYSICS-------" << endl;
+
+        string onoff = Physics::collisionDetection ? "On" : "Off";
+        std::cout << "Collisions: " << onoff << " (press P)" << endl;
+
+        onoff = Physics::gravity ? "On" : "Off";
+        std::cout << "Gravity: " << onoff << " (press G)" << endl;
+
+        std::cout << "--------PLAYER-------" << endl;
+
+        onoff = isKinematic ? "On" : "Off";
+        std::cout << "Kinematic: " << onoff << " (press X)" << endl;
+
+        onoff = dampenersActive ? "On" : "Off";
+        std::cout << "Inertial Dampeners: " << onoff << " (press Z)" << endl;
+
+        std::cout << "Velocity: <" << velocity.x << ", " << velocity.y << ", " << velocity.z << ">" << endl;
     }
 }
 #endif

@@ -77,13 +77,13 @@ void OnKeyPressEvent(GLFWwindow* window, int key, int scancode, int action, int 
 
         //------------------Physics-------------------
 
-        // Toggle momentum
+        // Toggle Momentum
         else if (key == GLFW_KEY_X) {
             velocity = Vec3(0, 0, 0);//Reset every toggle state
             isKinematic = !isKinematic;
         }
 
-        // Toggle dampeners
+        // Toggle Inertial Dampeners
         else if (key == GLFW_KEY_Z) {
             dampenersActive = !dampenersActive;
         }
@@ -91,6 +91,11 @@ void OnKeyPressEvent(GLFWwindow* window, int key, int scancode, int action, int 
         // Toggle Collision Detection
         else if (key == GLFW_KEY_P) {
             Physics::collisionDetection = !Physics::collisionDetection;
+        }
+
+        // Toggle Gravity
+        else if (key == GLFW_KEY_G) {
+            Physics::gravity = !Physics::gravity;
         }
 
         //-------------------Debugging------------------------
