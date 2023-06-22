@@ -415,7 +415,7 @@ public:
         return TranslationMatrix4x4() * RotationMatrix4x4();
     }
 
-    // RT^-1
+    // R^-1T^-1
     Matrix4x4 TRInverse() 
     {
         return Matrix4x4::Transpose(RotationMatrix4x4()) * TranslationMatrix4x4Inverse();
