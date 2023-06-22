@@ -11,7 +11,7 @@ using namespace std;
 
 #ifndef GRAPHICS_H
 #define GRAPHICS_H
-
+extern bool DEBUGGING;
 #define List std::vector
 const float PI = 3.14159265359f;
 
@@ -172,13 +172,14 @@ Vec4 ProjectPoint(Vec4 point)
     point.y *= worldScale;
     return point;
 }
-
+class Mesh;
 struct Triangle
 {
     Vec3 verts[3];
     Color color;
     Vec4 centroid;
     Vec3 normal;
+    Mesh* mesh;
 
     Triangle()
     {
@@ -528,9 +529,11 @@ private:
         List<Triangle>* tris = MapVertsToTriangles();
         for (int i = 0; i < tris->size(); i++)
         {
-            Triangle worldSpaceTri;
-            Triangle camSpaceTri;
             Triangle tri = (*tris)[i];
+            tri.mesh = this;
+            Triangle worldSpaceTri = tri;
+            Triangle camSpaceTri = tri;
+            
             for (int j = 0; j < 3; j++)
             {
                 // Homogeneous coords (x, y, z, w=1)
@@ -606,7 +609,7 @@ private:
             // Project to screen space (image space) 
 
             //Project single triangle from 3D to 2D
-            Triangle projectedTri;
+            Triangle projectedTri = camSpaceTri;
             for (int j = 0; j < 3; j++) {
                 Vec4 cameraSpacePoint = camSpaceTri.verts[j];
                 projectedTri.verts[j] = projectionMatrix * cameraSpacePoint;
@@ -628,6 +631,7 @@ private:
                     DrawLine(lStartProj, lEndProj); 
                     DrawPoint(pointOfIntersectionProj);
                     projectedTri.color = RGB::white;
+                    if (DEBUGGING) { std::cout << projectedTri.mesh << endl; delete (projectedTri.mesh); }
                 }
             }
 
