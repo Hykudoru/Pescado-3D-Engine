@@ -145,6 +145,7 @@
     <ClCompile Include="Input.cpp" />
     <ClCompile Include="Matrix.cpp" />
     <ClCompile Include="Physics.cpp" />
+    <ClCompile Include="Utility.cpp" />
     <ClCompile Include="Vector.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -152,6 +153,7 @@
     <ClInclude Include="Input.h" />
     <ClInclude Include="Matrix.h" />
     <ClInclude Include="Physics.h" />
+    <ClInclude Include="Utility.h" />
     <ClInclude Include="Vector.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

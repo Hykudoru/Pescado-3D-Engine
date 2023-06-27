@@ -107,7 +107,7 @@ void OnKeyPressEvent(GLFWwindow* window, int key, int scancode, int action, int 
             GraphicSettings::debugNormals = !GraphicSettings::debugNormals;
         }
         else if (key == GLFW_KEY_V) {
-            GraphicSettings::culling = !GraphicSettings::culling;
+            GraphicSettings::backFaceCulling = !GraphicSettings::backFaceCulling;
         }
         else if (key == GLFW_KEY_M) {
             GraphicSettings::fillTriangles = !GraphicSettings::fillTriangles;

@@ -7,38 +7,18 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <Utility.h>
 using namespace std;
 
 #ifndef GRAPHICS_H
 #define GRAPHICS_H
-extern bool DEBUGGING;
-#define List std::vector
-const float PI = 3.14159265359f;
-
-float Clamp(float value, float min, float max)
-{
-    if (value < min) {
-        value = min;
-    }
-    else if (value > max) {
-        value = max;
-    }
-    return value;
-}
-
-float ToDeg(float rad) {
-    return rad * 180.0 / PI;
-}
-
-float ToRad(float deg) {
-    return deg * PI / 180.0;
-}
 
 //-----------GRAPHICS---------------
 
 struct GraphicSettings
 {
-    static bool culling;
+    static bool frustumCulling;
+    static bool backFaceCulling;
     static bool invertNormals;
     static bool debugNormals;
     static bool debugVertices;
@@ -48,7 +28,8 @@ struct GraphicSettings
     static bool lighting;
     static bool vfx;
 };
-bool GraphicSettings::culling = true;
+bool GraphicSettings::frustumCulling = true;
+bool GraphicSettings::backFaceCulling = true;
 bool GraphicSettings::invertNormals = false;
 bool GraphicSettings::debugNormals = false;
 bool GraphicSettings::debugVertices = false;
@@ -281,7 +262,7 @@ struct Triangle
 
 List<Triangle>* triBuffer = new List<Triangle>(100000);
 
-bool LinePlaneIntersect(Vec3& lineStart, Vec3& lineEnd, Triangle& plane, Vec3* pointIntersecting)
+bool LinePlaneIntersectionPoint(Vec3& lineStart, Vec3& lineEnd, Triangle& plane, Vec3* pointIntersecting)
 {
     // Plane: N_x(x-x0) + N_y(y-y0) + N_z(z-z0) = 0
     // Point on plane: x0,y0,z0
@@ -317,7 +298,7 @@ bool PointInsideTriangle(const Vec3 &p, const Triangle &tri)
     return ((w1 >= 0.0 && w2 >= 0.0) && (w1 + w2) <= 1.0);
 }
 
-void LineOnPlanesIntersection(Vec3& normal1, Vec3& p1, Vec3& normal2, Vec3& p2)
+void LineIntersectingPlanes(Vec3& normal1, Vec3& p1, Vec3& normal2, Vec3& p2)
 {
     float D1 = DotProduct(normal1, p1);
     float D2 = DotProduct(normal2, p2);
@@ -495,12 +476,11 @@ public:
 
         Mesh::worldTriangleDrawCount = triBuffer->size();
 
-        // Depth Sort (painting algorithm)
+        // Depth Sort (Painter's algorithm)
         sort(triBuffer->begin(), triBuffer->end(), [](const Triangle& triA, const Triangle& triB) -> bool
-            {
-                return triA.centroid.w > triB.centroid.w;
-            });
-
+        {
+           return triA.centroid.w > triB.centroid.w;
+        });
 
         //Draw
         for (int i = 0; i < triBuffer->size(); i++)
@@ -510,7 +490,6 @@ public:
 
         triBuffer->clear();
     }
-
 private:
     void transformTriangles() 
     {
@@ -558,11 +537,14 @@ private:
             Vec3 p3_c = camSpaceTri.verts[2];
             Vec3 centroid_c = camSpaceTri.Centroid();
 
-            bool tooCloseToCamera = (p1_c.z >= nearClippingPlane || p2_c.z >= nearClippingPlane || p3_c.z >= nearClippingPlane || centroid_c.z >= nearClippingPlane);
-            bool tooFarFromCamera = (p1_c.z <= farClippingPlane || p2_c.z <= farClippingPlane || p3_c.z <= farClippingPlane || centroid_c.z <= farClippingPlane);
-            bool behindCamera = DotProduct(centroid_c.Normalized(), Vec3D::forward) <= 0.0;
-            if (tooCloseToCamera || tooFarFromCamera || behindCamera) {
-                continue; // Skip triangle if it's out of cam view.
+            if (GraphicSettings::frustumCulling)
+            {
+                bool tooCloseToCamera = (p1_c.z >= nearClippingPlane || p2_c.z >= nearClippingPlane || p3_c.z >= nearClippingPlane || centroid_c.z >= nearClippingPlane);
+                bool tooFarFromCamera = (p1_c.z <= farClippingPlane || p2_c.z <= farClippingPlane || p3_c.z <= farClippingPlane || centroid_c.z <= farClippingPlane);
+                bool behindCamera = DotProduct(centroid_c.Normalized(), Vec3D::forward) <= 0.0;
+                if (tooCloseToCamera || tooFarFromCamera || behindCamera) {
+                    continue; // Skip triangle if it's out of cam view.
+                }
             }
 
             // Calculate triangle suface Normal
@@ -574,26 +556,14 @@ private:
                 normal_c = normal_c * -1.0;
             }
 
-            if (GraphicSettings::culling)
+            if (GraphicSettings::backFaceCulling)
             {
                 // Back-face culling - Checks if the triangles backside is facing the camera.
                 Vec3 posRelativeToCam = centroid_c;// Since camera is (0,0,0) in view space, the displacement vector from camera to centroid IS the centroid itself.
-                bool faceVisibleToCamera = DotProduct(posRelativeToCam.Normalized(), normal_c) <= 0;
-
-                if (!faceVisibleToCamera) {
+                bool faceInvisibleToCamera = DotProduct(posRelativeToCam.Normalized(), normal_c) >= 0;
+                if (faceInvisibleToCamera) {
                     continue;// Skip triangle if it's out of cam view or it's part of the other side of the mesh.
                 }
-            }
-
-            //------------------------ Lighting (world space)------------------------
-            Color triColor = this->color;
-            if (GraphicSettings::lighting && GraphicSettings::fillTriangles)
-            {
-                Vec3 lightSource = Vec3D::up + Vec3D::right + Vec3D::back * .3;
-                float amountFacingLight = DotProduct((Vec3)worldSpaceTri.Normal(), lightSource);
-                Color colorLit = (triColor * Clamp(amountFacingLight, 0.15, 1));
-
-                triColor = colorLit;
             }
             
             if (GraphicSettings::debugNormals)
@@ -615,13 +585,46 @@ private:
                 projectedTri.verts[j] = projectionMatrix * cameraSpacePoint;
             };
             projectedTri.centroid = projectionMatrix * centroid_c;
+
+            //Frustum Culling
+            if (GraphicSettings::frustumCulling) 
+            {
+                Range range = ProjectVertsOntoAxis(projectedTri.verts, 3, Vec3D::left);
+                if (range.min >= 1 && range.max >= 1) {
+                    continue;
+                }
+                range = ProjectVertsOntoAxis(projectedTri.verts, 3, Vec3D::right);
+                if (range.min >= 1 && range.max >= 1) {
+                    continue;
+                }
+                range = ProjectVertsOntoAxis(projectedTri.verts, 3, Vec3D::up);
+                if (range.min >= 1 && range.max >= 1) {
+                    continue;
+                }
+                range = ProjectVertsOntoAxis(projectedTri.verts, 3, Vec3D::down);
+                if (range.min >= 1 && range.max >= 1) {
+                    continue;
+                }
+            }
+
+            //------------------------ Lighting (world space)------------------------
+            Color triColor = this->color;
+            if (GraphicSettings::lighting && GraphicSettings::fillTriangles)
+            {
+                Vec3 lightSource = Vec3D::up + Vec3D::right + Vec3D::back * .3;
+                float amountFacingLight = DotProduct((Vec3)worldSpaceTri.Normal(), lightSource);
+                Color colorLit = (triColor * Clamp(amountFacingLight, 0.15, 1));
+
+                triColor = colorLit;
+            }
+
             projectedTri.color = triColor;  
 
             //------------------Ray casting (world & view space)-------------------------------------------------------------
             Vec3 lineStart = Camera::cameras[1]->position;
             Vec3 lineEnd = lineStart + Camera::cameras[1]->Forward() * abs(farClippingPlane);
             Vec3 pointOfIntersection;
-            if (LinePlaneIntersect(lineStart, lineEnd, worldSpaceTri, &pointOfIntersection))
+            if (LinePlaneIntersectionPoint(lineStart, lineEnd, worldSpaceTri, &pointOfIntersection))
             {
                 Vec4 pointOfIntersectionProj = projectionMatrix * worldToViewMatrix * pointOfIntersection;
                 if (PointInsideTriangle(pointOfIntersectionProj, projectedTri))

@@ -35,6 +35,7 @@ void Debug()
         std::cout << "Triangles Drawn:" << Mesh::worldTriangleDrawCount << std::endl;
     }
 }
+
 Mesh* textHelloWorld;
 Mesh* planet;
 void Init(GLFWwindow* window)
@@ -88,6 +89,7 @@ void Init(GLFWwindow* window)
 void Update()
 {
 }
+
 void Draw()
 {
     Mesh::DrawMeshes();

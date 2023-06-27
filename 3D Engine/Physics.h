@@ -3,6 +3,7 @@
 #include <math.h>
 #include <Matrix.h>
 #include <Graphics.h>
+#include <Utility.h>
 using namespace std;
 
 #ifndef PHYSICS_H
@@ -68,41 +69,7 @@ public:
     }
 };
 
-struct Range
-{
-    float min;
-    float max;
-
-    Range(float minimum, float maximum)
-    {
-        min = minimum;
-        max = maximum;
-    }
-};
-
-Range ProjectVertsOntoAxis(List<Vec3>& verts, Vec3& axis)
-{
-    float min = 0;
-    float max = 0;
-    for (size_t k = 0; k < verts.size(); k++)
-    {
-        float dist = DotProduct(verts[k], axis);
-        if (k == 0)
-        {
-            min = dist;
-            max = dist;
-        }
-        else if (dist < min) {
-            min = dist;
-        }
-        else if (dist > max) {
-            max = dist;
-        }
-    }
-
-    return Range(min, max);
-}
-
+// Oriented Bounding Box (OBB) with Separating Axis Theorem (SAT) algorithm
 bool Collision(CubeMesh& mesh1, CubeMesh& mesh2)
 {
     bool gap = false;
@@ -124,8 +91,8 @@ bool Collision(CubeMesh& mesh1, CubeMesh& mesh2)
         for (size_t j = 0; j < mesh1Normals.size(); j++)
         {
             Vec3 n1 = mesh1Normals[j];
-            Range rangeA = ProjectVertsOntoAxis(mesh1Verts, n1);
-            Range rangeB = ProjectVertsOntoAxis(mesh2Verts, n1);
+            Range rangeA = ProjectVertsOntoAxis(mesh1Verts.data(), mesh1Verts.size(), n1);
+            Range rangeB = ProjectVertsOntoAxis(mesh2Verts.data(), mesh2Verts.size(), n1);
             gap = !((rangeA.max >= rangeB.min && rangeB.max >= rangeA.min));// || (mesh1Range.max < mesh2Range.min && mesh2Range.max < mesh1Range.min));
             if (gap) {
                 break;
@@ -161,8 +128,8 @@ bool Collision(CubeMesh& mesh1, CubeMesh& mesh2)
                 }
 
                 axis = CrossProduct(nA, nB);
-                Range rangeA = ProjectVertsOntoAxis(mesh1Verts, axis);
-                Range rangeB = ProjectVertsOntoAxis(mesh2Verts, axis);
+                Range rangeA = ProjectVertsOntoAxis(mesh1Verts.data(), mesh1Verts.size(), axis);
+                Range rangeB = ProjectVertsOntoAxis(mesh2Verts.data(), mesh2Verts.size(), axis);
                 gap = !((rangeA.max >= rangeB.min && rangeB.max >= rangeA.min));// || (mesh1Range.max < mesh2Range.min && mesh2Range.max < mesh1Range.min));
                 if (gap) {
                     break;
@@ -179,7 +146,8 @@ bool Collision(CubeMesh& mesh1, CubeMesh& mesh2)
 
 void DetectCollisions()
 {
-    // How it works: Meshes A, B, C, D, E...
+    // How nested loop algorithm works: 
+    // Gets meshes A, B, C, D, E...
     // Compare A:B, A:C, A:D, A:E
     // Compare B:C, B:D, B:E
     // Compare C:D, C:E
@@ -227,8 +195,6 @@ Vec3 velocity = Vec3(0, 0, 0);
 extern Mesh* planet;
 //PhysicsObject physicsCube1 = PhysicsObject(new CubeMesh());// PhysicsObject();
 //PhysicsObject physicsCube2 = PhysicsObject(new CubeMesh());// PhysicsObject();
-
-
 static void Physics(GLFWwindow* window)
 {
     //---------- Physics Update ------------
@@ -251,14 +217,14 @@ static void Physics(GLFWwindow* window)
         float planetRotationSpeed = 1.5 * PI / 180 * deltaTime;
         planet->rotation = Matrix3x3::RotX(-planetRotationSpeed) * Matrix3x3::RotY(planetRotationSpeed + 0.000001) * planet->rotation;// MatrixMultiply(YPR(angle * ((screenWidth / 2)), angle * -((screenWidth / 2)), 0), Mesh.meshes[1].rotation);
     }
-    
+    /*
     for (size_t i = 0; i < Mesh::meshes.size(); i++)
     {
         if (Mesh::meshes[i])
         {
            //Mesh::meshes[i]->position += Mesh::meshes[i]->position  * (-deltaTime / 10.0);
         }
-    }
+    }*/
 
     if (Physics::collisionDetection)
     {
