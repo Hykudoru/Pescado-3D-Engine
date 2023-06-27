@@ -55,6 +55,8 @@ void OnMouseButtonEvent(GLFWwindow* window, int button, int action, int mods)
             mesh->position = Camera::main->position + (Camera::main->Forward() * 10);
         }
     }
+
+
 }
 
 void OnKeyPressEvent(GLFWwindow* window, int key, int scancode, int action, int mods)

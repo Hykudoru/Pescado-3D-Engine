@@ -259,11 +259,7 @@ public:
             Vector4<float> rowVec = Vector4<float>(matrixA.m[r][0], matrixA.m[r][1], matrixA.m[r][2], matrixA.m[r][3]);
             for (size_t c = 0; c < 4; c++)
             {
-                Vector4<float> columnVec;
-                columnVec.x = matrixB.m[0][c];
-                columnVec.y = matrixB.m[1][c];
-                columnVec.z = matrixB.m[2][c];
-                columnVec.w = matrixB.m[3][c];
+                Vector4<float> columnVec = Vector4<float>(matrixB.m[0][c], matrixB.m[1][c], matrixB.m[2][c], matrixB.m[3][c]);
                 result.m[r][c] = DotProduct(rowVec, columnVec);
             }
         }

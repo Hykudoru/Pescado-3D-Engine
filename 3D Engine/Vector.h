@@ -10,13 +10,13 @@ template <typename T>
 class Vector4;
 
 template <typename T>
-T DotProduct(Vector3<T> a, Vector3<T> b)
+T DotProduct(const Vector3<T>& a, const Vector3<T>& b)
 {
     return (a.x * b.x) + (a.y * b.y) + (a.z * b.z);
 }
 
 template <typename T>
-T DotProduct(Vector4<T> a, Vector4<T> b)
+T DotProduct(const Vector4<T>& a, const Vector4<T>& b)
 {
     return (a.x * b.x) + (a.y * b.y) + (a.z * b.z) + (a.w * b.w);
 }
@@ -24,7 +24,7 @@ T DotProduct(Vector4<T> a, Vector4<T> b)
 // Remember order matters. A X B != B X A
 // Calculates a unit vector orthogonal/perpendicular to both A and B vectors
 template <typename T>
-Vector3<T> CrossProduct(Vector3<T> a, Vector3<T> b)
+Vector3<T> CrossProduct(const Vector3<T>& a, const Vector3<T>& b)
 {
     /* Matrix
      |  i | j | k  |
