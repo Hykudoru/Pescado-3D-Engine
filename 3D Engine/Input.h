@@ -50,9 +50,11 @@ void OnMouseButtonEvent(GLFWwindow* window, int button, int action, int mods)
     if (action == GLFW_PRESS)
     {
         // Spawn Mesh
-        if (button == 1) {
-            Mesh* mesh = LoadMeshFromOBJFile("Objects/Sphere.obj");
+        if (button == 2) {
+            Mesh* mesh = LoadMeshFromOBJFile("Objects/Diamond.obj");
             mesh->position = Camera::main->position + (Camera::main->Forward() * 10);
+            mesh->rotation = Camera::main->rotation;
+            mesh->color = RGB::turquoise;
         }
     }
 
@@ -101,7 +103,6 @@ void OnKeyPressEvent(GLFWwindow* window, int key, int scancode, int action, int 
         }
 
         //-------------------Debugging------------------------
-
         else if (key == GLFW_KEY_I) {
             GraphicSettings::invertNormals = !GraphicSettings::invertNormals;
         }

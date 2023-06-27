@@ -183,8 +183,9 @@ void DetectCollisions()
 
 Vec3 gravity = Vec3(0, -9.81, 0);
 const float accel = 0.1;
-const float deccel = 0.95;
+const float decel = 0.95;
 const float defaultMoveSpeed = 50;
+
 float moveSpeed = defaultMoveSpeed;
 float rotateSpeed = PI / 2;
 bool isKinematic = false;
@@ -198,19 +199,23 @@ extern Mesh* planet;
 static void Physics(GLFWwindow* window)
 {
     //---------- Physics Update ------------
-    if (!isKinematic) {
+    if (isKinematic) 
+    {
+        Camera::main->position += moveDir * moveSpeed * deltaTime;
+    }
+    else 
+    {
         velocity += moveDir * moveSpeed * accel;
         if (Physics::gravity) {
             velocity += gravity * deltaTime;
         }
         else if (dampenersActive) {
-            velocity *= 0.95;
+            velocity *= decel;
+        }
+        if (velocity.SqrMagnitude() < 0.0001) {
+            velocity = Vec3::zero;
         }
         Camera::main->position += velocity * deltaTime;
-        //std::cout << "Velocity:" << velocity.ToString();
-    }
-    else {
-        Camera::main->position += moveDir * moveSpeed * deltaTime;
     }
 
     if (planet) {

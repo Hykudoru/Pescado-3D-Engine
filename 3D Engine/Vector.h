@@ -48,6 +48,7 @@ class Vector2
 public:
     T x;
     T y;
+    static Vector2<T> zero;
 
     Vector2();
     Vector2(T xVal, T yVal);
@@ -163,6 +164,8 @@ Vector2<T>::Vector2(T xy[])
     x = xy[0];
     y = xy[1];
 }
+template <typename T>
+Vector2<T> Vector2<T>::zero = { 0, 0 };
 
 // ----------------------- Vector3 -------------------------
 template <typename T>
@@ -174,8 +177,7 @@ public:
     T y;
     T z;
     int size = 3;
-    //static const Zero = new Vec3(0, 0, 0);
-    //static const One = new Vec3(1.0, 1.0, 1.0);
+    static Vector3<T> zero;
 
     Vector3();
     Vector3(T xVal, T yVal, T zVal);
@@ -293,6 +295,8 @@ public:
     operator Vector2<T>();
     operator Vector4<T>();
 };
+template <typename T>
+Vector3<T> Vector3<T>::zero = { 0, 0, 0};
 
 // Constructors
 template <typename T>

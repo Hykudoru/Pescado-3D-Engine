@@ -153,13 +153,14 @@ Vec4 ProjectPoint(Vec4 point)
     point.y *= worldScale;
     return point;
 }
+
 class Mesh;
-struct Triangle
+struct Triangle : Plane
 {
-    Vec3 verts[3];
-    Color color;
+    //Vec3 verts[3];
+    //Vec3 normal;
     Vec4 centroid;
-    Vec3 normal;
+    Color color;
     Mesh* mesh;
 
     Triangle()
@@ -178,7 +179,7 @@ struct Triangle
         centroid = Centroid();// Vec3(0, 0, 0);
         normal = Normal();// Vec3(0, 0, 0);
     }
-
+    /*
     Vec4 Normal()
     {
         // Calculate triangle suface Normal
@@ -187,7 +188,7 @@ struct Triangle
         Vec3 normal = (CrossProduct(a, b)).Normalized();
 
         return normal;
-    }
+    }*/
 
     Vec4 Centroid()
     {
@@ -205,21 +206,6 @@ struct Triangle
         Vec4 p1 = tri.verts[0];
         Vec4 p2 = tri.verts[1];
         Vec4 p3 = tri.verts[2];
-
-        if (GraphicSettings::debugVertices) 
-        {
-            float c = Clamp(1.0 / (0.000001 + (tri.color.x + tri.color.y + tri.color.z) / 3), 0, 255);
-            glColor3ub(c, c, c);
-
-            DrawPoint(p1);
-            DrawPoint(p2);
-            
-            DrawPoint(p2);
-            DrawPoint(p3);
-            
-            DrawPoint(p3);
-            DrawPoint(p1);
-        }
 
         if (GraphicSettings::fillTriangles == false) 
         {
@@ -261,54 +247,6 @@ struct Triangle
 };
 
 List<Triangle>* triBuffer = new List<Triangle>(100000);
-
-bool LinePlaneIntersectionPoint(Vec3& lineStart, Vec3& lineEnd, Triangle& plane, Vec3* pointIntersecting)
-{
-    // Plane: N_x(x-x0) + N_y(y-y0) + N_z(z-z0) = 0
-    // Point on plane: x0,y0,z0
-    // Point on line: x,y,z
-    // Parametric Line: P = P0 + Vt ---> lineEnd = lineStart + (lineEnd-lineStart)t
-    // 1st. Paramiterize line like this ---> x = (P0_x + V_x*t), y =, z = ... 
-    // 2nd. Plugin x,y,z it into plane equation and solve for t.
-    // 3rd. Use t to find the point intersecting both the line and plane.
-    Vec3 n = plane.Normal();
-    Vec3 pointPlane = plane.verts[0];
-    Vec3 v = lineEnd - lineStart;
-
-    double t = (round(DotProduct(n, pointPlane - lineStart))) / DotProduct(n, v);
-    Vec3 pIntersect = lineStart + (v * t);
-    
-    if (round(DotProduct((pIntersect - lineStart), v)) > 0.0)
-    {
-        *pointIntersecting = pIntersect;
-        return true;
-    }
-    
-    return false;
-}
-
-bool PointInsideTriangle(const Vec3 &p, const Triangle &tri)
-{
-    Vec3 A = tri.verts[0];
-    Vec3 B = tri.verts[1];
-    Vec3 C = tri.verts[2];
-    float w1 = ( ((p.x-A.x)*(C.y-A.y)) - ((p.y-A.y)*(C.x-A.x)) ) / ( ((B.x-A.x)*(C.y-A.y)) - ((B.y-A.y)*(C.x-A.x)) );
-    float w2 = ( (p.y - A.y) - (w1*(B.y-A.y)) ) / (C.y-A.y);
-
-    return ((w1 >= 0.0 && w2 >= 0.0) && (w1 + w2) <= 1.0);
-}
-
-void LineIntersectingPlanes(Vec3& normal1, Vec3& p1, Vec3& normal2, Vec3& p2)
-{
-    float D1 = DotProduct(normal1, p1);
-    float D2 = DotProduct(normal2, p2);
-    Vec3 v = CrossProduct(normal1, normal2);
-    float y = (D2 * normal1.x - D1 * normal2.x) / (-normal2.x * normal1.y + normal2.y);
-    float x = (D1 - normal1.y * y) / normal1.x;
-
-    float t = 0;
-    Vec3 line = Vec3(x, y, 0) + v * t;
-}
 
 //-------------------------------TRANSFORM---------------------------------------------
 class Transform
@@ -627,7 +565,7 @@ private:
             if (LinePlaneIntersectionPoint(lineStart, lineEnd, worldSpaceTri, &pointOfIntersection))
             {
                 Vec4 pointOfIntersectionProj = projectionMatrix * worldToViewMatrix * pointOfIntersection;
-                if (PointInsideTriangle(pointOfIntersectionProj, projectedTri))
+                if (PointInsideTriangle(pointOfIntersectionProj, projectedTri.verts))
                 {
                     Vec4 lStartProj = projectionMatrix * worldToViewMatrix * lineStart;
                     Vec4 lEndProj = projectionMatrix * worldToViewMatrix * lineEnd;
@@ -725,10 +663,10 @@ public:
 };
 
 //---------------------------------PLANE---------------------------------------------
-class Plane : Mesh
+class PlaneMesh : Mesh
 {
 public:
-    Plane(int scale = 1, Vec3 position = Vec3(0, 0, 0), Vec3 rotationEuler = Vec3(0, 0, 0))
+    PlaneMesh(int scale = 1, Vec3 position = Vec3(0, 0, 0), Vec3 rotationEuler = Vec3(0, 0, 0))
         :Mesh(scale, position, rotationEuler) {}
     
     List<Triangle>* MapVertsToTriangles()
@@ -779,11 +717,9 @@ Mesh* LoadMeshFromOBJFile(string objFile)
     file.close();
     // -----------------Construct new mesh-------------------
     Mesh* mesh = new Mesh();
-
     List<Vec3>* verts = new List<Vec3>();
-    verts->reserve(10);
-
     List<Triangle>* triangles = new List<Triangle>();
+    verts->reserve(10);
     triangles->reserve(10);
 
     for (size_t i = 0; i < strings.size(); i++)
@@ -797,7 +733,6 @@ Mesh* LoadMeshFromOBJFile(string objFile)
             float y = stof(strings[++i]);
             float z = stof(strings[++i]);
             verts->emplace_back(Vec3(x, y, z));
-            //std::cout << "(" << x << ", " << y << ", " << z << ")" << endl;
         }
         else if (str == "f") { //f means the next 3 strings will be the indices for mapping vertices
             int p3Index = stof(strings[++i]);
