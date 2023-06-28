@@ -325,7 +325,16 @@ public:
 
     Matrix4x4 TRS() 
     {
-        return TranslationMatrix4x4() * RotationMatrix4x4() * ScaleMatrix4x4();
+        float matrix[4][4] =
+        {
+            {this->rotation.m[0][0] * scale.x, this->rotation.m[0][1] * scale.y, this->rotation.m[0][2] * scale.z, position.x},
+            {this->rotation.m[1][0] * scale.x, this->rotation.m[1][1] * scale.y, this->rotation.m[1][2] * scale.z, position.y},
+            {this->rotation.m[2][0] * scale.x, this->rotation.m[2][1] * scale.y, this->rotation.m[2][2] * scale.z, position.z},
+            {0,                                         0,                                  0,                      1}
+        };
+
+        return matrix; //return TranslationMatrix4x4() * RotationMatrix4x4() * ScaleMatrix4x4();
+        
     }
 
     Matrix4x4 TR() 
