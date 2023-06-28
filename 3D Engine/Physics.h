@@ -41,32 +41,76 @@ void Time()
         frames = 0;
     }
 }
+/*
+class Component
+{
 
-class PhysicsObject
+};
+
+class GameObject
+{
+public:
+    static List<GameObject*> gameObjects;
+    static int gameObjectCount;
+    List<Component> components;
+    Transform* transform;
+    Mesh* mesh;
+    RigidBody* rigidBody;
+
+    GameObject(Mesh& mesh, RigidBody& rigidBody)
+    {
+        this->mesh = &mesh;
+        this->rigidBody = &rigidBody;
+        GameObject::gameObjects.emplace(gameObjects.begin() + gameObjectCount++, this);
+    }
+
+    ~GameObject()
+    {
+        if (transform)
+        {
+            delete transform;
+        }
+        if (mesh)
+        {
+            delete mesh;
+        }
+        if (rigidBody)
+        {
+            delete rigidBody;
+        }
+    }
+
+    static void Update()
+    {
+        for (size_t i = 0; i < gameObjectCount; i++)
+        {
+            if (gameObjects[i]->rigidBody)
+            {
+                gameObjects[i]->Update();
+            }
+        }
+    }
+};*/
+
+class RigidBody
 {
 public:
     float mass = 1;
     bool isKinematic = false;
-    Vec3 velocity = Vec3(0, 0, 0);
-    Vec3 angularVelocity = Vec3(0, 0, 0);
-    Vec3 position;
-    Matrix3x3 rotation;
-    Mesh* mesh;
+    Vec3 velocity = Vec3::zero;
+    Vec3 angularVelocity = Vec3::zero;
+    Vec3 position = Vec3::zero;
+    Matrix3x3 rotation = Identity3x3;
+};
 
-    PhysicsObject(Mesh* mesh)
-    {
-        this->mesh = mesh;
-        position = mesh->position;
-        rotation = mesh->rotation;
-    }
+class Collider
+{
 
-    virtual void Update()
-    {
-        if (mesh) {
-            mesh->position = position;
-            mesh->rotation = rotation;
-        }
-    }
+};
+
+class BoxCollider
+{
+
 };
 
 // Oriented Bounding Box (OBB) with Separating Axis Theorem (SAT) algorithm
@@ -160,18 +204,20 @@ void DetectCollisions()
         }
 
         // Current Mesh
-        CubeMesh* mesh = (CubeMesh*)Mesh::meshes[i];
-        if (!mesh)
-        {
+        // Check type
+        if (typeid(*Mesh::meshes[i]) != typeid(CubeMesh)) {
             continue;
         }
+        CubeMesh* mesh = (CubeMesh*)Mesh::meshes[i];
         for (size_t j = i + 1; j < Mesh::meshCount; j++)
         {
             // Next Mesh
-            CubeMesh* mesh2 = (CubeMesh*)Mesh::meshes[j];
-            if (!mesh2) {
+            // Check type
+            if (typeid(*Mesh::meshes[j]) != typeid(CubeMesh)) {
                 continue;
             }
+            CubeMesh* mesh2 = (CubeMesh*)Mesh::meshes[j];
+            
             if (Collision(*mesh, *mesh2))
             {
                 mesh->color = RGB::pink;
@@ -194,8 +240,6 @@ Vec3 moveDir = Vec3(0, 0, 0);
 Vec3 velocity = Vec3(0, 0, 0);
 
 extern Mesh* planet;
-//PhysicsObject physicsCube1 = PhysicsObject(new CubeMesh());// PhysicsObject();
-//PhysicsObject physicsCube2 = PhysicsObject(new CubeMesh());// PhysicsObject();
 static void Physics(GLFWwindow* window)
 {
     //---------- Physics Update ------------

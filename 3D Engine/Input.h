@@ -51,14 +51,12 @@ void OnMouseButtonEvent(GLFWwindow* window, int button, int action, int mods)
     {
         // Spawn Mesh
         if (button == 2) {
-            Mesh* mesh = LoadMeshFromOBJFile("Objects/Diamond.obj");
+            Mesh* mesh = new CubeMesh();//LoadMeshFromOBJFile("Objects/Sphere.obj");
             mesh->position = Camera::main->position + (Camera::main->Forward() * 10);
             mesh->rotation = Camera::main->rotation;
             mesh->color = RGB::turquoise;
         }
     }
-
-
 }
 
 void OnKeyPressEvent(GLFWwindow* window, int key, int scancode, int action, int mods)

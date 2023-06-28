@@ -51,7 +51,7 @@ void Init(GLFWwindow* window)
     glLineWidth(2);
     glPointSize(2);
 
-    Physics::collisionDetection = false;
+    Physics::collisionDetection = true;
 
     Mesh* cube1 = new CubeMesh(1, Vec3(-5, -5, -10));
     CubeMesh* cube2 = new CubeMesh(1, Vec3(-5, 5, -20));
