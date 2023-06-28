@@ -406,6 +406,18 @@ public:
         meshes.shrink_to_fit();
     }
 
+    //Convert to world coordinates
+    List<Vec3> WorldVertices()
+    {
+        List<Vec3> verts = *vertices;
+        for (size_t i = 0; i < verts.size(); i++)
+        {
+            verts[i] = (Vec3)(TRS() * ((Vec4)verts[i]));
+        }
+
+        return verts;
+    }
+
     static void DrawMeshes()
     {
         static bool init = false;
@@ -437,6 +449,7 @@ public:
 
         triBuffer->clear();
     }
+
 private:
     void transformTriangles() 
     {
@@ -581,7 +594,7 @@ private:
                     DrawLine(lStartProj, lEndProj); 
                     DrawPoint(pointOfIntersectionProj);
                     projectedTri.color = RGB::white;
-                    if (DEBUGGING) { std::cout << projectedTri.mesh << endl; delete (projectedTri.mesh); }
+                    if (DEBUGGING) { std::cout << projectedTri.mesh << endl; }//delete (projectedTri.mesh); }
                 }
             }
 

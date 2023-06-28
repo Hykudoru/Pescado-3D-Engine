@@ -114,18 +114,16 @@ class BoxCollider
 };
 
 // Oriented Bounding Box (OBB) with Separating Axis Theorem (SAT) algorithm
-bool Collision(CubeMesh& mesh1, CubeMesh& mesh2)
+bool Collision(CubeMesh& mesh1, CubeMesh& mesh2, bool resolve = true)
 {
     bool gap = false;
     if (!mesh1.vertices || !mesh2.vertices) {
         return false;
     }
-    List<Vec3> mesh1Verts = *mesh1.vertices;
-    List<Vec3> mesh2Verts = *mesh2.vertices;
+    List<Vec3> mesh1Verts = mesh1.WorldVertices();
+    List<Vec3> mesh2Verts = mesh2.WorldVertices();
     List<Vec3> mesh1Normals = mesh1.WorldXYZNormals();
     List<Vec3> mesh2Normals = mesh2.WorldXYZNormals();
-    for (size_t i = 0; i < mesh1Verts.size(); i++){ mesh1Verts[i] = (Vec3)(mesh1.TRS() * ((Vec4)mesh1Verts[i])); }//Convert to world coordinates
-    for (size_t i = 0; i < mesh2Verts.size(); i++){ mesh2Verts[i] = (Vec3)(mesh2.TRS() * ((Vec4)mesh2Verts[i])); }//Convert to world coordinates
 
     // Collision detection stops if at any time a gap is found.
     // Step 1: Project both meshes onto Mesh A's normal axes.
@@ -185,6 +183,17 @@ bool Collision(CubeMesh& mesh1, CubeMesh& mesh2)
         }
     }
 
+    if (!gap && resolve)
+    {
+        Vec3 axis = mesh1.position - mesh2.position;
+        axis.Normalize();
+        Range rangeA = ProjectVertsOntoAxis(mesh1Verts.data(), mesh1Verts.size(), axis);
+        Range rangeB = ProjectVertsOntoAxis(mesh2Verts.data(), mesh2Verts.size(), axis);
+        float tOffset = (abs(rangeA.max + rangeB.min) / 2.0) * 0.01;// deltaTime;
+        mesh1.position += axis * (tOffset);
+        mesh2.position -= axis * (tOffset);
+    }
+
     return !gap;//No gap = collision
 }
 
@@ -219,7 +228,7 @@ void DetectCollisions()
             CubeMesh* mesh2 = (CubeMesh*)Mesh::meshes[j];
             
             if (Collision(*mesh, *mesh2))
-            {
+            {   
                 mesh->color = RGB::pink;
                 mesh2->color = RGB::pink;
             }
@@ -266,12 +275,12 @@ static void Physics(GLFWwindow* window)
         float planetRotationSpeed = 1.5 * PI / 180 * deltaTime;
         planet->rotation = Matrix3x3::RotX(-planetRotationSpeed) * Matrix3x3::RotY(planetRotationSpeed + 0.000001) * planet->rotation;// MatrixMultiply(YPR(angle * ((screenWidth / 2)), angle * -((screenWidth / 2)), 0), Mesh.meshes[1].rotation);
     }
-    /*
-    for (size_t i = 0; i < Mesh::meshes.size(); i++)
+    
+    /*for (size_t i = 0; i < Mesh::meshes.size(); i++)
     {
         if (Mesh::meshes[i])
         {
-           //Mesh::meshes[i]->position += Mesh::meshes[i]->position  * (-deltaTime / 10.0);
+           Mesh::meshes[i]->position += Mesh::meshes[i]->position  * (-deltaTime / 10.0);
         }
     }*/
 
