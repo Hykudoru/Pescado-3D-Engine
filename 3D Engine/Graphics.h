@@ -120,21 +120,6 @@ void FOV(int deg)
     perspectiveProjectionMatrix = newPerspectiveProjectionMatrix;
 }
 
-void DrawPoint(Vec2 point)
-{
-    glBegin(GL_POINTS);
-    glVertex2f(point.x, point.y);
-    glEnd();
-}
-
-void DrawLine(Vec2 from, Vec2 to)
-{
-    glBegin(GL_LINES);
-    glVertex2f(from.y, from.y);
-    glVertex2f(to.x, to.y);
-    glEnd();
-}
-
 Matrix4x4 ProjectionMatrix()
 {
     if (GraphicSettings::perspective) {
@@ -152,6 +137,68 @@ Vec4 ProjectPoint(Vec4 point)
     point.x *= worldScale;
     point.y *= worldScale;
     return point;
+}
+
+struct Point
+{
+    Vec3 point;
+    Color color;
+    int size;
+
+    Point(Vec3 point, Color color = RGB::white, int size = 2)
+    {
+        this->point = point;
+        this->color = color;
+        this->size = size;
+    }
+
+    void Draw()
+    {
+        glPointSize(size);
+        glColor3ub(color.x, color.y, color.z);
+
+        glBegin(GL_POINTS);
+        glVertex2f(point.x, point.y);
+        glEnd();
+    }
+};
+
+struct Line
+{
+    Vec3 from;
+    Vec3 to;
+    Color color;
+    int width;
+
+    Line(Vec3 from, Vec3 to, Color color = RGB::white, int width = 2)
+    {
+        this->from = from;
+        this->to = to;
+        this->color = color;
+        this->width= width;
+    }
+
+    void Draw()
+    {
+        glLineWidth(width);
+        glColor3ub(color.x, color.y, color.z);
+
+        glBegin(GL_LINES);
+        glVertex2f(from.x, from.y);
+        glVertex2f(to.x, to.y);
+        glEnd();
+    }
+};
+
+List<Point>* points = new List<Point>();
+void Points(Point point)
+{
+    points->emplace_back(point);
+}
+List<Line>* lines = new List<Line>();
+void Lines(Line line)
+{
+    lines->emplace_back(line);
 }
 
 class Mesh;
@@ -201,11 +248,11 @@ struct Triangle : Plane
         return centroid;
     }
 
-    static void DrawTriangle(Triangle tri)
+    void Draw()
     {
-        Vec4 p1 = tri.verts[0];
-        Vec4 p2 = tri.verts[1];
-        Vec4 p3 = tri.verts[2];
+        Vec4 p1 = verts[0];
+        Vec4 p2 = verts[1];
+        Vec4 p3 = verts[2];
 
         if (GraphicSettings::fillTriangles == false) 
         {
@@ -214,12 +261,21 @@ struct Triangle : Plane
 
         glColor3ub(255, 255, 255);
 
+        if (GraphicSettings::fillTriangles)
+        {   glColor3ub(color.x, color.y, color.z);
+            glBegin(GL_TRIANGLES);
+            glVertex2f(p1.x, p1.y);
+            glVertex2f(p2.x, p2.y);
+            glVertex2f(p3.x, p3.y);
+            glEnd();
+        }
+
         if (GraphicSettings::displayWireFrames)
         {
             glBegin(GL_LINES);
             if (GraphicSettings::fillTriangles)
             {
-                float c = Clamp(1.0 / (0.000001 + (tri.color.x + tri.color.y + tri.color.z) / 3), 0, 255);
+                float c = Clamp(1.0 / (0.000001 + (color.x + color.y + color.z) / 3), 0, 255);
                 glColor3ub(c, c, c);
             }
             glVertex2f(p1.x, p1.y);
@@ -232,16 +288,7 @@ struct Triangle : Plane
             glVertex2f(p1.x, p1.y);
             glEnd();
         }
-
-        if (GraphicSettings::fillTriangles)
-        {   glColor3ub(tri.color.x, tri.color.y, tri.color.z);
-            glBegin(GL_TRIANGLES);
-            glVertex2f(p1.x, p1.y);
-            glVertex2f(p2.x, p2.y);
-            glVertex2f(p3.x, p3.y);
-            glEnd();
-        }
-
+        
         glColor3ub(255, 255, 255);
     }
 };
@@ -444,7 +491,7 @@ public:
         //Draw
         for (int i = 0; i < triBuffer->size(); i++)
         {
-            Triangle::DrawTriangle((*triBuffer)[i]);
+            (*triBuffer)[i].Draw();
         }
 
         triBuffer->clear();
@@ -501,7 +548,7 @@ private:
             {
                 bool tooCloseToCamera = (p1_c.z >= nearClippingPlane || p2_c.z >= nearClippingPlane || p3_c.z >= nearClippingPlane || centroid_c.z >= nearClippingPlane);
                 bool tooFarFromCamera = (p1_c.z <= farClippingPlane || p2_c.z <= farClippingPlane || p3_c.z <= farClippingPlane || centroid_c.z <= farClippingPlane);
-                bool behindCamera = DotProduct(centroid_c.Normalized(), Vec3D::forward) <= 0.0;
+                bool behindCamera = DotProduct(centroid_c, Vec3D::forward) <= 0.0;
                 if (tooCloseToCamera || tooFarFromCamera || behindCamera) {
                     continue; // Skip triangle if it's out of cam view.
                 }
@@ -520,21 +567,12 @@ private:
             {
                 // Back-face culling - Checks if the triangles backside is facing the camera.
                 Vec3 posRelativeToCam = centroid_c;// Since camera is (0,0,0) in view space, the displacement vector from camera to centroid IS the centroid itself.
-                bool faceInvisibleToCamera = DotProduct(posRelativeToCam.Normalized(), normal_c) >= 0;
+                bool faceInvisibleToCamera = DotProduct(posRelativeToCam, normal_c) >= 0;
                 if (faceInvisibleToCamera) {
                     continue;// Skip triangle if it's out of cam view or it's part of the other side of the mesh.
                 }
             }
             
-            if (GraphicSettings::debugNormals)
-            {
-                //---------Draw point at centroid and a line from centroid to normal (view space & projected space)-----------
-                Vec2 projectedNormal = projectionMatrix * (centroid_c + normal_c);
-                Vec2 projectedCentroid = projectionMatrix * centroid_c;
-                DrawPoint(projectedCentroid);
-                DrawLine(projectedCentroid, projectedNormal);
-            }
-
             // ================ SCREEN SPACE ==================
             // Project to screen space (image space) 
 
@@ -566,7 +604,7 @@ private:
                     continue;
                 }
             }
-
+            
             //------------------------ Lighting (world space)------------------------
             Color triColor = this->color;
             if (GraphicSettings::lighting && GraphicSettings::fillTriangles)
@@ -591,8 +629,8 @@ private:
                 {
                     Vec4 lStartProj = projectionMatrix * worldToViewMatrix * lineStart;
                     Vec4 lEndProj = projectionMatrix * worldToViewMatrix * lineEnd;
-                    DrawLine(lStartProj, lEndProj); 
-                    DrawPoint(pointOfIntersectionProj);
+                    Lines(Line(lStartProj, lEndProj)); 
+                    Points(Point(pointOfIntersectionProj, RGB::black, 5));
                     projectedTri.color = RGB::white;
                     if (DEBUGGING) { std::cout << projectedTri.mesh << endl; }//delete (projectedTri.mesh); }
                 }
@@ -610,6 +648,15 @@ private:
                 else {
                     projectedTri.color = RGB::red;
                 }
+            }
+            
+            if (GraphicSettings::debugNormals)
+            {
+                //---------Draw point at centroid and a line from centroid to normal (view space & projected space)-----------
+                Vec2 centroidToNormal_p = projectionMatrix * (centroid_c + normal_c);
+                Vec2 centroid_p = projectionMatrix * centroid_c;
+                Points(Point(centroid_p));
+                Lines(Line(centroid_p, centroidToNormal_p));
             }
 
             //Add projected tri

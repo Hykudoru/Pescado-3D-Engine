@@ -49,9 +49,9 @@ void Init(GLFWwindow* window)
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
 
     glLineWidth(2);
-    glPointSize(2);
+    glPointSize(2);//2);
 
-    Physics::collisionDetection = true;
+    GraphicSettings::debugVertices = true;
 
     Mesh* cube1 = new CubeMesh(1, Vec3(-5, -5, -10));
     CubeMesh* cube2 = new CubeMesh(1, Vec3(-5, 5, -20));
@@ -89,10 +89,25 @@ void Init(GLFWwindow* window)
 void Update()
 {
 }
-
+extern List<Vec3>* vertsDebugBuffer;
+extern List<Point>* points;
+extern List<Line>* lines;
 void Draw()
 {
     Mesh::DrawMeshes();
+
+    for (size_t i = 0; i < lines->size(); i++)
+    {
+        (*lines)[i].Draw();
+    }
+    lines->clear();
+
+    for (size_t i = 0; i < points->size(); i++)
+    {
+        (*points)[i].Draw();
+    }
+
+    points->clear();
 }
 
 int main(void)
