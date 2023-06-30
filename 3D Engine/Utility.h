@@ -64,13 +64,13 @@ Range ProjectVertsOntoAxis(const Vec3 verts[], const int& count, Vec3& axis)
 struct Plane
 {
     Vec3 verts[3];
-    Vec3 normal;
+    Vec4 normal;
     Vec4 Normal()
     {
         // Calculate triangle suface Normal
         Vec3 a = verts[2] - verts[0];
         Vec3 b = verts[1] - verts[0];
-        Vec3 normal = (CrossProduct(a, b)).Normalized();
+        normal = (CrossProduct(a, b)).Normalized();
 
         return normal;
     }

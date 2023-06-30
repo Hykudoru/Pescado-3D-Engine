@@ -239,10 +239,11 @@ struct Triangle : Plane
 
     Vec4 Centroid()
     {
-        Vec4 centroid = Vec4(
+        centroid = Vec4(
             (verts[0].x + verts[1].x + verts[2].x) / 3.0,
             (verts[0].y + verts[1].y + verts[2].y) / 3.0,
-            (verts[0].z + verts[1].z + verts[2].z) / 3.0
+            (verts[0].z + verts[1].z + verts[2].z) / 3.0,
+            centroid.w
         );
 
         return centroid;
@@ -509,8 +510,7 @@ private:
         Matrix4x4 modelToWorldMatrix = this->TRS();
         Matrix4x4 worldToViewMatrix = Camera::main->TRInverse();
         Matrix4x4 projectionMatrix = ProjectionMatrix();
-        //Matrix4x4 mvp = projectionMatrix * worldToViewMatrix * modelToWorldMatrix;
-        
+
         //Transform Triangles
         List<Triangle>* tris = MapVertsToTriangles();
         for (int i = 0; i < tris->size(); i++)
@@ -519,7 +519,7 @@ private:
             tri.mesh = this;
             Triangle worldSpaceTri = tri;
             Triangle camSpaceTri = tri;
-            
+            Triangle projectedTri = tri;
             for (int j = 0; j < 3; j++)
             {
                 // Homogeneous coords (x, y, z, w=1)
@@ -536,57 +536,29 @@ private:
 
                 Vec4 cameraSpacePoint = worldToViewMatrix * worldPoint;
                 camSpaceTri.verts[j] = cameraSpacePoint;
+
+                // ================ SCREEN SPACE ==================
+                // Project to screen space (image space)
+                
+                Vec4 projectedPoint = projectionMatrix * cameraSpacePoint;
+                projectedTri.verts[j] = projectedPoint;
             };
 
             //------------------- Normal/Frustum Culling (view space)------------------------
             Vec3 p1_c = camSpaceTri.verts[0];
             Vec3 p2_c = camSpaceTri.verts[1];
             Vec3 p3_c = camSpaceTri.verts[2];
-            Vec3 centroid_c = camSpaceTri.Centroid();
+            camSpaceTri.centroid = camSpaceTri.Centroid();
 
             if (GraphicSettings::frustumCulling)
             {
-                bool tooCloseToCamera = (p1_c.z >= nearClippingPlane || p2_c.z >= nearClippingPlane || p3_c.z >= nearClippingPlane || centroid_c.z >= nearClippingPlane);
-                bool tooFarFromCamera = (p1_c.z <= farClippingPlane || p2_c.z <= farClippingPlane || p3_c.z <= farClippingPlane || centroid_c.z <= farClippingPlane);
-                bool behindCamera = DotProduct(centroid_c, Vec3D::forward) <= 0.0;
+                bool tooCloseToCamera = (p1_c.z >= nearClippingPlane || p2_c.z >= nearClippingPlane || p3_c.z >= nearClippingPlane || camSpaceTri.centroid.z >= nearClippingPlane);
+                bool tooFarFromCamera = (p1_c.z <= farClippingPlane || p2_c.z <= farClippingPlane || p3_c.z <= farClippingPlane || camSpaceTri.centroid.z <= farClippingPlane);
+                bool behindCamera = DotProduct((Vec3)camSpaceTri.centroid, Vec3D::forward) <= 0.0;
                 if (tooCloseToCamera || tooFarFromCamera || behindCamera) {
                     continue; // Skip triangle if it's out of cam view.
                 }
-            }
-
-            // Calculate triangle suface Normal
-            Vec3 a = p3_c - p1_c;
-            Vec3 b = p2_c - p1_c;
-            Vec3 normal_c = (CrossProduct(a, b)).Normalized();
-
-            if (GraphicSettings::invertNormals) {
-                normal_c = normal_c * -1.0;
-            }
-
-            if (GraphicSettings::backFaceCulling)
-            {
-                // Back-face culling - Checks if the triangles backside is facing the camera.
-                Vec3 posRelativeToCam = centroid_c;// Since camera is (0,0,0) in view space, the displacement vector from camera to centroid IS the centroid itself.
-                bool faceInvisibleToCamera = DotProduct(posRelativeToCam, normal_c) >= 0;
-                if (faceInvisibleToCamera) {
-                    continue;// Skip triangle if it's out of cam view or it's part of the other side of the mesh.
-                }
-            }
-            
-            // ================ SCREEN SPACE ==================
-            // Project to screen space (image space) 
-
-            //Project single triangle from 3D to 2D
-            Triangle projectedTri = camSpaceTri;
-            for (int j = 0; j < 3; j++) {
-                Vec4 cameraSpacePoint = camSpaceTri.verts[j];
-                projectedTri.verts[j] = projectionMatrix * cameraSpacePoint;
-            };
-            projectedTri.centroid = projectionMatrix * centroid_c;
-
-            //Frustum Culling
-            if (GraphicSettings::frustumCulling) 
-            {
+                
                 Range range = ProjectVertsOntoAxis(projectedTri.verts, 3, Vec3D::left);
                 if (range.min >= 1 && range.max >= 1) {
                     continue;
@@ -604,7 +576,25 @@ private:
                     continue;
                 }
             }
-            
+
+            // Calculate triangle suface Normal
+            Vec3 normal_c = camSpaceTri.Normal();
+
+            if (GraphicSettings::invertNormals) {
+                normal_c = normal_c * -1.0;
+            }
+
+            // Back-face Culling - Checks if the triangles backside is facing the camera.
+            // Condition makes this setting optional when drawing wireframes alone, but will force culling if triangles are filled.
+            if (GraphicSettings::backFaceCulling || GraphicSettings::fillTriangles)
+            {
+                Vec3 posRelativeToCam = camSpaceTri.centroid;// Since camera is (0,0,0) in view space, the displacement vector from camera to centroid IS the centroid itself.
+                bool faceInvisibleToCamera = DotProduct(posRelativeToCam, normal_c) >= 0;
+                if (faceInvisibleToCamera) {
+                    continue;// Skip triangle if it's out of cam view or it's part of the other side of the mesh.
+                }
+            }
+
             //------------------------ Lighting (world space)------------------------
             Color triColor = this->color;
             if (GraphicSettings::lighting && GraphicSettings::fillTriangles)
@@ -653,13 +643,14 @@ private:
             if (GraphicSettings::debugNormals)
             {
                 //---------Draw point at centroid and a line from centroid to normal (view space & projected space)-----------
-                Vec2 centroidToNormal_p = projectionMatrix * (centroid_c + normal_c);
-                Vec2 centroid_p = projectionMatrix * centroid_c;
+                Vec2 centroidToNormal_p = projectionMatrix * ((Vec3)camSpaceTri.centroid + normal_c);
+                Vec2 centroid_p = projectionMatrix * camSpaceTri.centroid;
                 Points(Point(centroid_p));
                 Lines(Line(centroid_p, centroidToNormal_p));
             }
 
             //Add projected tri
+            projectedTri.centroid = projectionMatrix * camSpaceTri.centroid;
             triBuffer->emplace_back(projectedTri);
         }
     }
