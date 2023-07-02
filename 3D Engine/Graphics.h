@@ -83,7 +83,7 @@ int screenWidth = 800;//700;//screen.width - 20;
 int screenHeight = 800; //screen.height - 20; //screen.height;// - 30;
 float aspectRatio = screenWidth / screenHeight;
 float nearClippingPlane = -0.1;
-float farClippingPlane = -10000.0;
+float farClippingPlane = -100000.0;
 float fieldOfViewDeg = 60;
 float fov = ToRad(fieldOfViewDeg);
 
@@ -502,7 +502,7 @@ private:
     void transformTriangles() 
     {
         // Scale/Distance ratio culling
-        bool tooSmallToSee = scale.SqrMagnitude() / (position - Camera::main->position).SqrMagnitude() < 0.00000125;
+        bool tooSmallToSee = scale.SqrMagnitude() / (position - Camera::main->position).SqrMagnitude() < 0.000000125;
         if (tooSmallToSee) {
             return;
         }
@@ -527,28 +527,45 @@ private:
 
                 // =================== WORLD SPACE ===================
                 // Transform local coords to world-space coords.
-
                 Vec4 worldPoint = modelToWorldMatrix * vert;
                 worldSpaceTri.verts[j] = worldPoint;
 
                 // ================ VIEW/CAM/EYE SPACE ================
                 // Transform world coordinates to view coordinates.
-
                 Vec4 cameraSpacePoint = worldToViewMatrix * worldPoint;
                 camSpaceTri.verts[j] = cameraSpacePoint;
 
                 // ================ SCREEN SPACE ==================
                 // Project to screen space (image space)
-                
                 Vec4 projectedPoint = projectionMatrix * cameraSpacePoint;
                 projectedTri.verts[j] = projectedPoint;
             };
+projectedTri.color = this->color;
+            //------------------Ray casting (world & view space)-------------------------------------------------------------
+            Vec3 lineStart = Camera::cameras[1]->position;
+            Vec3 lineEnd = lineStart + Camera::cameras[1]->Forward() * abs(farClippingPlane);
+            Vec3 pointOfIntersection;
+            if (LinePlaneIntersectionPoint(lineStart, lineEnd, worldSpaceTri, &pointOfIntersection))
+            {
+                Vec4 pointOfIntersectionProj = projectionMatrix * worldToViewMatrix * pointOfIntersection;
+
+                if (PointInsideTriangle(pointOfIntersectionProj, projectedTri.verts))
+                {
+                    //Vec4 pointOfIntersectionProj = projectionMatrix * worldToViewMatrix * pointOfIntersection;
+                    Vec4 lStartProj = projectionMatrix * worldToViewMatrix * lineStart;
+                    Vec4 lEndProj = projectionMatrix * worldToViewMatrix * lineEnd;
+                    Lines(Line(lStartProj, lEndProj));
+                    Points(Point(pointOfIntersectionProj, RGB::black, 5));
+                    projectedTri.color = RGB::white;
+                    if (DEBUGGING) { std::cout << projectedTri.mesh << endl; }//delete (projectedTri.mesh); }
+                }
+            }
 
             //------------------- Normal/Frustum Culling (view space)------------------------
             Vec3 p1_c = camSpaceTri.verts[0];
             Vec3 p2_c = camSpaceTri.verts[1];
             Vec3 p3_c = camSpaceTri.verts[2];
-            camSpaceTri.centroid = camSpaceTri.Centroid();
+            camSpaceTri.Centroid();
 
             if (GraphicSettings::frustumCulling)
             {
@@ -596,41 +613,21 @@ private:
             }
 
             //------------------------ Lighting (world space)------------------------
-            Color triColor = this->color;
+            
             if (GraphicSettings::lighting && GraphicSettings::fillTriangles)
             {
                 Vec3 lightSource = Vec3D::up + Vec3D::right + Vec3D::back * .3;
                 float amountFacingLight = DotProduct((Vec3)worldSpaceTri.Normal(), lightSource);
-                Color colorLit = (triColor * Clamp(amountFacingLight, 0.15, 1));
+                Color colorLit = (projectedTri.color* Clamp(amountFacingLight, 0.15, 1));
 
-                triColor = colorLit;
-            }
-
-            projectedTri.color = triColor;  
-
-            //------------------Ray casting (world & view space)-------------------------------------------------------------
-            Vec3 lineStart = Camera::cameras[1]->position;
-            Vec3 lineEnd = lineStart + Camera::cameras[1]->Forward() * abs(farClippingPlane);
-            Vec3 pointOfIntersection;
-            if (LinePlaneIntersectionPoint(lineStart, lineEnd, worldSpaceTri, &pointOfIntersection))
-            {
-                Vec4 pointOfIntersectionProj = projectionMatrix * worldToViewMatrix * pointOfIntersection;
-                if (PointInsideTriangle(pointOfIntersectionProj, projectedTri.verts))
-                {
-                    Vec4 lStartProj = projectionMatrix * worldToViewMatrix * lineStart;
-                    Vec4 lEndProj = projectionMatrix * worldToViewMatrix * lineEnd;
-                    Lines(Line(lStartProj, lEndProj)); 
-                    Points(Point(pointOfIntersectionProj, RGB::black, 5));
-                    projectedTri.color = RGB::white;
-                    if (DEBUGGING) { std::cout << projectedTri.mesh << endl; }//delete (projectedTri.mesh); }
-                }
+                projectedTri.color = colorLit;
             }
 
             if (GraphicSettings::vfx)
             {
                 Vec3 screenLeftSide = Vec3(-1, 0, 0);
                 Vec3 screenRightSide = Vec3(1, 0, 0);
-                bool leftHalfScreenX = DotProduct(screenLeftSide, (((Vec3)projectedTri.Centroid()) - screenLeftSide).Normalized()) < -0.5;
+                bool leftHalfScreenX = DotProduct(screenLeftSide, (Vec3)projectedTri.Centroid()) < 0.0;
 
                 if (leftHalfScreenX) {
                     projectedTri.color = Color(0, 0, 255);// std::cout << "Inside" << std::endl;

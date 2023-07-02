@@ -89,10 +89,10 @@ bool LinePlaneIntersectionPoint(Vec3& lineStart, Vec3& lineEnd, Plane& plane, Ve
     Vec3 pointPlane = plane.verts[0];
     Vec3 v = lineEnd - lineStart;
 
-    double t = (round(DotProduct(n, pointPlane - lineStart))) / DotProduct(n, v);
+    float t = DotProduct(n, pointPlane - lineStart) / DotProduct(n, v);
     Vec3 pIntersect = lineStart + (v * t);
 
-    if (round(DotProduct((pIntersect - lineStart), v)) > 0.0)
+    if (DotProduct(pIntersect - lineStart, v) > 0.0)
     {
         *pointIntersecting = pIntersect;
         return true;
