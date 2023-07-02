@@ -307,6 +307,7 @@ static void Physics(GLFWwindow* window)
         onoff = dampenersActive ? "On" : "Off";
         std::cout << "Inertial Dampeners: " << onoff << " (press Z)" << endl;
 
+        std::cout << "Position: (" << Camera::main->position.x << ", " << Camera::main->position.y << ", " << Camera::main->position.z << ")" << endl;
         std::cout << "Velocity: <" << velocity.x << ", " << velocity.y << ", " << velocity.z << ">" << endl;
     }
 }

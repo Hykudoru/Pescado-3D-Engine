@@ -309,7 +309,7 @@ public:
     Vec3 Left() { return this->rotation * Vec3D::left; }
     Vec3 Up() { return this->rotation * Vec3D::up; }
     Vec3 Down() { return this->rotation * Vec3D::down; }
-
+    string name;
     Transform(float scale = 1, Vec3 position = Vec3(0, 0, 0), Vec3 rotationEuler = Vec3(0, 0, 0))
     {
         this->scale.x = scale;
@@ -317,6 +317,7 @@ public:
         this->scale.z = scale;
         this->position = position;
         this->rotation = YPR(rotationEuler.x, rotationEuler.y, rotationEuler.z);
+        name = (int)(this);
     }
 
     Matrix4x4 ScaleMatrix4x4()
@@ -404,8 +405,6 @@ public:
     static Camera* main;
     static List<Camera*> cameras;
     static int cameraCount;
-
-    string name;
     Camera(Vec3 position = Vec3(0, 0, 0), Vec3 rotationEuler = Vec3(0, 0, 0))
     : Transform(1, position, rotationEuler)
     {
@@ -435,6 +434,7 @@ public:
     : Transform(scale, position, rotationEuler)
     {
         Mesh::meshes.emplace(meshes.begin()+meshCount++, this);
+        name = "Mesh "+meshCount;
         MapVertsToTriangles();
     }
 
@@ -478,6 +478,19 @@ public:
         // Transform
         for (int i = 0; i < Mesh::meshCount; i++)
         {
+            if (GraphicSettings::frustumCulling)
+            {
+                // Scale/Distance ratio culling
+                bool tooSmallToSee = Mesh::meshes[i]->scale.SqrMagnitude() / (Mesh::meshes[i]->position - Camera::main->position).SqrMagnitude() < 0.0000000125;
+                if (tooSmallToSee) {
+                    continue;
+                }
+                bool behindCamera = DotProduct(Mesh::meshes[i]->position - Camera::main->position, Camera::main->Forward()) < 0.0;
+                if (behindCamera) {
+                    continue;
+                }
+            }
+            
             Mesh::meshes[i]->transformTriangles();
         }
 
@@ -517,6 +530,7 @@ private:
         {
             Triangle tri = (*tris)[i];
             tri.mesh = this;
+            tri.color = this->color;
             Triangle worldSpaceTri = tri;
             Triangle camSpaceTri = tri;
             Triangle projectedTri = tri;
@@ -540,7 +554,7 @@ private:
                 Vec4 projectedPoint = projectionMatrix * cameraSpacePoint;
                 projectedTri.verts[j] = projectedPoint;
             };
-projectedTri.color = this->color;
+            
             //------------------Ray casting (world & view space)-------------------------------------------------------------
             Vec3 lineStart = Camera::cameras[1]->position;
             Vec3 lineEnd = lineStart + Camera::cameras[1]->Forward() * abs(farClippingPlane);
@@ -557,7 +571,7 @@ projectedTri.color = this->color;
                     Lines(Line(lStartProj, lEndProj));
                     Points(Point(pointOfIntersectionProj, RGB::black, 5));
                     projectedTri.color = RGB::white;
-                    if (DEBUGGING) { std::cout << projectedTri.mesh << endl; }//delete (projectedTri.mesh); }
+                    if (DEBUGGING) { std::cout << ((string)projectedTri.mesh->name) << endl; }//delete (projectedTri.mesh); }
                 }
             }
 
@@ -595,10 +609,10 @@ projectedTri.color = this->color;
             }
 
             // Calculate triangle suface Normal
-            Vec3 normal_c = camSpaceTri.Normal();
+            camSpaceTri.Normal();
 
             if (GraphicSettings::invertNormals) {
-                normal_c = normal_c * -1.0;
+                camSpaceTri.normal = ((Vec3) camSpaceTri.normal) * -1.0;
             }
 
             // Back-face Culling - Checks if the triangles backside is facing the camera.
@@ -606,7 +620,7 @@ projectedTri.color = this->color;
             if (GraphicSettings::backFaceCulling || GraphicSettings::fillTriangles)
             {
                 Vec3 posRelativeToCam = camSpaceTri.centroid;// Since camera is (0,0,0) in view space, the displacement vector from camera to centroid IS the centroid itself.
-                bool faceInvisibleToCamera = DotProduct(posRelativeToCam, normal_c) >= 0;
+                bool faceInvisibleToCamera = DotProduct(posRelativeToCam, (Vec3) camSpaceTri.normal) >= 0;
                 if (faceInvisibleToCamera) {
                     continue;// Skip triangle if it's out of cam view or it's part of the other side of the mesh.
                 }
@@ -640,7 +654,7 @@ projectedTri.color = this->color;
             if (GraphicSettings::debugNormals)
             {
                 //---------Draw point at centroid and a line from centroid to normal (view space & projected space)-----------
-                Vec2 centroidToNormal_p = projectionMatrix * ((Vec3)camSpaceTri.centroid + normal_c);
+                Vec2 centroidToNormal_p = projectionMatrix * ((Vec3)camSpaceTri.centroid + camSpaceTri.normal);
                 Vec2 centroid_p = projectionMatrix * camSpaceTri.centroid;
                 Points(Point(centroid_p));
                 Lines(Line(centroid_p, centroidToNormal_p));

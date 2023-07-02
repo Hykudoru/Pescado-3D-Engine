@@ -89,6 +89,7 @@ void Init(GLFWwindow* window)
 void Update()
 {
 }
+
 extern List<Vec3>* vertsDebugBuffer;
 extern List<Point>* points;
 extern List<Line>* lines;
@@ -130,23 +131,25 @@ int main(void)
     glfwMakeContextCurrent(window);
     
     //glewInit();
-    Init(window);
     
-   
+    {
+        Init(window);
+    }
+
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
     {
         /* Render here */
         glClear(GL_COLOR_BUFFER_BIT);
 
-
-        Time();
-        Input(window);
-        Physics(window);
-        Update();
-        Draw();
-        Debug();
-
+        {
+            Time();
+            Input(window);
+            Physics(window);
+            Update();
+            Draw();
+            Debug();
+        }
 
         /* Swap front and back buffers */
         glfwSwapBuffers(window);

@@ -5,9 +5,6 @@
 #include <Graphics.h>
 #include <Physics.h>
 //-----------------Input----------------------
-
-//static double prevMouseX;
-//static double prevMouseY;
 static double deltaMouseX;
 static double deltaMouseY;
 float mouseSensitivity = .25;
@@ -132,8 +129,6 @@ void OnKeyPressEvent(GLFWwindow* window, int key, int scancode, int action, int 
 
 static void Input(GLFWwindow* window)
 {
-    //CheckMouseMove(window);
-
     moveDir = Vec3(0, 0, 0);
     //----------Camera Controls-------
     // FORWARD
