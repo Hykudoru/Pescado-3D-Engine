@@ -90,7 +90,6 @@ void Update()
 {
 }
 
-extern List<Vec3>* vertsDebugBuffer;
 extern List<Point>* points;
 extern List<Line>* lines;
 void Draw()

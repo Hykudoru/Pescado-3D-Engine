@@ -33,13 +33,6 @@ void OnMouseMoveEvent(GLFWwindow* window, double mouseX, double mouseY)
     }
 }
 
-void OnScrollEvent(GLFWwindow* window, double xOffset, double yOffset)
-{
-    FOV(fieldOfViewDeg - yOffset);
-
-    std::cout << "FOV:" << ToDeg(fov) << "°" << std::endl;
-}
-
 void OnMouseButtonEvent(GLFWwindow* window, int button, int action, int mods)
 {
     std::cout << "Mouse button:" << button << std::endl;
@@ -56,6 +49,13 @@ void OnMouseButtonEvent(GLFWwindow* window, int button, int action, int mods)
     }
 }
 
+void OnScrollEvent(GLFWwindow* window, double xOffset, double yOffset)
+{
+    FOV(fieldOfViewDeg - yOffset);
+
+    std::cout << "FOV:" << ToDeg(fov) << "°" << std::endl;
+}
+
 void OnKeyPressEvent(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
     if (action == GLFW_PRESS)
@@ -67,10 +67,10 @@ void OnKeyPressEvent(GLFWwindow* window, int key, int scancode, int action, int 
             Camera::main->rotation = Identity3x3;
             Camera::main->position = Vec3();
         }
-        else if (glfwGetKey(window, GLFW_KEY_F1) == GLFW_PRESS) {
+        else if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS) {
             Camera::main = Camera::cameras[0];
         }
-        else if (glfwGetKey(window, GLFW_KEY_F2) == GLFW_PRESS) {
+        else if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS) {
             Camera::main = Camera::cameras[1];
         }
 
@@ -120,9 +120,13 @@ void OnKeyPressEvent(GLFWwindow* window, int key, int scancode, int action, int 
         {
             mouseCameraControlEnabled = !mouseCameraControlEnabled;
         }
-        else if (key == GLFW_KEY_SLASH)
+        else if (key == GLFW_KEY_F1)
         {
             GraphicSettings::vfx = !GraphicSettings::vfx;
+        }
+        else if (key == GLFW_KEY_F2)
+        {
+            GraphicSettings::matrixMode = !GraphicSettings::matrixMode;
         }
     }
 }

@@ -101,14 +101,17 @@ public:
     Vec3 angularVelocity = Vec3::zero;
     Vec3 position = Vec3::zero;
     Matrix3x3 rotation = Identity3x3;
+
+    //Collider collider;
 };
 
 class Collider
 {
-
+public:
+    bool isStatic = false;
 };
 
-class BoxCollider
+class BoxCollider : public Collider
 {
 
 };
@@ -325,5 +328,8 @@ static void Physics(GLFWwindow* window)
         std::cout << "Position: (" << Camera::main->position.x << ", " << Camera::main->position.y << ", " << Camera::main->position.z << ")" << endl;
         std::cout << "Velocity: <" << velocity.x << ", " << velocity.y << ", " << velocity.z << ">" << endl;
     }
+
+    //List<Vec3> worldVerts = planet->WorldVertices();
+    //Points(Point(ProjectionMatrix() * Camera::main->TRInverse() * ClosestPoint(worldVerts, Camera::main->position), RGB::green, 10));
 }
 #endif

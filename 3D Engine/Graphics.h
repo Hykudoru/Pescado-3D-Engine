@@ -27,6 +27,7 @@ struct GraphicSettings
     static bool displayWireFrames;
     static bool lighting;
     static bool vfx;
+    static bool matrixMode;
 };
 bool GraphicSettings::frustumCulling = true;
 bool GraphicSettings::backFaceCulling = true;
@@ -38,6 +39,7 @@ bool GraphicSettings::fillTriangles = true;
 bool GraphicSettings::displayWireFrames = false;
 bool GraphicSettings::lighting = true;
 bool GraphicSettings::vfx = false;
+bool GraphicSettings::matrixMode = false;
 
 #define Color Vector3<float>
 struct RGB : Vector3<float>
@@ -260,7 +262,11 @@ struct Triangle : Plane
             GraphicSettings::displayWireFrames = true;
         }
 
-        glColor3ub(255, 255, 255);
+        //glColor3ub(255, 255, 255);
+        if (GraphicSettings::matrixMode)
+        {
+            glColor3ub(0, 255, 0);
+        }
 
         if (GraphicSettings::fillTriangles)
         {   glColor3ub(color.x, color.y, color.z);

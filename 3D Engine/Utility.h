@@ -61,6 +61,35 @@ Range ProjectVertsOntoAxis(const Vec3 verts[], const int& count, Vec3& axis)
     return Range(min, max);
 }
 
+
+Vec3 ClosestPoint(List<Vec3>& verts, Vec3& pointComparing, float* closestDistance = NULL)
+{
+    Vec3 closestPoint;
+    float closestDist;
+    for (size_t i = 0; i < verts.size(); i++)
+    {
+        if (i == 0) {
+            closestPoint = verts[i];
+            closestDist = (verts[i]-pointComparing).SqrMagnitude();
+            continue;
+        }
+
+        Vec3 point = verts[i] - pointComparing;
+        float dist = point.SqrMagnitude();
+        if (dist < closestDist)
+        {
+            closestDist = dist;
+            closestPoint = verts[i];
+        }
+    }
+
+    if (closestDistance) {
+        *closestDistance = closestDist;
+    }
+
+    return closestPoint;
+}
+
 struct Plane
 {
     Vec3 verts[3];
