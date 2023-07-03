@@ -117,6 +117,9 @@ class BoxCollider
 bool Collision(CubeMesh& mesh1, CubeMesh& mesh2, bool resolve = true)
 {
     bool gap = false;
+    float minDistProjection;
+    Vec3 minDistProjectionAxis;
+
     if (!mesh1.vertices || !mesh2.vertices) {
         return false;
     }
@@ -125,7 +128,8 @@ bool Collision(CubeMesh& mesh1, CubeMesh& mesh2, bool resolve = true)
     List<Vec3> mesh1Normals = mesh1.WorldXYZNormals();
     List<Vec3> mesh2Normals = mesh2.WorldXYZNormals();
 
-    // Collision detection stops if at any time a gap is found.
+    // Note: Collision detection stops if at any time a gap is found.
+    // Note: Cache the minimum distance projection and axis for later use to resolve the collision if needed.
     // Step 1: Project both meshes onto Mesh A's normal axes.
     // Step 2: Project both meshes onto Mesh B's normal axes.
     for (size_t i = 0; i < 2; i++)
@@ -139,7 +143,23 @@ bool Collision(CubeMesh& mesh1, CubeMesh& mesh2, bool resolve = true)
             if (gap) {
                 break;
             }
+            
+            //Compare and cache minimum projection distance and axis for later use if needed for collision resolution.
+            float min1 = rangeA.max - rangeB.min;
+            float min2 = rangeB.max - rangeA.min;
+            float min = min1 < min2 ? min1 : min2;
+            if (j == 0) 
+            {   //Initialize minimum projection distance and axis
+                minDistProjection = min;
+                minDistProjectionAxis = n1;
+            }
+            else if (min < minDistProjection)
+            {
+                minDistProjection = min;
+                minDistProjectionAxis = n1;
+            }
         }
+
         if (gap) {
             break;
         }
@@ -168,7 +188,7 @@ bool Collision(CubeMesh& mesh1, CubeMesh& mesh2, bool resolve = true)
                         nB = mesh2Normals[j + 1];
                     }
                 }
-
+                // Search for possible 3D Edge-Edge collision
                 axis = CrossProduct(nA, nB);
                 Range rangeA = ProjectVertsOntoAxis(mesh1Verts.data(), mesh1Verts.size(), axis);
                 Range rangeB = ProjectVertsOntoAxis(mesh2Verts.data(), mesh2Verts.size(), axis);
@@ -185,13 +205,8 @@ bool Collision(CubeMesh& mesh1, CubeMesh& mesh2, bool resolve = true)
 
     if (!gap && resolve)
     {
-        Vec3 axis = mesh1.position - mesh2.position;
-        axis.Normalize();
-        Range rangeA = ProjectVertsOntoAxis(mesh1Verts.data(), mesh1Verts.size(), axis);
-        Range rangeB = ProjectVertsOntoAxis(mesh2Verts.data(), mesh2Verts.size(), axis);
-        float tOffset = (abs(rangeA.max + rangeB.min) / 2.0) * 0.01;// deltaTime;
-        mesh1.position += axis * (tOffset);
-        mesh2.position -= axis * (tOffset);
+        mesh1.position -= minDistProjectionAxis * (minDistProjection/2.0);
+        mesh2.position += minDistProjectionAxis * (minDistProjection/2.0);
     }
 
     return !gap;//No gap = collision
