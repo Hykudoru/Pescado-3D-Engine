@@ -7,6 +7,64 @@ extern bool DEBUGGING;
 const float PI = 3.14159265359f;
 const float TAO = 2.0 * PI;
 
+template <typename T>
+class ManagedObjectPool
+{
+public:
+    static List<T*> objects;
+    static int count;
+
+    ManagedObjectPool(T* obj)
+    {
+        //objects.emplace(objects.begin() + count++, obj);
+        ManagedObjectPool::objects.emplace_back(obj);
+        count++;
+    }
+
+    ~ManagedObjectPool()
+    {
+        for (size_t i = 0; i < ManagedObjectPool::objects.size(); i++)
+        {
+            if (this == ManagedObjectPool::objects[i]) {
+                ManagedObjectPool::objects.erase(ManagedObjectPool::objects.begin() + i);
+                break;
+            }
+        }
+        count--;
+    }
+};
+template <typename T>
+List<T*> ManagedObjectPool<T>::objects = List<T*>();
+template <typename T>
+int ManagedObjectPool<T>::count = 0;
+
+struct Plane
+{
+    Vec3 verts[3];
+    Vec4 normal;
+    Vec4 Normal()
+    {
+        // Calculate triangle suface Normal
+        Vec3 a = verts[2] - verts[0];
+        Vec3 b = verts[1] - verts[0];
+        normal = (CrossProduct(a, b)).Normalized();
+
+        return normal;
+    }
+};
+
+struct Range
+{
+    float min;
+    float max;
+
+    Range(float minimum, float maximum)
+    {
+        min = minimum;
+        max = maximum;
+    }
+};
+
 float Clamp(float value, float min, float max)
 {
     if (value < min) {
@@ -25,18 +83,6 @@ float ToDeg(float rad) {
 float ToRad(float deg) {
     return deg * PI / 180.0;
 }
-
-struct Range
-{
-    float min;
-    float max;
-
-    Range(float minimum, float maximum)
-    {
-        min = minimum;
-        max = maximum;
-    }
-};
 
 Range ProjectVertsOntoAxis(const Vec3 verts[], const int& count, Vec3& axis)
 {
@@ -60,7 +106,6 @@ Range ProjectVertsOntoAxis(const Vec3 verts[], const int& count, Vec3& axis)
 
     return Range(min, max);
 }
-
 
 Vec3 ClosestPoint(List<Vec3>& verts, Vec3& pointComparing, float* closestDistance = NULL)
 {
@@ -89,21 +134,6 @@ Vec3 ClosestPoint(List<Vec3>& verts, Vec3& pointComparing, float* closestDistanc
 
     return closestPoint;
 }
-
-struct Plane
-{
-    Vec3 verts[3];
-    Vec4 normal;
-    Vec4 Normal()
-    {
-        // Calculate triangle suface Normal
-        Vec3 a = verts[2] - verts[0];
-        Vec3 b = verts[1] - verts[0];
-        normal = (CrossProduct(a, b)).Normalized();
-
-        return normal;
-    }
-};
 
 bool LinePlaneIntersectionPoint(Vec3& lineStart, Vec3& lineEnd, Plane& plane, Vec3* pointIntersecting)
 {

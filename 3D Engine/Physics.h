@@ -105,10 +105,14 @@ public:
     //Collider collider;
 };
 
-class Collider
+
+class Collider : public ManagedObjectPool<Collider>
 {
 public:
     bool isStatic = false;
+    Collider():ManagedObjectPool(this)
+    {
+    }
 };
 
 class BoxCollider : public Collider
@@ -223,27 +227,27 @@ void DetectCollisions()
     // Compare B:C, B:D, B:E
     // Compare C:D, C:E
     // Compare D:E
-    for (size_t i = 0; i < Mesh::meshCount; i++)
+    for (size_t i = 0; i < Mesh::count; i++)
     {
         // exit if this is the last mesh
-        if ((i + 1) >= Mesh::meshCount) {
+        if ((i + 1) >= Mesh::count) {
             break;
         }
 
         // Current Mesh
         // Check type
-        if (typeid(*Mesh::meshes[i]) != typeid(CubeMesh)) {
+        if (typeid(*Mesh::objects[i]) != typeid(CubeMesh)) {
             continue;
         }
-        CubeMesh* mesh = (CubeMesh*)Mesh::meshes[i];
-        for (size_t j = i + 1; j < Mesh::meshCount; j++)
+        CubeMesh* mesh = (CubeMesh*)Mesh::objects[i];
+        for (size_t j = i + 1; j < Mesh::count; j++)
         {
             // Next Mesh
             // Check type
-            if (typeid(*Mesh::meshes[j]) != typeid(CubeMesh)) {
+            if (typeid(*Mesh::objects[j]) != typeid(CubeMesh)) {
                 continue;
             }
-            CubeMesh* mesh2 = (CubeMesh*)Mesh::meshes[j];
+            CubeMesh* mesh2 = (CubeMesh*)Mesh::objects[j];
             
             if (Collision(*mesh, *mesh2))
             {   
@@ -328,8 +332,5 @@ static void Physics(GLFWwindow* window)
         std::cout << "Position: (" << Camera::main->position.x << ", " << Camera::main->position.y << ", " << Camera::main->position.z << ")" << endl;
         std::cout << "Velocity: <" << velocity.x << ", " << velocity.y << ", " << velocity.z << ">" << endl;
     }
-
-    //List<Vec3> worldVerts = planet->WorldVertices();
-    //Points(Point(ProjectionMatrix() * Camera::main->TRInverse() * ClosestPoint(worldVerts, Camera::main->position), RGB::green, 10));
 }
 #endif

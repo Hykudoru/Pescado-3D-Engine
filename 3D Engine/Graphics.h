@@ -424,11 +424,11 @@ Camera* cam = new Camera();
 Camera* Camera::main = cam;
 
 //---------------------------------MESH---------------------------------------------
-class Mesh : public Transform
+class Mesh : public Transform, public ManagedObjectPool<Mesh>
 {
 public:
-    static List<Mesh*> meshes;
-    static int meshCount;
+    //static List<Mesh*> meshes;
+    //static int meshCount;
     static int worldTriangleDrawCount;
     
     List<Vec3>* vertices;
@@ -437,10 +437,10 @@ public:
     Color color = RGB::white;
 
     Mesh(float scale = 1, Vec3 position = Vec3(0, 0, 0), Vec3 rotationEuler = Vec3(0, 0, 0))
-    : Transform(scale, position, rotationEuler)
+    : Transform(scale, position, rotationEuler), ManagedObjectPool(this)
     {
-        Mesh::meshes.emplace(meshes.begin()+meshCount++, this);
-        name = "Mesh "+meshCount;
+        //Mesh::objects.emplace(objects.begin()+meshCount++, this);
+        //name = "Mesh "+meshCount;
         MapVertsToTriangles();
     }
 
@@ -448,16 +448,6 @@ public:
     {
         delete vertices;
         delete triangles;
-
-        for (size_t i = 0; i < meshes.size(); i++)
-        {
-            if (this == meshes.at(i)) {
-                meshes.erase(meshes.begin() + i);
-                break;
-            }
-        }
-        meshes.resize(meshCount--);
-        meshes.shrink_to_fit();
     }
 
     //Convert to world coordinates
@@ -476,28 +466,28 @@ public:
     {
         static bool init = false;
         if (!init) {
-            meshes.resize(meshCount);
-            meshes.shrink_to_fit();
+            Mesh::objects.resize(count);
+            Mesh::objects.shrink_to_fit();
             init = true;
         }
 
         // Transform
-        for (int i = 0; i < Mesh::meshCount; i++)
+        for (int i = 0; i < Mesh::count; i++)
         {
             if (GraphicSettings::frustumCulling)
             {
                 // Scale/Distance ratio culling
-                bool tooSmallToSee = Mesh::meshes[i]->scale.SqrMagnitude() / (Mesh::meshes[i]->position - Camera::main->position).SqrMagnitude() < 0.0000000125;
+                bool tooSmallToSee = Mesh::objects[i]->scale.SqrMagnitude() / (Mesh::objects[i]->position - Camera::main->position).SqrMagnitude() < 0.0000000125;
                 if (tooSmallToSee) {
                     continue;
                 }
-                bool behindCamera = DotProduct(Mesh::meshes[i]->position - Camera::main->position, Camera::main->Forward()) < 0.0;
+                bool behindCamera = DotProduct(Mesh::objects[i]->position - Camera::main->position, Camera::main->Forward()) < 0.0;
                 if (behindCamera) {
                     continue;
                 }
             }
             
-            Mesh::meshes[i]->transformTriangles();
+            Mesh::objects[i]->transformTriangles();
         }
 
         Mesh::worldTriangleDrawCount = triBuffer->size();
@@ -577,7 +567,7 @@ private:
                     Lines(Line(lStartProj, lEndProj));
                     Points(Point(pointOfIntersectionProj, RGB::black, 5));
                     projectedTri.color = RGB::white;
-                    if (DEBUGGING) { std::cout << ((string)projectedTri.mesh->name) << endl; }//delete (projectedTri.mesh); }
+                    if (DEBUGGING) { std::cout << (projectedTri.mesh) << endl; }// delete projectedTri.mesh; }
                 }
             }
 
@@ -672,8 +662,8 @@ private:
         }
     }
 };
-List<Mesh*> Mesh::meshes = List<Mesh*>(1000);
-int Mesh::meshCount = 0;
+//List<Mesh*> Mesh::objects = List<Mesh*>(1000);
+//int Mesh::meshCount = 0;
 int Mesh::worldTriangleDrawCount = 0;
 
 //------------------------------------CUBE MESH------------------------------------------

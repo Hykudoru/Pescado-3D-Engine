@@ -40,7 +40,7 @@ void OnMouseButtonEvent(GLFWwindow* window, int button, int action, int mods)
     if (action == GLFW_PRESS)
     {
         // Spawn Mesh
-        if (button == 2) {
+        if (button == 0) {
             Mesh* mesh = new CubeMesh();//LoadMeshFromOBJFile("Objects/Sphere.obj");
             mesh->position = Camera::main->position + (Camera::main->Forward() * 10);
             mesh->rotation = Camera::main->rotation;
