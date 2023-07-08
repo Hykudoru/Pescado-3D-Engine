@@ -315,15 +315,15 @@ public:
     Vec3 Left() { return this->rotation * Vec3D::left; }
     Vec3 Up() { return this->rotation * Vec3D::up; }
     Vec3 Down() { return this->rotation * Vec3D::down; }
-    string name;
+    Transform* parent;
+
     Transform(float scale = 1, Vec3 position = Vec3(0, 0, 0), Vec3 rotationEuler = Vec3(0, 0, 0))
     {
         this->scale.x = scale;
         this->scale.y = scale;
         this->scale.z = scale;
         this->position = position;
-        this->rotation = YPR(rotationEuler.x, rotationEuler.y, rotationEuler.z);
-        name = (int)(this);
+        this->rotation = YPR(rotationEuler.x, rotationEuler.y, rotationEuler.z);    
     }
 
     Matrix4x4 ScaleMatrix4x4()
@@ -388,18 +388,33 @@ public:
             {0,                                         0,                                  0,                      1}
         };
 
+        if (parent) 
+        {
+            return parent->TRS() * matrix;
+        }
+
         return matrix; //return TranslationMatrix4x4() * RotationMatrix4x4() * ScaleMatrix4x4();
         
     }
 
     Matrix4x4 TR() 
     {
+        if (parent) 
+        {
+            return parent->TR() * TranslationMatrix4x4() * RotationMatrix4x4();
+        }
+
         return TranslationMatrix4x4() * RotationMatrix4x4();
     }
 
     // R^-1T^-1
     Matrix4x4 TRInverse() 
     {
+        if (parent) 
+        {
+            return  Matrix4x4::Transpose(RotationMatrix4x4()) * TranslationMatrix4x4Inverse() * parent->TRInverse();
+        }
+
         return Matrix4x4::Transpose(RotationMatrix4x4()) * TranslationMatrix4x4Inverse();
     }
 };
@@ -411,6 +426,9 @@ public:
     static Camera* main;
     static List<Camera*> cameras;
     static int cameraCount;
+
+    std::string name;
+
     Camera(Vec3 position = Vec3(0, 0, 0), Vec3 rotationEuler = Vec3(0, 0, 0))
     : Transform(1, position, rotationEuler)
     {
@@ -471,7 +489,7 @@ public:
             init = true;
         }
 
-        // Transform
+        // ---------- Transform -----------
         for (int i = 0; i < Mesh::count; i++)
         {
             if (GraphicSettings::frustumCulling)
@@ -489,16 +507,15 @@ public:
             
             Mesh::objects[i]->transformTriangles();
         }
-
         Mesh::worldTriangleDrawCount = triBuffer->size();
 
-        // Depth Sort (Painter's algorithm)
+        // ---------- Sort (Painter's algorithm) -----------
         sort(triBuffer->begin(), triBuffer->end(), [](const Triangle& triA, const Triangle& triB) -> bool
         {
            return triA.centroid.w > triB.centroid.w;
         });
 
-        //Draw
+        // ---------- Draw -----------
         for (int i = 0; i < triBuffer->size(); i++)
         {
             (*triBuffer)[i].Draw();
