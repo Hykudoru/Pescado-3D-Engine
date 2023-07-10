@@ -107,6 +107,8 @@ void Init(GLFWwindow* window)
 
     //Plane* plane = new Plane(1, Vec3(0, 0, 0), Vec3(0, 0, 0));
     Camera* camera2 = new Camera(Vec3(0, 50, 0), Vec3(-90 * PI / 180, 0, 0)); 
+    Mesh* cameraMesh = new CubeMesh();
+    cameraMesh->parent = camera2;
 }
  
 void Update(GLFWwindow* window)

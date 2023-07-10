@@ -593,16 +593,22 @@ private:
             Vec3 pointOfIntersection;
             if (LinePlaneIntersectionPoint(lineStart, lineEnd, worldSpaceTri, &pointOfIntersection))
             {
-                Vec4 pointOfIntersectionProj = projectionMatrix * worldToViewMatrix * pointOfIntersection;
+                Vec4 pointOfIntersection_p = projectionMatrix * worldToViewMatrix * pointOfIntersection;
 
-                if (PointInsideTriangle(pointOfIntersectionProj, projectedTri.verts))
+                if (PointInsideTriangle(pointOfIntersection_p, projectedTri.verts))
                 {
                     // ---------- Debugging -----------
                     //Vec4 pointOfIntersectionProj = projectionMatrix * worldToViewMatrix * pointOfIntersection;
-                    Vec4 lStartProj = projectionMatrix * worldToViewMatrix * lineStart;
-                    Vec4 lEndProj = projectionMatrix * worldToViewMatrix * lineEnd;
-                    Lines(Line(lStartProj, lEndProj));
-                    Points(Point(pointOfIntersectionProj, RGB::black, 5));
+                    Vec4 from_p = projectionMatrix * worldToViewMatrix * lineStart;
+                    Vec4 to_p = projectionMatrix * worldToViewMatrix * (pointOfIntersection);// +lineEnd);
+                    Lines(Line(from_p, pointOfIntersection_p));
+                    Points(Point(pointOfIntersection_p, RGB::black, 5));
+
+                    Vec3 n = worldSpaceTri.Normal();
+                    Vec3 v = (lineEnd - lineStart);
+                    Vec3 reflection = (n + v.Normalized()) * (DotProduct(v * -1, n));
+                    Lines(Line(pointOfIntersection_p, (Vec3)(projectionMatrix * worldToViewMatrix * (pointOfIntersection + reflection)), RGB::red));
+
                     projectedTri.color = RGB::white;
                     if (DEBUGGING) { std::cout << (projectedTri.mesh) << endl; }// delete projectedTri.mesh; }
                 }
