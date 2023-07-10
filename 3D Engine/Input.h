@@ -7,7 +7,7 @@
 //-----------------Input----------------------
 static double deltaMouseX;
 static double deltaMouseY;
-float mouseSensitivity = .25;
+float mouseSensitivity = .1;
 bool mouseCameraControlEnabled = true;
 
 void OnMouseMoveEvent(GLFWwindow* window, double mouseX, double mouseY)
@@ -25,9 +25,9 @@ void OnMouseMoveEvent(GLFWwindow* window, double mouseX, double mouseY)
 
         // Reset cursor to the center of the screen
         glfwSetCursorPos(window, screenCenterX, screenCenterY);
-
-        double xAngle = mouseSensitivity * -deltaMouseY * deltaTime;
-        double yAngle = 0.0000001 + mouseSensitivity * -deltaMouseX * deltaTime; // 0.0000001 so no gimbal lock
+        static float rad = PI / 180;
+        double xAngle = rad * mouseSensitivity * -deltaMouseY;// *deltaTime;
+        double yAngle = 0.0000001 + rad * mouseSensitivity * -deltaMouseX;// * deltaTime; // 0.0000001 so no gimbal lock
         Camera::main->rotation *= YPR(xAngle, yAngle, 0);
         //Camera::main->rotation = Matrix3x3::RotX(rotateSpeed * -deltaMouseY) * Camera::main->rotation * Matrix3x3::RotY((0.00001 + rotateSpeed) * -deltaMouseX);
     }
@@ -189,10 +189,10 @@ static void Input(GLFWwindow* window)
     // Speed 
     if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
     {
-        moveSpeed = defaultMoveSpeed * 5;
+        accel = defaultAcceleration * 5;
     }
     else {
-        moveSpeed = defaultMoveSpeed;
+        accel = defaultAcceleration;
     }
 }
 

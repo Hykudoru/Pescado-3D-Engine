@@ -38,6 +38,10 @@ void Debug()
 
 Mesh* textHelloWorld;
 Mesh* planet;
+CubeMesh* obj1;
+CubeMesh* obj2;
+CubeMesh* obj3;
+CubeMesh* obj4;
 void Init(GLFWwindow* window)
 {
     glfwSetCursorPosCallback(window, OnMouseMoveEvent);
@@ -49,9 +53,10 @@ void Init(GLFWwindow* window)
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
 
     glLineWidth(2);
-    glPointSize(2);//2);
+    glPointSize(2);
 
-    GraphicSettings::debugVertices = true;
+    GraphicSettings::matrixMode = true;
+    GraphicSettings::debugAxes = true;
 
     Mesh* cube1 = new CubeMesh(1, Vec3(-5, -5, -10));
     CubeMesh* cube2 = new CubeMesh(1, Vec3(-5, 5, -20));
@@ -61,10 +66,10 @@ void Init(GLFWwindow* window)
     CubeMesh* cube7 = new CubeMesh(1, Vec3(5, 5, 30));
     CubeMesh* cube8 = new CubeMesh(10, Vec3(5, -5, 40));
 
-    cube1->color = Color(255, 0, 0);
-    cube2->color = Color(255, 255, 0);
-    cube3->color = Color(0, 255, 255);
-    cube5->color = Color(0, 0, 255);
+    //cube1->color = Color(255, 0, 0);
+    //cube2->color = Color(255, 255, 0);
+    //cube3->color = Color(0, 255, 255);
+    //cube5->color = Color(0, 0, 255);
 
     
     planet = LoadMeshFromOBJFile("Objects/Sphere.obj");
@@ -77,6 +82,24 @@ void Init(GLFWwindow* window)
     textHelloWorld->position = Vec3(0, 0, -490);
     textHelloWorld->color = RGB::green;
     
+    Mesh* parent = new CubeMesh();
+    Mesh* child = new CubeMesh();
+    Mesh* grandchild = new CubeMesh();
+    child->parent = parent;
+    grandchild->parent = child;
+
+    obj1 = new CubeMesh(1, Vec3(0, 0, 0));
+    obj2 = new CubeMesh(1, Vec3(0, 2, -1));
+    obj3 = new CubeMesh(1, Vec3(0, 2, -1));
+    obj4 = new CubeMesh(1, Vec3(0, 2, -1));
+
+    obj2->rotation = Matrix3x3::RotZ(ToRad(-45));
+    obj3->rotation = Matrix3x3::RotZ(ToRad(-45));
+    //obj4->rotation = Matrix3x3::RotZ(ToRad(-45));
+    obj2->parent = obj1;
+    obj3->parent = obj2;
+    obj4->parent = obj3;
+
     //Mesh* guitar = LoadMeshFromOBJFile("Objects/Guitar.obj");
     //guitar->position += (Camera::main->Forward() * 10) + Camera::main->Right();
     //Mesh* chair = LoadMeshFromOBJFile("Objects/Chair.obj");
@@ -86,8 +109,16 @@ void Init(GLFWwindow* window)
     Camera* camera2 = new Camera(Vec3(0, 50, 0), Vec3(-90 * PI / 180, 0, 0)); 
 }
  
-void Update()
+void Update(GLFWwindow* window)
 {
+    if (glfwGetKey(window, GLFW_KEY_COMMA) == GLFW_PRESS) {
+        if (obj3->parent) {
+            obj3->parent = NULL;
+        }
+        else {
+            obj3->parent = obj2;
+        }
+    }
 }
 
 extern List<Point>* points;
@@ -145,7 +176,7 @@ int main(void)
             Time();
             Input(window);
             Physics(window);
-            Update();
+            Update(window);
             Draw();
             Debug();
         }

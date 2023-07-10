@@ -259,11 +259,9 @@ void DetectCollisions()
 }
 
 Vec3 gravity = Vec3(0, -9.81, 0);
-const float accel = 0.1;
-const float decel = 0.95;
-const float defaultMoveSpeed = 50;
-
-float moveSpeed = defaultMoveSpeed;
+const float defaultAcceleration = 50;
+float accel = defaultAcceleration;
+float decel = -5;
 float rotateSpeed = PI / 2;
 bool isKinematic = false;
 bool dampenersActive = true;
@@ -276,16 +274,16 @@ static void Physics(GLFWwindow* window)
     //---------- Physics Update ------------
     if (isKinematic) 
     {
-        Camera::main->position += moveDir * moveSpeed * deltaTime;
+        Camera::main->position += moveDir * accel * deltaTime;
     }
     else 
     {
-        velocity += moveDir * moveSpeed * accel;
+        velocity += moveDir * accel * deltaTime;
         if (Physics::gravity) {
             velocity += gravity * deltaTime;
         }
         else if (dampenersActive) {
-            velocity *= decel;
+            velocity += velocity * decel * deltaTime;
         }
         if (velocity.SqrMagnitude() < 0.0001) {
             velocity = Vec3::zero;
@@ -294,7 +292,7 @@ static void Physics(GLFWwindow* window)
     }
 
     if (planet) {
-        float planetRotationSpeed = 1.5 * PI / 180 * deltaTime;
+        float planetRotationSpeed = (1.5 * PI / 180) * deltaTime;
         planet->rotation = Matrix3x3::RotX(-planetRotationSpeed) * Matrix3x3::RotY(planetRotationSpeed + 0.000001) * planet->rotation;// MatrixMultiply(YPR(angle * ((screenWidth / 2)), angle * -((screenWidth / 2)), 0), Mesh.meshes[1].rotation);
     }
     

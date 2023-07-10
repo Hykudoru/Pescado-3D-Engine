@@ -22,6 +22,7 @@ struct GraphicSettings
     static bool invertNormals;
     static bool debugNormals;
     static bool debugVertices;
+    static bool debugAxes;
     static bool perspective;
     static bool fillTriangles;
     static bool displayWireFrames;
@@ -34,6 +35,7 @@ bool GraphicSettings::backFaceCulling = true;
 bool GraphicSettings::invertNormals = false;
 bool GraphicSettings::debugNormals = false;
 bool GraphicSettings::debugVertices = false;
+bool GraphicSettings::debugAxes = false;
 bool GraphicSettings::perspective = true;
 bool GraphicSettings::fillTriangles = true;
 bool GraphicSettings::displayWireFrames = false;
@@ -503,10 +505,27 @@ public:
                 if (behindCamera) {
                     continue;
                 }
+
+                // ---------- Debug -----------
+                if (GraphicSettings::debugAxes)
+                {
+                    Matrix4x4 mvp = ProjectionMatrix() * Camera::main->TRInverse() * Mesh::objects[i]->TRS();
+
+                    Vec3 center_p = mvp * Vec4(0, 0, 0, 1);
+                    Vec3 right_p = mvp * (Vec4)Vec3D::right;
+                    Vec3 up_p = mvp * (Vec4)Vec3D::up;
+                    Vec3 forward_p = mvp * (Vec4)Vec3D::forward;
+
+                    Points(Point(center_p, RGB::red, 5));
+                    Lines(Line(center_p, right_p, RGB::red));
+                    Lines(Line(center_p, up_p, RGB::yellow));
+                    Lines(Line(center_p, forward_p, RGB::blue));
+                }
             }
             
             Mesh::objects[i]->transformTriangles();
         }
+
         Mesh::worldTriangleDrawCount = triBuffer->size();
 
         // ---------- Sort (Painter's algorithm) -----------
@@ -568,7 +587,7 @@ private:
                 projectedTri.verts[j] = projectedPoint;
             };
             
-            //------------------Ray casting (world & view space)-------------------------------------------------------------
+            //------------------Ray casting (world & view space)--------------------------
             Vec3 lineStart = Camera::cameras[1]->position;
             Vec3 lineEnd = lineStart + Camera::cameras[1]->Forward() * abs(farClippingPlane);
             Vec3 pointOfIntersection;
@@ -578,6 +597,7 @@ private:
 
                 if (PointInsideTriangle(pointOfIntersectionProj, projectedTri.verts))
                 {
+                    // ---------- Debugging -----------
                     //Vec4 pointOfIntersectionProj = projectionMatrix * worldToViewMatrix * pointOfIntersection;
                     Vec4 lStartProj = projectionMatrix * worldToViewMatrix * lineStart;
                     Vec4 lEndProj = projectionMatrix * worldToViewMatrix * lineEnd;
@@ -663,7 +683,7 @@ private:
                     projectedTri.color = RGB::red;
                 }
             }
-            
+            // ---------- Debugging -----------
             if (GraphicSettings::debugNormals)
             {
                 //---------Draw point at centroid and a line from centroid to normal (view space & projected space)-----------
