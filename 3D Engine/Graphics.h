@@ -227,8 +227,7 @@ struct Triangle : Plane
         this->verts[1] = p2;
         this->verts[2] = p3;
         color = RGB::white;
-        centroid = Centroid();// Vec3(0, 0, 0);
-        normal = Normal();// Vec3(0, 0, 0);
+        centroid = Centroid();
     }
     /*
     Vec4 Normal()
@@ -497,15 +496,41 @@ public:
             if (GraphicSettings::frustumCulling)
             {
                 // Scale/Distance ratio culling
-                bool tooSmallToSee = Mesh::objects[i]->scale.SqrMagnitude() / (Mesh::objects[i]->position - Camera::main->position).SqrMagnitude() < 0.0000000125;
+                bool tooSmallToSee = Mesh::objects[i]->scale.SqrMagnitude() / (Mesh::objects[i]->position - Camera::main->position).SqrMagnitude() < 0.000000125;
                 if (tooSmallToSee) {
-                    continue;
+                    return;
                 }
                 bool behindCamera = DotProduct(Mesh::objects[i]->position - Camera::main->position, Camera::main->Forward()) < 0.0;
                 if (behindCamera) {
                     continue;
                 }
+                /*
+                if (Mesh::objects[i]->vertices)
+                {
+                    List<Vec3> verts = *(Mesh::objects[i]->vertices);
+                    for (size_t j = 0; j < verts.size(); j++)
+                    {
+                        verts[j] = ProjectionMatrix() * Camera::main->TRInverse() * Mesh::objects[i]->TRS() * verts[j];
+                    }
 
+                    Range range = ProjectVertsOntoAxis(verts.data(), verts.size(), Vec3D::left);
+                    if (range.min >= 1 && range.max >= 1) {
+                        continue;
+                    }
+                    range = ProjectVertsOntoAxis(verts.data(), verts.size(), Vec3D::right);
+                    if (range.min >= 1 && range.max >= 1) {
+                        continue;
+                    }
+                    range = ProjectVertsOntoAxis(verts.data(), verts.size(), Vec3D::up);
+                    if (range.min >= 1 && range.max >= 1) {
+                        continue;
+                    }
+                    range = ProjectVertsOntoAxis(verts.data(), verts.size(), Vec3D::down);
+                    if (range.min >= 1 && range.max >= 1) {
+                        continue;
+                    }
+                }*/
+                
                 // ---------- Debug -----------
                 if (GraphicSettings::debugAxes)
                 {
@@ -588,26 +613,32 @@ private:
             };
             
             //------------------Ray casting (world & view space)--------------------------
+            
             Vec3 lineStart = Camera::cameras[1]->position;
             Vec3 lineEnd = lineStart + Camera::cameras[1]->Forward() * abs(farClippingPlane);
             Vec3 pointOfIntersection;
             if (LinePlaneIntersectionPoint(lineStart, lineEnd, worldSpaceTri, &pointOfIntersection))
             {
-                Vec4 pointOfIntersection_p = projectionMatrix * worldToViewMatrix * pointOfIntersection;
+                Matrix4x4 matrix = projectionMatrix * worldToViewMatrix;
 
+                Vec4 pointOfIntersection_p = matrix * pointOfIntersection;
                 if (PointInsideTriangle(pointOfIntersection_p, projectedTri.verts))
                 {
                     // ---------- Debugging -----------
                     //Vec4 pointOfIntersectionProj = projectionMatrix * worldToViewMatrix * pointOfIntersection;
-                    Vec4 from_p = projectionMatrix * worldToViewMatrix * lineStart;
-                    Vec4 to_p = projectionMatrix * worldToViewMatrix * (pointOfIntersection);// +lineEnd);
+                    Vec4 from_p = matrix * lineStart;
+                    Vec4 to_p = matrix * (pointOfIntersection);// +lineEnd);
                     Lines(Line(from_p, pointOfIntersection_p));
                     Points(Point(pointOfIntersection_p, RGB::black, 5));
 
+                    // Reflect
                     Vec3 n = worldSpaceTri.Normal();
                     Vec3 v = (lineEnd - lineStart);
-                    Vec3 reflection = (n + v.Normalized()) * (DotProduct(v * -1, n));
-                    Lines(Line(pointOfIntersection_p, (Vec3)(projectionMatrix * worldToViewMatrix * (pointOfIntersection + reflection)), RGB::red));
+                    Vec3 reflection = Reflect(v, n);
+                    Lines(Line(pointOfIntersection_p, (Vec3)(matrix * (pointOfIntersection + reflection)), RGB::red));
+
+                    Vec3 vecPlane = ProjectOnPlane(v, n);
+                    Lines(Line(pointOfIntersection_p, (Vec3)(matrix * (pointOfIntersection + vecPlane.Normalized())), RGB::black));
 
                     projectedTri.color = RGB::white;
                     if (DEBUGGING) { std::cout << (projectedTri.mesh) << endl; }// delete projectedTri.mesh; }

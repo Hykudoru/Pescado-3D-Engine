@@ -84,6 +84,17 @@ float ToRad(float deg) {
     return deg * PI / 180.0;
 }
 
+Vec3 Reflect(Vec3 v, Vec3 n)
+{
+    return (n + v.Normalized()) * DotProduct(v * -1, n);
+}
+
+Vec3 ProjectOnPlane(Vec3 v, Vec3 n)
+{
+    Vec3 b = n * DotProduct(n, v);
+    return v - b;
+}
+
 Range ProjectVertsOntoAxis(const Vec3 verts[], const int& count, Vec3& axis)
 {
     float min = 0;
@@ -171,6 +182,7 @@ bool PointInsideTriangle(const Vec3& p, const Vec3 triPoints[3])
     return ((w1 >= 0.0 && w2 >= 0.0) && (w1 + w2) <= 1.0);
 }
 
+//Needs Testing
 void LineIntersectingPlanes(Vec3& normal1, Vec3& p1, Vec3& normal2, Vec3& p2)
 {
     float D1 = DotProduct(normal1, p1);
