@@ -132,8 +132,8 @@ bool Collision(CubeMesh& mesh1, CubeMesh& mesh2, bool resolve = true)
     }
     List<Vec3> mesh1Verts = mesh1.WorldVertices();
     List<Vec3> mesh2Verts = mesh2.WorldVertices();
-    List<Vec3> mesh1Normals = mesh1.WorldXYZNormals();
-    List<Vec3> mesh2Normals = mesh2.WorldXYZNormals();
+    List<Vec3> mesh1Normals = List<Vec3>{ mesh1.Right(), mesh1.Up(), mesh1.Forward() };// mesh1.WorldXYZNormals();
+    List<Vec3> mesh2Normals = List<Vec3>{ mesh2.Right(), mesh2.Up(), mesh2.Forward() }; //mesh2.WorldXYZNormals();
 
     // Note: Collision detection stops if at any time a gap is found.
     // Note: Cache the minimum distance projection and axis for later use to resolve the collision if needed.

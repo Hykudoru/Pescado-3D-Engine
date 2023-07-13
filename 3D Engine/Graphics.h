@@ -473,9 +473,10 @@ public:
     List<Vec3> WorldVertices()
     {
         List<Vec3> verts = *vertices;
+        Matrix4x4 matrix = TRS();
         for (size_t i = 0; i < verts.size(); i++)
         {
-            verts[i] = (Vec3)(TRS() * ((Vec4)verts[i]));
+            verts[i] = (Vec3)(matrix * ((Vec4)verts[i]));
         }
 
         return verts;
@@ -790,16 +791,6 @@ public:
         }
 
         return triangles;
-    }
-
-    List<Vec3> WorldXYZNormals()
-    {
-        List<Vec3> normals = {
-            Triangle(TRS() * (Vec4)(*vertices)[3], TRS() * (Vec4)(*vertices)[2], TRS() * (Vec4)(*vertices)[6]).Normal(),
-            Triangle(TRS() * (Vec4)(*vertices)[1], TRS() * (Vec4)(*vertices)[5], TRS() * (Vec4)(*vertices)[6]).Normal(),
-            Triangle(TRS() * (Vec4)(*vertices)[0], TRS() * (Vec4)(*vertices)[1], TRS() * (Vec4)(*vertices)[2]).Normal()
-        };
-        return normals;
     }
 };
 

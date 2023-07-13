@@ -67,11 +67,19 @@ void OnKeyPressEvent(GLFWwindow* window, int key, int scancode, int action, int 
             Camera::main->rotation = Identity3x3;
             Camera::main->position = Vec3();
         }
+        // Switch between Cameras
         else if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS) {
             Camera::main = Camera::cameras[0];
         }
         else if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS) {
             Camera::main = Camera::cameras[1];
+        }
+
+        else if (glfwGetKey(window, GLFW_KEY_9) == GLFW_PRESS) {
+            Mesh* mesh = new CubeMesh();//LoadMeshFromOBJFile("Objects/Sphere.obj");
+            mesh->position = Camera::main->position + (Camera::main->Forward() * 10);
+            mesh->rotation = Camera::main->rotation;
+            mesh->color = RGB::turquoise;
         }
 
         //------------------Physics-------------------
