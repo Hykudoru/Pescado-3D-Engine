@@ -146,7 +146,7 @@ Vec3 ClosestPoint(List<Vec3>& verts, Vec3& pointComparing, float* closestDistanc
     return closestPoint;
 }
 
-bool LinePlaneIntersectionPoint(Vec3& lineStart, Vec3& lineEnd, Plane& plane, Vec3* pointIntersecting)
+bool LinePlaneIntersecting(Vec3& lineStart, Vec3& lineEnd, Plane& plane, Vec3* pointIntersecting)
 {
     // Plane: N_x(x-x0) + N_y(y-y0) + N_z(z-z0) = 0
     // Point on plane: x0,y0,z0
@@ -183,7 +183,7 @@ bool PointInsideTriangle(const Vec3& p, const Vec3 triPoints[3])
 }
 
 //Needs Testing
-void LineIntersectingPlanes(Vec3& normal1, Vec3& p1, Vec3& normal2, Vec3& p2)
+void PlanesIntersecting(Vec3& normal1, Vec3& p1, Vec3& normal2, Vec3& p2)
 {
     float D1 = DotProduct(normal1, p1);
     float D2 = DotProduct(normal2, p2);
