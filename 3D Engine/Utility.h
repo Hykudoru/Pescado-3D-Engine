@@ -86,7 +86,7 @@ float ToRad(float deg) {
 
 Vec3 Reflect(Vec3 v, Vec3 n)
 {
-    return (n + v.Normalized()) * DotProduct(v * -1, n);
+    return v + (n*2 * DotProduct(v*-1, n));
 }
 
 Vec3 ProjectOnPlane(Vec3 v, Vec3 n)

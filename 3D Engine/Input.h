@@ -74,12 +74,30 @@ void OnKeyPressEvent(GLFWwindow* window, int key, int scancode, int action, int 
         else if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS) {
             Camera::main = Camera::cameras[1];
         }
-
+        // Spawn
         else if (glfwGetKey(window, GLFW_KEY_9) == GLFW_PRESS) {
             Mesh* mesh = new CubeMesh();//LoadMeshFromOBJFile("Objects/Sphere.obj");
             mesh->position = Camera::main->position + (Camera::main->Forward() * 10);
             mesh->rotation = Camera::main->rotation;
-            mesh->color = RGB::turquoise;
+        }
+        else if (glfwGetKey(window, GLFW_KEY_8) == GLFW_PRESS) {
+            Mesh* mesh = LoadMeshFromOBJFile("Objects/Sphere.obj");
+            mesh->position = Camera::main->position + (Camera::main->Forward() * 10);
+            mesh->rotation = Camera::main->rotation;
+        }
+        else if (glfwGetKey(window, GLFW_KEY_7) == GLFW_PRESS) {
+            Mesh* mesh = LoadMeshFromOBJFile("Objects/Diamond.obj");
+            mesh->position = Camera::main->position + (Camera::main->Forward() * 10);
+            mesh->rotation = Camera::main->rotation;
+            mesh->scale *= 0.1;
+            mesh->color = RGB::red;
+        }
+        else if (glfwGetKey(window, GLFW_KEY_6) == GLFW_PRESS) {
+            Mesh* mesh = LoadMeshFromOBJFile("Objects/Icosahedron.obj");
+            mesh->position = Camera::main->position + (Camera::main->Forward() * 10);
+            mesh->rotation = Camera::main->rotation;
+            mesh->scale *= 0.1;
+            mesh->color = RGB::purple;
         }
 
         //------------------Physics-------------------
@@ -120,6 +138,9 @@ void OnKeyPressEvent(GLFWwindow* window, int key, int scancode, int action, int 
         }
         else if (key == GLFW_KEY_3) {
             GraphicSettings::displayWireFrames = !GraphicSettings::displayWireFrames;
+        }
+        else if (key == GLFW_KEY_COMMA) {
+            GraphicSettings::debugAxes = !GraphicSettings::debugAxes;
         }
         else if (key == GLFW_KEY_L) {
             GraphicSettings::lighting = !GraphicSettings::lighting;

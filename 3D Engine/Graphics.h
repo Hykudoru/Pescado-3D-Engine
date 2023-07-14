@@ -48,20 +48,24 @@ struct RGB : Vector3<float>
 {
     static Color black;
     static Color white;
+    static Color gray;
     static Color red;
     static Color green;
     static Color blue;
     static Color pink;
+    static Color purple;
     static Color yellow;
     static Color turquoise;
     static Color orange;
 };
 Color RGB::black = Color(0, 0, 0);
 Color RGB::white = Color(255, 255, 255);
+Color RGB::gray = Color(128, 128, 128);
 Color RGB::red = Color(255, 0, 0);
 Color RGB::green = Color(0, 255, 0);
 Color RGB::blue = Color(0, 0, 255);
 Color RGB::pink = Color(255, 0, 255);
+Color RGB::purple = Color(128, 0, 128);
 Color RGB::yellow = Color(255, 255, 0);
 Color RGB::turquoise = Color(0, 255, 255);
 Color RGB::orange = Color(255, 158, 0);
@@ -630,16 +634,16 @@ private:
                     Vec4 from_p = matrix * lineStart;
                     Vec4 to_p = matrix * (pointOfIntersection);// +lineEnd);
                     Lines(Line(from_p, pointOfIntersection_p));
-                    Points(Point(pointOfIntersection_p, RGB::black, 5));
+                    Points(Point(pointOfIntersection_p, RGB::gray, 5));
 
                     // Reflect
                     Vec3 n = worldSpaceTri.Normal();
-                    Vec3 v = (lineEnd - lineStart);
+                    Vec3 v = (pointOfIntersection - lineStart);
                     Vec3 reflection = Reflect(v, n);
                     Lines(Line(pointOfIntersection_p, (Vec3)(matrix * (pointOfIntersection + reflection)), RGB::red));
 
                     Vec3 vecPlane = ProjectOnPlane(v, n);
-                    Lines(Line(pointOfIntersection_p, (Vec3)(matrix * (pointOfIntersection + vecPlane.Normalized())), RGB::black));
+                    Lines(Line(pointOfIntersection_p, (Vec3)(matrix * (pointOfIntersection + vecPlane)), RGB::black));
 
                     projectedTri.color = RGB::white;
                     if (DEBUGGING) { std::cout << (projectedTri.mesh) << endl; }// delete projectedTri.mesh; }

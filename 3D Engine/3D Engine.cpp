@@ -113,7 +113,7 @@ void Init(GLFWwindow* window)
  
 void Update(GLFWwindow* window)
 {
-    if (glfwGetKey(window, GLFW_KEY_COMMA) == GLFW_PRESS) {
+    if (glfwGetKey(window, GLFW_KEY_CAPS_LOCK) == GLFW_PRESS) {
         if (obj3->parent) {
             obj3->parent = NULL;
         }
