@@ -121,6 +121,7 @@ void Update(GLFWwindow* window)
             obj3->parent = obj2;
         }
     }
+   
 }
 
 extern List<Point>* points;
@@ -142,10 +143,10 @@ void Draw()
 
     points->clear();
 }
-
+GLFWwindow* window;
 int main(void)
 {
-    GLFWwindow* window;
+    //GLFWwindow* window;
     
     /* Initialize the library */
     if (!glfwInit())
@@ -176,7 +177,7 @@ int main(void)
 
         {
             Time();
-            Input(window);
+            Input();
             Physics(window);
             Update(window);
             Draw();

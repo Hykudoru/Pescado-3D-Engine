@@ -271,10 +271,18 @@ Vec3 velocity = Vec3(0, 0, 0);
 extern Mesh* planet;
 static void Physics(GLFWwindow* window)
 {
+    Camera* cam;
+    if (CameraSettings::outsiderViewPerspective)
+    {
+        cam = Camera::outsider;
+    }
+    else {
+        cam = Camera::main;
+    }
     //---------- Physics Update ------------
     if (isKinematic) 
     {
-        Camera::main->position += moveDir * accel * deltaTime;
+        cam->position += moveDir * accel * deltaTime;
     }
     else 
     {
@@ -288,7 +296,7 @@ static void Physics(GLFWwindow* window)
         if (velocity.SqrMagnitude() < 0.0001) {
             velocity = Vec3::zero;
         }
-        Camera::main->position += velocity * deltaTime;
+        cam->position += velocity * deltaTime;
     }
 
     if (planet) {

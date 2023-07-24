@@ -43,6 +43,12 @@ bool GraphicSettings::lighting = true;
 bool GraphicSettings::vfx = false;
 bool GraphicSettings::matrixMode = false;
 
+struct CameraSettings
+{
+    static bool outsiderViewPerspective;
+};
+bool CameraSettings::outsiderViewPerspective = false;
+
 #define Color Vector3<float>
 struct RGB : Vector3<float>
 {
@@ -429,6 +435,7 @@ class Camera : public Transform
 {
 public:
     static Camera* main;
+    static Camera* outsider;
     static List<Camera*> cameras;
     static int cameraCount;
 
@@ -444,6 +451,7 @@ public:
 List<Camera*> Camera::cameras = List<Camera*>(1);
 int Camera::cameraCount = 0;
 Camera* cam = new Camera();
+Camera* Camera::outsider = new Camera();
 Camera* Camera::main = cam;
 
 //---------------------------------MESH---------------------------------------------
@@ -567,6 +575,13 @@ public:
         // ---------- Draw -----------
         for (int i = 0; i < triBuffer->size(); i++)
         {
+            if (CameraSettings::outsiderViewPerspective) {
+                for (size_t j = 0; j < 3; j++)
+                {
+                    (*triBuffer)[i].verts[j] = ProjectionMatrix() * Camera::outsider->TRInverse() * (*triBuffer)[i].verts[j];
+                }
+            }
+            
             (*triBuffer)[i].Draw();
         }
 
@@ -618,7 +633,7 @@ private:
             };
             
             //------------------Ray casting (world & view space)--------------------------
-            
+            /*
             Vec3 lineStart = Camera::cameras[1]->position;
             Vec3 lineEnd = lineStart + Camera::cameras[1]->Forward() * abs(farClippingPlane);
             Vec3 pointOfIntersection;
@@ -648,7 +663,7 @@ private:
                     projectedTri.color = RGB::white;
                     if (DEBUGGING) { std::cout << (projectedTri.mesh) << endl; }// delete projectedTri.mesh; }
                 }
-            }
+            }*/
 
             //------------------- Normal/Frustum Culling (view space)------------------------
             Vec3 p1_c = camSpaceTri.verts[0];

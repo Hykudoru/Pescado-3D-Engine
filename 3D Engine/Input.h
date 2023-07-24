@@ -28,7 +28,12 @@ void OnMouseMoveEvent(GLFWwindow* window, double mouseX, double mouseY)
         static float rad = PI / 180;
         double xAngle = rad * mouseSensitivity * -deltaMouseY;// *deltaTime;
         double yAngle = 0.0000001 + rad * mouseSensitivity * -deltaMouseX;// * deltaTime; // 0.0000001 so no gimbal lock
-        Camera::main->rotation *= YPR(xAngle, yAngle, 0);
+        if (CameraSettings::outsiderViewPerspective) {
+            Camera::outsider->rotation *= YPR(xAngle, yAngle, 0);
+        }
+        else {
+            Camera::main->rotation *= YPR(xAngle, yAngle, 0);
+        }
         //Camera::main->rotation = Matrix3x3::RotX(rotateSpeed * -deltaMouseY) * Camera::main->rotation * Matrix3x3::RotY((0.00001 + rotateSpeed) * -deltaMouseX);
     }
 }
@@ -73,6 +78,11 @@ void OnKeyPressEvent(GLFWwindow* window, int key, int scancode, int action, int 
         }
         else if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS) {
             Camera::main = Camera::cameras[1];
+        }
+        else if (glfwGetKey(window, GLFW_KEY_3) == GLFW_PRESS) {
+            CameraSettings::outsiderViewPerspective = !CameraSettings::outsiderViewPerspective;
+            Camera::outsider->rotation = Identity3x3;
+            Camera::outsider->position = Vec3();
         }
         // Spawn
         else if (glfwGetKey(window, GLFW_KEY_9) == GLFW_PRESS) {
@@ -133,10 +143,10 @@ void OnKeyPressEvent(GLFWwindow* window, int key, int scancode, int action, int 
         else if (key == GLFW_KEY_V) {
             GraphicSettings::backFaceCulling = !GraphicSettings::backFaceCulling;
         }
-        else if (key == GLFW_KEY_M) {
+        else if (key == GLFW_KEY_F) {
             GraphicSettings::fillTriangles = !GraphicSettings::fillTriangles;
         }
-        else if (key == GLFW_KEY_3) {
+        else if (key == GLFW_KEY_M) {
             GraphicSettings::displayWireFrames = !GraphicSettings::displayWireFrames;
         }
         else if (key == GLFW_KEY_COMMA) {
@@ -160,60 +170,61 @@ void OnKeyPressEvent(GLFWwindow* window, int key, int scancode, int action, int 
     }
 }
 
-static void Input(GLFWwindow* window)
+extern GLFWwindow* window;
+static void CameraControl(Camera* cam)
 {
     moveDir = Vec3(0, 0, 0);
     //----------Camera Controls-------
     // FORWARD
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
-        moveDir += Camera::main->Forward();
+        moveDir += cam->Forward();
     }
     // BACK
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
-        moveDir += Camera::main->Back();
+        moveDir += cam->Back();
     }
     // LEFT
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
-        moveDir += Camera::main->Left();
+        moveDir += cam->Left();
     }
     // RIGHT
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
-        moveDir += Camera::main->Right();
+        moveDir += cam->Right();
     }
     // UP
     if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
-        moveDir += Camera::main->Up();
+        moveDir += cam->Up();
     }
     // DOWN
     if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS) {
-        moveDir += Camera::main->Down();
+        moveDir += cam->Down();
     }
 
     moveDir.Normalize();
 
     // ROTATE CCW
     if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) {
-        Camera::main->rotation *= Matrix3x3::RotZ(rotateSpeed * deltaTime);
+        cam->rotation *= Matrix3x3::RotZ(rotateSpeed * deltaTime);
     }
     // ROTATE CW
     if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS) {
-        Camera::main->rotation *= Matrix3x3::RotZ(-rotateSpeed * deltaTime);
+        cam->rotation *= Matrix3x3::RotZ(-rotateSpeed * deltaTime);
     }
     // LOOK UP
     if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
-        Camera::main->rotation *= Matrix3x3::RotX(rotateSpeed * deltaTime);
+        cam->rotation *= Matrix3x3::RotX(rotateSpeed * deltaTime);
     }
     // LOOK DOWN
     if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
-        Camera::main->rotation *= Matrix3x3::RotX(-rotateSpeed * deltaTime);
+        cam->rotation *= Matrix3x3::RotX(-rotateSpeed * deltaTime);
     }
     // TURN LEFT
     if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
-        Camera::main->rotation *= Matrix3x3::RotY(rotateSpeed * deltaTime);
+        cam->rotation *= Matrix3x3::RotY(rotateSpeed * deltaTime);
     }
     // TURN RIGHT
     if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
-        Camera::main->rotation *= Matrix3x3::RotY(-rotateSpeed * deltaTime);
+        cam->rotation *= Matrix3x3::RotY(-rotateSpeed * deltaTime);
     }
     // Speed 
     if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
@@ -222,6 +233,18 @@ static void Input(GLFWwindow* window)
     }
     else {
         accel = defaultAcceleration;
+    }
+}
+
+static void Input()
+{
+    if (CameraSettings::outsiderViewPerspective)
+    {
+        CameraControl(Camera::outsider);
+    }
+    else 
+    {
+        CameraControl(Camera::main);
     }
 }
 
