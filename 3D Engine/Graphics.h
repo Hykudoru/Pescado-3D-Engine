@@ -464,7 +464,8 @@ public:
     
     List<Vec3>* vertices;
     List<Triangle>* triangles;
-    virtual List<Triangle>* MapVertsToTriangles() { return triangles; }
+    List<int>* indices;
+    
     Color color = RGB::white;
 
     Mesh(float scale = 1, Vec3 position = Vec3(0, 0, 0), Vec3 rotationEuler = Vec3(0, 0, 0))
@@ -478,9 +479,27 @@ public:
     ~Mesh()
     {
         delete vertices;
+        delete indices;
         delete triangles;
     }
-
+    
+    virtual List<Triangle>* MapVertsToTriangles() 
+    { 
+        if (vertices && triangles && indices)
+        {
+            int t = 0;
+            for (size_t i = 0; i < indices->size(); i++)
+            {
+                int p1Index = (*indices)[i++];
+                int p2Index = (*indices)[i++];
+                int p3Index = (*indices)[i];
+                (*triangles)[t] = Triangle((*vertices)[p1Index], (*vertices)[p2Index], (*vertices)[p3Index]);
+                t++;
+            }
+        }
+        return triangles;
+    }
+    
     //Convert to world coordinates
     List<Vec3> WorldVertices()
     {
@@ -765,51 +784,44 @@ class CubeMesh : public Mesh
 {
 public:
     CubeMesh(int scale = 1, Vec3 position = Vec3(0, 0, 0), Vec3 rotationEuler = Vec3(0, 0, 0))
-        :Mesh(scale, position, rotationEuler) { }
-
-    List<Triangle>* MapVertsToTriangles()
+        :Mesh(scale, position, rotationEuler) 
     {
-        static int calls = 0;
-        if (calls < 1)
-        {
-            // Local Space (Object Space)
-            this->vertices = new List<Vec3>({//new Vec3[8] {
-                //south
-                Vec3(-1, -1, 1),
-                Vec3(-1, 1, 1),
-                Vec3(1, 1, 1),
-                Vec3(1, -1, 1),
-                //north
-                Vec3(-1, -1, -1),
-                Vec3(-1, 1, -1),
-                Vec3(1, 1, -1),
-                Vec3(1, -1, -1)
+        // Local Space (Object Space)
+        this->vertices = new List<Vec3>({//new Vec3[8] {
+            //south
+            Vec3(-1, -1, 1),
+            Vec3(-1, 1, 1),
+            Vec3(1, 1, 1),
+            Vec3(1, -1, 1),
+            //north
+            Vec3(-1, -1, -1),
+            Vec3(-1, 1, -1),
+            Vec3(1, 1, -1),
+            Vec3(1, -1, -1)
             });
 
-            triangles = new List<Triangle>();
-            triangles->reserve(36 / 3);
-
+        this->indices = new List<int>{
             //South
-            triangles->emplace_back((*vertices)[0], (*vertices)[1], (*vertices)[2]);
-            triangles->emplace_back((*vertices)[0], (*vertices)[2], (*vertices)[3]);
-            //North                           
-            triangles->emplace_back((*vertices)[7], (*vertices)[6], (*vertices)[5]);
-            triangles->emplace_back((*vertices)[7], (*vertices)[5], (*vertices)[4]);
+            0, 1, 2,
+            0, 2, 3,
+            //North
+            7, 6, 5,
+            7, 5, 4,
             //Right
-            triangles->emplace_back((*vertices)[3], (*vertices)[2], (*vertices)[6]);
-            triangles->emplace_back((*vertices)[3], (*vertices)[6], (*vertices)[7]);
+            3, 2, 6,
+            3, 6, 7,
             //Left
-            triangles->emplace_back((*vertices)[4], (*vertices)[5], (*vertices)[1]);
-            triangles->emplace_back((*vertices)[4], (*vertices)[1], (*vertices)[0]);
+            4, 5, 1,
+            4, 1, 0,
             //Top
-            triangles->emplace_back((*vertices)[1], (*vertices)[5], (*vertices)[6]);
-            triangles->emplace_back((*vertices)[1], (*vertices)[6], (*vertices)[2]);
+            1, 5, 6,
+            1, 6, 2,
             //Bottom
-            triangles->emplace_back((*vertices)[3], (*vertices)[7], (*vertices)[4]);
-            triangles->emplace_back((*vertices)[3], (*vertices)[4], (*vertices)[0]);
-        }
+            3, 7, 4,
+            3, 4, 0
+        };
 
-        return triangles;
+        triangles = new List<Triangle>(this->indices->size() / 3);
     }
 };
 
@@ -869,6 +881,7 @@ Mesh* LoadMeshFromOBJFile(string objFile)
     // -----------------Construct new mesh-------------------
     Mesh* mesh = new Mesh();
     List<Vec3>* verts = new List<Vec3>();
+    List<int>* indices = new List<int>();
     List<Triangle>* triangles = new List<Triangle>();
     verts->reserve(10);
     triangles->reserve(10);
@@ -889,12 +902,16 @@ Mesh* LoadMeshFromOBJFile(string objFile)
             int p3Index = stof(strings[++i]);
             int p2Index = stof(strings[++i]);
             int p1Index = stof(strings[++i]);
+            indices->emplace_back(p1Index - 1);
+            indices->emplace_back(p2Index - 1);
+            indices->emplace_back(p3Index - 1);
             Triangle tri = Triangle(verts->at(p1Index - 1), verts->at(p2Index - 1), verts->at(p3Index - 1));
             triangles->emplace_back(tri);
         }
     }
 
     mesh->vertices = verts;
+    mesh->indices = indices;
     mesh->triangles = triangles;
 
     return mesh;
