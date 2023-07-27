@@ -431,6 +431,7 @@ public:
 };
 
 //-----------------------------CAMERA-------------------------------------------------
+
 class Camera : public Transform
 {
 public:
@@ -455,6 +456,7 @@ Camera* Camera::outsider = new Camera();
 Camera* Camera::main = cam;
 
 //---------------------------------MESH---------------------------------------------
+
 class Mesh : public Transform, public ManagedObjectPool<Mesh>
 {
 public:
@@ -485,7 +487,7 @@ public:
     
     virtual List<Triangle>* MapVertsToTriangles() 
     { 
-        if (vertices && triangles && indices)
+        if (vertices && indices)
         {
             int t = 0;
             for (size_t i = 0; i < indices->size(); i++)
@@ -528,10 +530,10 @@ public:
             if (GraphicSettings::frustumCulling)
             {
                 // Scale/Distance ratio culling
-                bool tooSmallToSee = Mesh::objects[i]->scale.SqrMagnitude() / (Mesh::objects[i]->position - Camera::main->position).SqrMagnitude() < 0.000000125;
+                /*bool tooSmallToSee = Mesh::objects[i]->scale.SqrMagnitude() / (Mesh::objects[i]->position - Camera::main->position).SqrMagnitude() < 0.000000125;
                 if (tooSmallToSee) {
                     return;
-                }
+                }*/
                 bool behindCamera = DotProduct(Mesh::objects[i]->position - Camera::main->position, Camera::main->Forward()) < 0.0;
                 if (behindCamera) {
                     continue;
@@ -882,9 +884,6 @@ Mesh* LoadMeshFromOBJFile(string objFile)
     Mesh* mesh = new Mesh();
     List<Vec3>* verts = new List<Vec3>();
     List<int>* indices = new List<int>();
-    List<Triangle>* triangles = new List<Triangle>();
-    verts->reserve(10);
-    triangles->reserve(10);
 
     for (size_t i = 0; i < strings.size(); i++)
     {
@@ -902,17 +901,16 @@ Mesh* LoadMeshFromOBJFile(string objFile)
             int p3Index = stof(strings[++i]);
             int p2Index = stof(strings[++i]);
             int p1Index = stof(strings[++i]);
+
             indices->emplace_back(p1Index - 1);
             indices->emplace_back(p2Index - 1);
             indices->emplace_back(p3Index - 1);
-            Triangle tri = Triangle(verts->at(p1Index - 1), verts->at(p2Index - 1), verts->at(p3Index - 1));
-            triangles->emplace_back(tri);
         }
     }
 
     mesh->vertices = verts;
     mesh->indices = indices;
-    mesh->triangles = triangles;
+    mesh->triangles = new List<Triangle>(indices->size() / 3);
 
     return mesh;
 }
