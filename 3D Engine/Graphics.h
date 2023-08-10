@@ -13,6 +13,9 @@ using namespace std;
 #ifndef GRAPHICS_H
 #define GRAPHICS_H
 
+class Mesh;
+struct Plane;
+class  Triangle;
 //-----------GRAPHICS---------------
 
 struct GraphicSettings
@@ -144,15 +147,6 @@ Matrix4x4 ProjectionMatrix()
     }
 }
 
-Vec4 ProjectPoint(Vec4 point)
-{
-    point = ProjectionMatrix() * point;
-
-    point.x *= worldScale;
-    point.y *= worldScale;
-    return point;
-}
-
 struct Point
 {
     Vec3 point;
@@ -204,51 +198,23 @@ struct Line
     }
 };
 
-List<Point>* points = new List<Point>();
-void Points(Point point)
-{
-    points->emplace_back(point);
-}
-List<Line>* lines = new List<Line>();
-void Lines(Line line)
-{
-    lines->emplace_back(line);
-}
-
-class Mesh;
 struct Triangle : Plane
 {
-    //Vec3 verts[3];
-    //Vec3 normal;
-    Vec4 centroid;
-    Color color;
-    Mesh* mesh;
+    Vec4 centroid = Vec4();
+    Color color = RGB::white;
+    Mesh* mesh = nullptr;
 
-    Triangle()
+    Triangle() : Plane()
     {
+        centroid = Vec4();
         color = RGB::white;
-        centroid = Vec3(0, 0, 0);
-        normal = Vec3(0, 0, 0);
-    };
-
-    Triangle(Vec3 p1, Vec3 p2, Vec3 p3)
+        mesh = nullptr;
+    }
+    Triangle(Vec3 p1, Vec3 p2, Vec3 p3) : Plane(p1, p2, p3)
     {
-        this->verts[0] = p1;
-        this->verts[1] = p2;
-        this->verts[2] = p3;
         color = RGB::white;
         centroid = Centroid();
     }
-    /*
-    Vec4 Normal()
-    {
-        // Calculate triangle suface Normal
-        Vec3 a = verts[2] - verts[0];
-        Vec3 b = verts[1] - verts[0];
-        Vec3 normal = (CrossProduct(a, b)).Normalized();
-
-        return normal;
-    }*/
 
     Vec4 Centroid()
     {
@@ -311,6 +277,9 @@ struct Triangle : Plane
     }
 };
 
+
+List<Point>* pointBuffer = new List<Point>();
+List<Line>* lineBuffer = new List<Line>();
 List<Triangle>* triBuffer = new List<Triangle>(100000);
 
 //-------------------------------TRANSFORM---------------------------------------------
@@ -320,21 +289,38 @@ public:
     Vec3 scale = Vec3(1, 1, 1);
     Vec3 position = Vec3(0, 0, 0);
     Matrix3x3 rotation = Identity3x3;
+    Transform* root = nullptr;
+    Transform* parent = nullptr;
+    static bool parentHierarchyDefault;
+
     Vec3 Forward() { return this->rotation * Vec3D::forward; }
     Vec3 Back() { return this->rotation * Vec3D::back; }
     Vec3 Right() { return this->rotation * Vec3D::right; }
     Vec3 Left() { return this->rotation * Vec3D::left; }
     Vec3 Up() { return this->rotation * Vec3D::up; }
     Vec3 Down() { return this->rotation * Vec3D::down; }
-    Transform* parent;
 
-    Transform(float scale = 1, Vec3 position = Vec3(0, 0, 0), Vec3 rotationEuler = Vec3(0, 0, 0))
+    Transform(float scale = 1, Vec3 position = Vec3(0, 0, 0), Vec3 rotationEuler = Vec3(0, 0, 0), Transform* parent = nullptr)
     {
         this->scale.x = scale;
         this->scale.y = scale;
         this->scale.z = scale;
         this->position = position;
-        this->rotation = YPR(rotationEuler.x, rotationEuler.y, rotationEuler.z);    
+        this->rotation = YPR(rotationEuler.x, rotationEuler.y, rotationEuler.z);
+        this->root = this;
+        SetParent(parent);
+    }
+
+    void SetParent(Transform* parent)
+    {
+        if (parent)
+        {
+            this->parent = parent;
+            this->root = this->parent->root;
+        }
+        else {
+            this->root = this;
+        }
     }
 
     Matrix4x4 ScaleMatrix4x4()
@@ -389,9 +375,10 @@ public:
         return Matrix4x4(matrix);
     }
 
+    // 1:Scale, 2:Rotate, 3:Translate
     Matrix4x4 TRS() 
     {
-        float matrix[4][4] =
+        float trs[4][4] =
         {
             {this->rotation.m[0][0] * scale.x, this->rotation.m[0][1] * scale.y, this->rotation.m[0][2] * scale.z, position.x},
             {this->rotation.m[1][0] * scale.x, this->rotation.m[1][1] * scale.y, this->rotation.m[1][2] * scale.z, position.y},
@@ -399,20 +386,26 @@ public:
             {0,                                         0,                                  0,                      1}
         };
 
-        if (parent) 
-        {
-            return parent->TRS() * matrix;
+        if (parent) {
+            if (Transform::parentHierarchyDefault) {
+                return parent->TRS() * trs;
+            } else { 
+                return parent->TRS() * ScaleMatrix4x4() * RotationMatrix4x4() * TranslationMatrix4x4();
+            }
         }
 
-        return matrix; //return TranslationMatrix4x4() * RotationMatrix4x4() * ScaleMatrix4x4();
-        
+        return trs;
     }
 
+    // 1:Rotate, 2:Translate
     Matrix4x4 TR() 
     {
-        if (parent) 
-        {
-            return parent->TR() * TranslationMatrix4x4() * RotationMatrix4x4();
+        if (parent) {
+            if (parentHierarchyDefault) {
+                return parent->TR() * TranslationMatrix4x4() * RotationMatrix4x4();
+            } else {
+                return parent->TR() * RotationMatrix4x4() * TranslationMatrix4x4();
+            }
         }
 
         return TranslationMatrix4x4() * RotationMatrix4x4();
@@ -429,9 +422,9 @@ public:
         return Matrix4x4::Transpose(RotationMatrix4x4()) * TranslationMatrix4x4Inverse();
     }
 };
+bool Transform::parentHierarchyDefault = true;
 
 //-----------------------------CAMERA-------------------------------------------------
-
 class Camera : public Transform
 {
 public:
@@ -449,32 +442,31 @@ public:
         name = "Camera " + cameraCount;
     }
 };
-List<Camera*> Camera::cameras = List<Camera*>(1);
+List<Camera*> Camera::cameras = List<Camera*>();
 int Camera::cameraCount = 0;
-Camera* cam = new Camera();
 Camera* Camera::outsider = new Camera();
-Camera* Camera::main = cam;
+Camera* Camera::main = new Camera();
+Camera* camera2 = new Camera(Vec3(0, 50, 0), Vec3(-90 * PI / 180, 0, 0));
+
+Plane topClippingPlane = Plane(Vec3D::up + Vec3D::forward, Vec3D::down);
+Plane rightClippingPlane = Plane(Vec3D::right + Vec3D::forward, Vec3D::left);
+Plane bottomClippingPlane = Plane(Vec3D::down + Vec3D::forward, Vec3D::up);
+Plane leftClippingPlane = Plane(Vec3D::left + Vec3D::forward, Vec3D::right);
 
 //---------------------------------MESH---------------------------------------------
 
 class Mesh : public Transform, public ManagedObjectPool<Mesh>
 {
 public:
-    //static List<Mesh*> meshes;
-    //static int meshCount;
     static int worldTriangleDrawCount;
-    
     List<Vec3>* vertices;
-    List<Triangle>* triangles;
     List<int>* indices;
-    
+    List<Triangle>* triangles;
     Color color = RGB::white;
 
     Mesh(float scale = 1, Vec3 position = Vec3(0, 0, 0), Vec3 rotationEuler = Vec3(0, 0, 0))
     : Transform(scale, position, rotationEuler), ManagedObjectPool(this)
     {
-        //Mesh::objects.emplace(objects.begin()+meshCount++, this);
-        //name = "Mesh "+meshCount;
         MapVertsToTriangles();
     }
 
@@ -575,10 +567,10 @@ public:
                     Vec3 up_p = mvp * (Vec4)Vec3D::up;
                     Vec3 forward_p = mvp * (Vec4)Vec3D::forward;
 
-                    Points(Point(center_p, RGB::red, 5));
-                    Lines(Line(center_p, right_p, RGB::red));
-                    Lines(Line(center_p, up_p, RGB::yellow));
-                    Lines(Line(center_p, forward_p, RGB::blue));
+                    pointBuffer->emplace_back(Point(center_p, RGB::red, 5));
+                    lineBuffer->emplace_back(Line(center_p, right_p, RGB::red));
+                    lineBuffer->emplace_back(Line(center_p, up_p, RGB::yellow));
+                    lineBuffer->emplace_back(Line(center_p, forward_p, RGB::blue));
                 }
             }
             
@@ -610,6 +602,7 @@ public:
     }
 
 private:
+
     void transformTriangles() 
     {
         // Scale/Distance ratio culling
@@ -652,11 +645,11 @@ private:
                 Vec4 projectedPoint = projectionMatrix * cameraSpacePoint;
                 projectedTri.verts[j] = projectedPoint;
             };
-            
+
             //------------------Ray casting (world & view space)--------------------------
-            /*
-            Vec3 lineStart = Camera::cameras[1]->position;
-            Vec3 lineEnd = lineStart + Camera::cameras[1]->Forward() * abs(farClippingPlane);
+
+            Vec3 lineStart = Camera::cameras[2]->position;
+            Vec3 lineEnd = lineStart + Camera::cameras[2]->Forward();// *abs(farClippingPlane);
             Vec3 pointOfIntersection;
             if (LinePlaneIntersecting(lineStart, lineEnd, worldSpaceTri, &pointOfIntersection))
             {
@@ -669,22 +662,23 @@ private:
                     //Vec4 pointOfIntersectionProj = projectionMatrix * worldToViewMatrix * pointOfIntersection;
                     Vec4 from_p = matrix * lineStart;
                     Vec4 to_p = matrix * (pointOfIntersection);// +lineEnd);
-                    Lines(Line(from_p, pointOfIntersection_p));
-                    Points(Point(pointOfIntersection_p, RGB::gray, 5));
+                    lineBuffer->emplace_back(Line(from_p, pointOfIntersection_p));
+                    pointBuffer->emplace_back(Point(pointOfIntersection_p, RGB::gray, 5));
 
                     // Reflect
                     Vec3 n = worldSpaceTri.Normal();
                     Vec3 v = (pointOfIntersection - lineStart);
                     Vec3 reflection = Reflect(v, n);
-                    Lines(Line(pointOfIntersection_p, (Vec3)(matrix * (pointOfIntersection + reflection)), RGB::red));
+                    lineBuffer->emplace_back(Line(pointOfIntersection_p, (Vec3)(matrix * (pointOfIntersection + reflection)), RGB::red));
 
+                    // Project
                     Vec3 vecPlane = ProjectOnPlane(v, n);
-                    Lines(Line(pointOfIntersection_p, (Vec3)(matrix * (pointOfIntersection + vecPlane)), RGB::black));
+                    lineBuffer->emplace_back(Line(pointOfIntersection_p, (Vec3)(matrix * (pointOfIntersection + vecPlane)), RGB::black));
 
                     projectedTri.color = RGB::white;
                     if (DEBUGGING) { std::cout << (projectedTri.mesh) << endl; }// delete projectedTri.mesh; }
                 }
-            }*/
+            }
 
             //------------------- Normal/Frustum Culling (view space)------------------------
             Vec3 p1_c = camSpaceTri.verts[0];
@@ -700,21 +694,21 @@ private:
                 if (tooCloseToCamera || tooFarFromCamera || behindCamera) {
                     continue; // Skip triangle if it's out of cam view.
                 }
-                
+
                 Range range = ProjectVertsOntoAxis(projectedTri.verts, 3, Vec3D::left);
-                if (range.min >= 1 && range.max >= 1) {
+                if (range.min > 1) {
                     continue;
                 }
                 range = ProjectVertsOntoAxis(projectedTri.verts, 3, Vec3D::right);
-                if (range.min >= 1 && range.max >= 1) {
+                if (range.min > 1) {
                     continue;
                 }
                 range = ProjectVertsOntoAxis(projectedTri.verts, 3, Vec3D::up);
-                if (range.min >= 1 && range.max >= 1) {
+                if (range.min > 1) {
                     continue;
                 }
                 range = ProjectVertsOntoAxis(projectedTri.verts, 3, Vec3D::down);
-                if (range.min >= 1 && range.max >= 1) {
+                if (range.min > 1) {
                     continue;
                 }
             }
@@ -767,8 +761,8 @@ private:
                 //---------Draw point at centroid and a line from centroid to normal (view space & projected space)-----------
                 Vec2 centroidToNormal_p = projectionMatrix * ((Vec3)camSpaceTri.centroid + camSpaceTri.normal);
                 Vec2 centroid_p = projectionMatrix * camSpaceTri.centroid;
-                Points(Point(centroid_p));
-                Lines(Line(centroid_p, centroidToNormal_p));
+                pointBuffer->emplace_back(Point(centroid_p));
+                lineBuffer->emplace_back(Line(centroid_p, centroidToNormal_p));
             }
 
             //Add projected tri
@@ -884,7 +878,6 @@ Mesh* LoadMeshFromOBJFile(string objFile)
     Mesh* mesh = new Mesh();
     List<Vec3>* verts = new List<Vec3>();
     List<int>* indices = new List<int>();
-
     for (size_t i = 0; i < strings.size(); i++)
     {
         // v = vertex
@@ -897,7 +890,8 @@ Mesh* LoadMeshFromOBJFile(string objFile)
             float z = stof(strings[++i]);
             verts->emplace_back(Vec3(x, y, z));
         }
-        else if (str == "f") { //f means the next 3 strings will be the indices for mapping vertices
+        //f means the next 3 strings will be the indices for mapping vertices
+        else if (str == "f") {
             int p3Index = stof(strings[++i]);
             int p2Index = stof(strings[++i]);
             int p1Index = stof(strings[++i]);

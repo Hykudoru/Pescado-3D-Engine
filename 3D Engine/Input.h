@@ -67,17 +67,15 @@ void OnKeyPressEvent(GLFWwindow* window, int key, int scancode, int action, int 
     {
         // Reset Camera
         if (glfwGetKey(window, GLFW_KEY_0) == GLFW_PRESS) {
-            // Camera::main->reset();
-            //Fix later
             Camera::main->rotation = Identity3x3;
             Camera::main->position = Vec3();
         }
         // Switch between Cameras
         else if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS) {
-            Camera::main = Camera::cameras[0];
+            Camera::main = Camera::cameras[1];
         }
         else if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS) {
-            Camera::main = Camera::cameras[1];
+            Camera::main = Camera::cameras[2];
         }
         else if (glfwGetKey(window, GLFW_KEY_3) == GLFW_PRESS) {
             CameraSettings::outsiderViewPerspective = !CameraSettings::outsiderViewPerspective;
@@ -166,6 +164,10 @@ void OnKeyPressEvent(GLFWwindow* window, int key, int scancode, int action, int 
         else if (key == GLFW_KEY_F2)
         {
             GraphicSettings::matrixMode = !GraphicSettings::matrixMode;
+        }
+        // Toggle Transform Hierarchy
+        else if (glfwGetKey(window, GLFW_KEY_CAPS_LOCK) == GLFW_PRESS) {
+            Transform::parentHierarchyDefault = !Transform::parentHierarchyDefault;
         }
     }
 }

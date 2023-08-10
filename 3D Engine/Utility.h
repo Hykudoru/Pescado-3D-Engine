@@ -41,8 +41,32 @@ int ManagedObjectPool<T>::count = 0;
 struct Plane
 {
     Vec3 verts[3];
-    Vec4 normal;
-    Vec4 Normal()
+    Vec3 normal;
+
+    Plane(){}
+
+    Plane(Vec3 p1, Vec3 p2, Vec3 p3)
+    {
+        verts[0] = p1;
+        verts[1] = p2;
+        verts[2] = p3;
+
+        Normal();
+    }
+
+    Plane(Vec3 pointOnPlane, Vec3 normal)
+    {
+        this->normal = normal;
+        float D = DotProduct(normal, pointOnPlane);
+        float xIntercept = D / normal.x;
+        float yIntercept = D / normal.y;
+        float zIntercept = D / normal.z;
+        verts[0] = Vec3(xIntercept, 0, 0);
+        verts[1] = Vec3(0, yIntercept, 0);
+        verts[2] = Vec3(0, 0, zIntercept);
+    }
+
+    Vec3 Normal()
     {
         // Calculate triangle suface Normal
         Vec3 a = verts[2] - verts[0];

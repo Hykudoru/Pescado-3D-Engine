@@ -66,12 +66,6 @@ void Init(GLFWwindow* window)
     CubeMesh* cube7 = new CubeMesh(1, Vec3(5, 5, 30));
     CubeMesh* cube8 = new CubeMesh(10, Vec3(5, -5, 40));
 
-    //cube1->color = Color(255, 0, 0);
-    //cube2->color = Color(255, 255, 0);
-    //cube3->color = Color(0, 255, 255);
-    //cube5->color = Color(0, 0, 255);
-
-    
     planet = LoadMeshFromOBJFile("Objects/Sphere.obj");
     planet->scale = Vec3(500, 500, 500);
     planet->position += Vec3D::forward * 1000;
@@ -88,61 +82,53 @@ void Init(GLFWwindow* window)
     child->parent = parent;
     grandchild->parent = child;
 
-    obj1 = new CubeMesh(1, Vec3(0, 0, 0));
-    obj2 = new CubeMesh(1, Vec3(0, 2, -1));
-    obj3 = new CubeMesh(1, Vec3(0, 2, -1));
-    obj4 = new CubeMesh(1, Vec3(0, 2, -1));
-
-    obj2->rotation = Matrix3x3::RotZ(ToRad(-45));
-    obj3->rotation = Matrix3x3::RotZ(ToRad(-45));
-    //obj4->rotation = Matrix3x3::RotZ(ToRad(-45));
-    obj2->parent = obj1;
-    obj3->parent = obj2;
-    obj4->parent = obj3;
-
+    obj1 = new CubeMesh(1, Vec3(0, 0, 0), Vec3(0, 90, 0));
+    obj2 = new CubeMesh(2, Vec3(0, 0, -2), Vec3(0, 90, 0));
+    obj3 = new CubeMesh(2, Vec3(0, 0, -2), Vec3(0, 90, 0));
+    obj4 = new CubeMesh(2, Vec3(0, 0, -2), Vec3(0, 90, 0));
+    obj2->SetParent(obj1);
+    obj3->SetParent(obj2);
+    obj4->SetParent(obj3);
+    obj1->color = RGB::red;
+    obj2->color = RGB::orange;
+    obj3->color = RGB::yellow;
+    obj4->color = RGB::green;
     //Mesh* guitar = LoadMeshFromOBJFile("Objects/Guitar.obj");
     //guitar->position += (Camera::main->Forward() * 10) + Camera::main->Right();
     //Mesh* chair = LoadMeshFromOBJFile("Objects/Chair.obj");
     //chair->position += (Camera::main->Forward() * 10) + Camera::main->Left();
 
     //Plane* plane = new Plane(1, Vec3(0, 0, 0), Vec3(0, 0, 0));
-    Camera* camera2 = new Camera(Vec3(0, 50, 0), Vec3(-90 * PI / 180, 0, 0)); 
-    Mesh* cameraMesh = new CubeMesh();
-    cameraMesh->parent = camera2;
+
+  //  Mesh* cameraMesh = new CubeMesh();
+    //cameraMesh->parent = camera2;
 }
  
 void Update(GLFWwindow* window)
 {
-    if (glfwGetKey(window, GLFW_KEY_CAPS_LOCK) == GLFW_PRESS) {
-        if (obj3->parent) {
-            obj3->parent = NULL;
-        }
-        else {
-            obj3->parent = obj2;
-        }
-    }
    
 }
 
-extern List<Point>* points;
-extern List<Line>* lines;
+extern List<Point>* pointbuffer;
+extern List<Line>* lineBuffer;
 void Draw()
 {
     Mesh::DrawMeshes();
 
-    for (size_t i = 0; i < lines->size(); i++)
+    for (size_t i = 0; i < lineBuffer->size(); i++)
     {
-        (*lines)[i].Draw();
-    }
-    lines->clear();
-
-    for (size_t i = 0; i < points->size(); i++)
-    {
-        (*points)[i].Draw();
+        (*lineBuffer)[i].Draw();
     }
 
-    points->clear();
+    for (size_t i = 0; i < pointBuffer->size(); i++)
+    {
+        (*pointBuffer)[i].Draw();
+    }
+
+    pointBuffer->clear();
+    lineBuffer->clear();
 }
+
 GLFWwindow* window;
 int main(void)
 {

@@ -212,8 +212,8 @@ bool Collision(CubeMesh& mesh1, CubeMesh& mesh2, bool resolve = true)
 
     if (!gap && resolve)
     {
-        mesh1.position -= minDistProjectionAxis * (minDistProjection/2.0);
-        mesh2.position += minDistProjectionAxis * (minDistProjection/2.0);
+        mesh1.root->position -= minDistProjectionAxis * (minDistProjection/2.0);
+        mesh2.root->position += minDistProjectionAxis * (minDistProjection/2.0);
     }
 
     return !gap;//No gap = collision
@@ -239,7 +239,9 @@ void DetectCollisions()
         if (typeid(*Mesh::objects[i]) != typeid(CubeMesh)) {
             continue;
         }
+
         CubeMesh* mesh = (CubeMesh*)Mesh::objects[i];
+
         for (size_t j = i + 1; j < Mesh::count; j++)
         {
             // Next Mesh
@@ -247,12 +249,13 @@ void DetectCollisions()
             if (typeid(*Mesh::objects[j]) != typeid(CubeMesh)) {
                 continue;
             }
+
             CubeMesh* mesh2 = (CubeMesh*)Mesh::objects[j];
-            
+
             if (Collision(*mesh, *mesh2))
             {   
-                mesh->color = RGB::pink;
-                mesh2->color = RGB::pink;
+                //mesh->color = RGB::pink;
+                //mesh2->color = RGB::pink;
             }
         }
     }
