@@ -79,7 +79,7 @@ Color RGB::yellow = Color(255, 255, 0);
 Color RGB::turquoise = Color(0, 255, 255);
 Color RGB::orange = Color(255, 158, 0);
 
-struct Vec3D
+struct Direction
 {
     static Vec3 forward;
     static Vec3 back;
@@ -88,12 +88,12 @@ struct Vec3D
     static Vec3 up;
     static Vec3 down;
 };
-Vec3 Vec3D::forward = Vec3(0, 0, -1);
-Vec3 Vec3D::back = Vec3(0, 0, 1);
-Vec3 Vec3D::right = Vec3(1, 0, 0);
-Vec3 Vec3D::left = Vec3(-1, 0, 0);
-Vec3 Vec3D::up = Vec3(0, 1, 0);
-Vec3 Vec3D::down = Vec3(0, -1, 0);
+Vec3 Direction::forward = Vec3(0, 0, -1);
+Vec3 Direction::back = Vec3(0, 0, 1);
+Vec3 Direction::right = Vec3(1, 0, 0);
+Vec3 Direction::left = Vec3(-1, 0, 0);
+Vec3 Direction::up = Vec3(0, 1, 0);
+Vec3 Direction::down = Vec3(0, -1, 0);
 
 static float worldScale = 1;
 int screenWidth = 800;//700;//screen.width - 20;
@@ -293,12 +293,12 @@ public:
     Transform* parent = nullptr;
     static bool parentHierarchyDefault;
 
-    Vec3 Forward() { return this->rotation * Vec3D::forward; }
-    Vec3 Back() { return this->rotation * Vec3D::back; }
-    Vec3 Right() { return this->rotation * Vec3D::right; }
-    Vec3 Left() { return this->rotation * Vec3D::left; }
-    Vec3 Up() { return this->rotation * Vec3D::up; }
-    Vec3 Down() { return this->rotation * Vec3D::down; }
+    Vec3 Forward() { return this->rotation * Direction::forward; }
+    Vec3 Back() { return this->rotation * Direction::back; }
+    Vec3 Right() { return this->rotation * Direction::right; }
+    Vec3 Left() { return this->rotation * Direction::left; }
+    Vec3 Up() { return this->rotation * Direction::up; }
+    Vec3 Down() { return this->rotation * Direction::down; }
 
     Transform(float scale = 1, Vec3 position = Vec3(0, 0, 0), Vec3 rotationEuler = Vec3(0, 0, 0), Transform* parent = nullptr)
     {
@@ -448,10 +448,10 @@ Camera* Camera::outsider = new Camera();
 Camera* Camera::main = new Camera();
 Camera* camera2 = new Camera(Vec3(0, 50, 0), Vec3(-90 * PI / 180, 0, 0));
 
-Plane topClippingPlane = Plane(Vec3D::up + Vec3D::forward, Vec3D::down);
-Plane rightClippingPlane = Plane(Vec3D::right + Vec3D::forward, Vec3D::left);
-Plane bottomClippingPlane = Plane(Vec3D::down + Vec3D::forward, Vec3D::up);
-Plane leftClippingPlane = Plane(Vec3D::left + Vec3D::forward, Vec3D::right);
+Plane topClippingPlane = Plane(Direction::up + Direction::forward, Direction::down);
+Plane rightClippingPlane = Plane(Direction::right + Direction::forward, Direction::left);
+Plane bottomClippingPlane = Plane(Direction::down + Direction::forward, Direction::up);
+Plane leftClippingPlane = Plane(Direction::left + Direction::forward, Direction::right);
 
 //---------------------------------MESH---------------------------------------------
 
@@ -539,19 +539,19 @@ public:
                         verts[j] = ProjectionMatrix() * Camera::main->TRInverse() * Mesh::objects[i]->TRS() * verts[j];
                     }
 
-                    Range range = ProjectVertsOntoAxis(verts.data(), verts.size(), Vec3D::left);
+                    Range range = ProjectVertsOntoAxis(verts.data(), verts.size(), Direction::left);
                     if (range.min >= 1 && range.max >= 1) {
                         continue;
                     }
-                    range = ProjectVertsOntoAxis(verts.data(), verts.size(), Vec3D::right);
+                    range = ProjectVertsOntoAxis(verts.data(), verts.size(), Direction::right);
                     if (range.min >= 1 && range.max >= 1) {
                         continue;
                     }
-                    range = ProjectVertsOntoAxis(verts.data(), verts.size(), Vec3D::up);
+                    range = ProjectVertsOntoAxis(verts.data(), verts.size(), Direction::up);
                     if (range.min >= 1 && range.max >= 1) {
                         continue;
                     }
-                    range = ProjectVertsOntoAxis(verts.data(), verts.size(), Vec3D::down);
+                    range = ProjectVertsOntoAxis(verts.data(), verts.size(), Direction::down);
                     if (range.min >= 1 && range.max >= 1) {
                         continue;
                     }
@@ -562,15 +562,23 @@ public:
                 {
                     Matrix4x4 mvp = ProjectionMatrix() * Camera::main->TRInverse() * Mesh::objects[i]->TRS();
 
-                    Vec3 center_p = mvp * Vec4(0, 0, 0, 1);
-                    Vec3 right_p = mvp * (Vec4)Vec3D::right;
-                    Vec3 up_p = mvp * (Vec4)Vec3D::up;
-                    Vec3 forward_p = mvp * (Vec4)Vec3D::forward;
+                    Vec3 center_p = mvp * Vec4(0,0,0,1);
+                    Vec3 xAxis_p = mvp * Vec3(0.5, 0, 0);
+                    Vec3 yAxis_p = mvp * Vec3(0, 0.5, 0);
+                    Vec3 zAxis_p = mvp * Vec3(0, 0, 0.5);
+                    
+                    Vec3 right_p = mvp * (Direction::right + Direction::forward * 0.01);
+                    Vec3 up_p = mvp * (Direction::up+Direction::forward*0.01);
+                    Vec3 forward_p = mvp * (Direction::forward);
 
-                    pointBuffer->emplace_back(Point(center_p, RGB::red, 5));
-                    lineBuffer->emplace_back(Line(center_p, right_p, RGB::red));
-                    lineBuffer->emplace_back(Line(center_p, up_p, RGB::yellow));
-                    lineBuffer->emplace_back(Line(center_p, forward_p, RGB::blue));
+                    pointBuffer->emplace_back(Point(center_p, RGB::red, 4));
+                    lineBuffer->emplace_back(Line(center_p, xAxis_p, RGB::red));
+                    lineBuffer->emplace_back(Line(center_p, yAxis_p, RGB::yellow));
+                    lineBuffer->emplace_back(Line(center_p, zAxis_p, RGB::blue));
+
+                    //lineBuffer->emplace_back(Line(center_p, right_p, RGB::red));
+                    //lineBuffer->emplace_back(Line(center_p, up_p, RGB::yellow));
+                    lineBuffer->emplace_back(Line(center_p, mvp*(Direction::forward), RGB::turquoise, 3));
                 }
             }
             
@@ -588,13 +596,6 @@ public:
         // ---------- Draw -----------
         for (int i = 0; i < triBuffer->size(); i++)
         {
-            if (CameraSettings::outsiderViewPerspective) {
-                for (size_t j = 0; j < 3; j++)
-                {
-                    (*triBuffer)[i].verts[j] = ProjectionMatrix() * Camera::outsider->TRInverse() * (*triBuffer)[i].verts[j];
-                }
-            }
-            
             (*triBuffer)[i].Draw();
         }
 
@@ -646,40 +647,6 @@ private:
                 projectedTri.verts[j] = projectedPoint;
             };
 
-            //------------------Ray casting (world & view space)--------------------------
-
-            Vec3 lineStart = Camera::cameras[2]->position;
-            Vec3 lineEnd = lineStart + Camera::cameras[2]->Forward();// *abs(farClippingPlane);
-            Vec3 pointOfIntersection;
-            if (LinePlaneIntersecting(lineStart, lineEnd, worldSpaceTri, &pointOfIntersection))
-            {
-                Matrix4x4 matrix = projectionMatrix * worldToViewMatrix;
-
-                Vec4 pointOfIntersection_p = matrix * pointOfIntersection;
-                if (PointInsideTriangle(pointOfIntersection_p, projectedTri.verts))
-                {
-                    // ---------- Debugging -----------
-                    //Vec4 pointOfIntersectionProj = projectionMatrix * worldToViewMatrix * pointOfIntersection;
-                    Vec4 from_p = matrix * lineStart;
-                    Vec4 to_p = matrix * (pointOfIntersection);// +lineEnd);
-                    lineBuffer->emplace_back(Line(from_p, pointOfIntersection_p));
-                    pointBuffer->emplace_back(Point(pointOfIntersection_p, RGB::gray, 5));
-
-                    // Reflect
-                    Vec3 n = worldSpaceTri.Normal();
-                    Vec3 v = (pointOfIntersection - lineStart);
-                    Vec3 reflection = Reflect(v, n);
-                    lineBuffer->emplace_back(Line(pointOfIntersection_p, (Vec3)(matrix * (pointOfIntersection + reflection)), RGB::red));
-
-                    // Project
-                    Vec3 vecPlane = ProjectOnPlane(v, n);
-                    lineBuffer->emplace_back(Line(pointOfIntersection_p, (Vec3)(matrix * (pointOfIntersection + vecPlane)), RGB::black));
-
-                    projectedTri.color = RGB::white;
-                    if (DEBUGGING) { std::cout << (projectedTri.mesh) << endl; }// delete projectedTri.mesh; }
-                }
-            }
-
             //------------------- Normal/Frustum Culling (view space)------------------------
             Vec3 p1_c = camSpaceTri.verts[0];
             Vec3 p2_c = camSpaceTri.verts[1];
@@ -690,24 +657,24 @@ private:
             {
                 bool tooCloseToCamera = (p1_c.z >= nearClippingPlane || p2_c.z >= nearClippingPlane || p3_c.z >= nearClippingPlane || camSpaceTri.centroid.z >= nearClippingPlane);
                 bool tooFarFromCamera = (p1_c.z <= farClippingPlane || p2_c.z <= farClippingPlane || p3_c.z <= farClippingPlane || camSpaceTri.centroid.z <= farClippingPlane);
-                bool behindCamera = DotProduct((Vec3)camSpaceTri.centroid, Vec3D::forward) <= 0.0;
+                bool behindCamera = DotProduct((Vec3)camSpaceTri.centroid, Direction::forward) <= 0.0;
                 if (tooCloseToCamera || tooFarFromCamera || behindCamera) {
                     continue; // Skip triangle if it's out of cam view.
                 }
 
-                Range range = ProjectVertsOntoAxis(projectedTri.verts, 3, Vec3D::left);
+                Range range = ProjectVertsOntoAxis(projectedTri.verts, 3, Direction::left);
                 if (range.min > 1) {
                     continue;
                 }
-                range = ProjectVertsOntoAxis(projectedTri.verts, 3, Vec3D::right);
+                range = ProjectVertsOntoAxis(projectedTri.verts, 3, Direction::right);
                 if (range.min > 1) {
                     continue;
                 }
-                range = ProjectVertsOntoAxis(projectedTri.verts, 3, Vec3D::up);
+                range = ProjectVertsOntoAxis(projectedTri.verts, 3, Direction::up);
                 if (range.min > 1) {
                     continue;
                 }
-                range = ProjectVertsOntoAxis(projectedTri.verts, 3, Vec3D::down);
+                range = ProjectVertsOntoAxis(projectedTri.verts, 3, Direction::down);
                 if (range.min > 1) {
                     continue;
                 }
@@ -735,7 +702,7 @@ private:
             
             if (GraphicSettings::lighting && GraphicSettings::fillTriangles)
             {
-                Vec3 lightSource = Vec3D::up + Vec3D::right + Vec3D::back * .3;
+                Vec3 lightSource = Direction::up + Direction::right + Direction::back * .3;
                 float amountFacingLight = DotProduct((Vec3)worldSpaceTri.Normal(), lightSource);
                 Color colorLit = (projectedTri.color* Clamp(amountFacingLight, 0.15, 1));
 
@@ -765,8 +732,17 @@ private:
                 lineBuffer->emplace_back(Line(centroid_p, centroidToNormal_p));
             }
 
-            //Add projected tri
             projectedTri.centroid = projectionMatrix * camSpaceTri.centroid;
+
+            if (CameraSettings::outsiderViewPerspective) 
+            {
+                for (size_t k = 0; k < 3; k++)
+                {
+                    projectedTri.verts[k] = projectionMatrix * Camera::outsider->TRInverse() * projectedTri.verts[k];
+                }
+            }
+            
+            //Add projected tri
             triBuffer->emplace_back(projectedTri);
         }
     }

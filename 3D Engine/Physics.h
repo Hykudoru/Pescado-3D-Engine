@@ -14,9 +14,11 @@ class Physics
 {
 public:
     static bool collisionDetection;
+    static bool raycasting;
     static bool gravity;
 };
 bool Physics::collisionDetection = true;
+bool Physics::raycasting = false;
 bool Physics::gravity = false;
 
 double deltaTime = 0;
@@ -306,7 +308,7 @@ static void Physics(GLFWwindow* window)
         float planetRotationSpeed = (1.5 * PI / 180) * deltaTime;
         planet->rotation = Matrix3x3::RotX(-planetRotationSpeed) * Matrix3x3::RotY(planetRotationSpeed + 0.000001) * planet->rotation;// MatrixMultiply(YPR(angle * ((screenWidth / 2)), angle * -((screenWidth / 2)), 0), Mesh.meshes[1].rotation);
     }
-    
+
     /*for (size_t i = 0; i < Mesh::meshes.size(); i++)
     {
         if (Mesh::meshes[i])
@@ -318,6 +320,56 @@ static void Physics(GLFWwindow* window)
     if (Physics::collisionDetection)
     {
         DetectCollisions();
+    }
+    
+    if (Physics::raycasting)
+    {
+        for (size_t i = 0; i < Mesh::objects.size(); i++)
+        {
+            auto triangles = Mesh::objects[i]->MapVertsToTriangles();
+            for (size_t j = 0; j < triangles->size(); j++)
+            {
+                Triangle worldSpaceTri = (*triangles)[j];
+                Triangle projectedTri = (*triangles)[j];
+                for (size_t k = 0; k < 3; k++)
+                {
+                    worldSpaceTri.verts[k] = Mesh::objects[i]->TRS() * worldSpaceTri.verts[k];
+                    projectedTri.verts[k] = ProjectionMatrix() * Camera::main->TRInverse() * worldSpaceTri.verts[k];
+                }
+                //------------------Ray casting (world & view space)--------------------------
+                Vec3 lineStart = Camera::cameras[2]->position;
+                Vec3 lineEnd = lineStart + Camera::cameras[2]->Forward();// *abs(farClippingPlane);
+                Vec3 pointOfIntersection;
+                if (LinePlaneIntersecting(lineStart, lineEnd, worldSpaceTri, &pointOfIntersection))
+                {
+                    Matrix4x4 matrix = ProjectionMatrix() * Camera::main->TRInverse();
+
+                    Vec4 pointOfIntersection_p = matrix * pointOfIntersection;
+                    if (PointInsideTriangle(pointOfIntersection_p, projectedTri.verts))
+                    {
+                        // ---------- Debugging -----------
+                        //Vec4 pointOfIntersectionProj = projectionMatrix * worldToViewMatrix * pointOfIntersection;
+                        Vec4 from_p = matrix * lineStart;
+                        Vec4 to_p = matrix * (pointOfIntersection);// +lineEnd);
+                        lineBuffer->emplace_back(Line(from_p, pointOfIntersection_p));
+                        pointBuffer->emplace_back(Point(pointOfIntersection_p, RGB::gray, 5));
+
+                        // Reflect
+                        Vec3 n = worldSpaceTri.Normal();
+                        Vec3 v = (pointOfIntersection - lineStart);
+                        Vec3 reflection = Reflect(v, n);
+                        lineBuffer->emplace_back(Line(pointOfIntersection_p, (Vec3)(matrix * (pointOfIntersection + reflection)), RGB::red));
+
+                        // Project
+                        Vec3 vecPlane = ProjectOnPlane(v, n);
+                        lineBuffer->emplace_back(Line(pointOfIntersection_p, (Vec3)(matrix * (pointOfIntersection + vecPlane)), RGB::black));
+
+                        projectedTri.color = RGB::white;
+                        if (DEBUGGING) { std::cout << (projectedTri.mesh) << endl; }// delete projectedTri.mesh; }
+                    }
+                }
+            }
+        }
     }
 
     if (DEBUGGING) 

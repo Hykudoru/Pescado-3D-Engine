@@ -68,7 +68,7 @@ void Init(GLFWwindow* window)
 
     planet = LoadMeshFromOBJFile("Objects/Sphere.obj");
     planet->scale = Vec3(500, 500, 500);
-    planet->position += Vec3D::forward * 1000;
+    planet->position += Direction::forward * 1000;
     planet->color = RGB::white;
     
     textHelloWorld = LoadMeshFromOBJFile("Objects/Hello3DWorldText.obj");
@@ -102,6 +102,8 @@ void Init(GLFWwindow* window)
 
   //  Mesh* cameraMesh = new CubeMesh();
     //cameraMesh->parent = camera2;
+    Mesh* cameraMesh = LoadMeshFromOBJFile("Objects/Camera.obj");
+    cameraMesh->SetParent(Camera::main);
 }
  
 void Update(GLFWwindow* window)

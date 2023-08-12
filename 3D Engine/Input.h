@@ -51,6 +51,15 @@ void OnMouseButtonEvent(GLFWwindow* window, int button, int action, int mods)
             mesh->rotation = Camera::main->rotation;
             mesh->color = RGB::turquoise;
         }
+        else if (button == 1) {
+            Physics::raycasting = true;
+        }
+    }
+    if (action == GLFW_RELEASE)
+    {
+        if (button == 1) {
+            Physics::raycasting = false;
+        }
     }
 }
 
