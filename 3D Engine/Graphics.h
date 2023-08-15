@@ -96,18 +96,27 @@ Vec3 Direction::up = Vec3(0, 1, 0);
 Vec3 Direction::down = Vec3(0, -1, 0);
 
 static float worldScale = 1;
-int screenWidth = 800;//700;//screen.width - 20;
-int screenHeight = 800; //screen.height - 20; //screen.height;// - 30;
+int screenWidth = 1600;//700;//screen.width - 20;
+int screenHeight = 900; //screen.height - 20; //screen.height;// - 30;
 float aspectRatio = screenWidth / screenHeight;
 float nearClippingPlane = -0.1;
 float farClippingPlane = -100000.0;
 float fieldOfViewDeg = 60;
 float fov = ToRad(fieldOfViewDeg);
+float aspect = (float)screenHeight / (float)screenWidth;
 
 // Perspective Projection Matrix
 float persp[4][4] = {
-    {1 / tan(fov / 2), 0, 0, 0},
-    {0, 1 / tan(fov / 2), 0, 0},
+    {aspect * 1/tan(fov/2), 0, 0, 0},
+    {0, 1/tan(fov/2), 0, 0},
+    {0, 0, 1, 0},
+    {0, 0, -1, 0}
+};
+
+// Perspective Projection Matrix
+float outerPersp[4][4] = {
+    {1, 0, 0, 0},
+    {0, 1, 0, 0},
     {0, 0, 1, 0},
     {0, 0, -1, 0}
 };
@@ -120,15 +129,24 @@ float ortho[4][4] = {
     {0, 0, 0, 1}
 };
 
+float undoAspect[4][4] = {
+    {1 / aspect, 0, 0, 0},
+    {0, 1, 0, 0},
+    {0, 0, 1, 0},
+    {0, 0, 0, 0}
+};
+
 Matrix4x4 perspectiveProjectionMatrix = persp;
+Matrix4x4 outerPerspectiveProjectionMatrix = outerPersp;
 Matrix4x4 orthographicProjectionMatrix = ortho;
+Matrix4x4 undoAspectRatio = undoAspect;
 
 void FOV(int deg)
 {
     fieldOfViewDeg = deg;
     fov = ToRad(deg);
     float newPerspectiveProjectionMatrix[4][4] = {
-        {1/tan(fov/2), 0, 0, 0},
+        {aspect * 1/tan(fov/2), 0, 0, 0},
         {0, 1/tan(fov/2), 0, 0},
         {0, 0, 1, 0},
         {0, 0, -1, 0}
@@ -736,9 +754,11 @@ private:
 
             if (CameraSettings::outsiderViewPerspective) 
             {
+                Matrix4x4 pictureMatrix = outerPerspectiveProjectionMatrix * Camera::outsider->TRInverse();
+                
                 for (size_t k = 0; k < 3; k++)
                 {
-                    projectedTri.verts[k] = projectionMatrix * Camera::outsider->TRInverse() * projectedTri.verts[k];
+                    projectedTri.verts[k] = pictureMatrix * projectedTri.verts[k];
                 }
             }
             

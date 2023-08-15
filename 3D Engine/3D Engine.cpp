@@ -56,7 +56,7 @@ void Init(GLFWwindow* window)
     glPointSize(2);
 
     GraphicSettings::matrixMode = true;
-    GraphicSettings::debugAxes = true;
+    //GraphicSettings::debugAxes = true;
 
     Mesh* cube1 = new CubeMesh(1, Vec3(-5, -5, -10));
     CubeMesh* cube2 = new CubeMesh(1, Vec3(-5, 5, -20));
@@ -141,7 +141,7 @@ int main(void)
         return -1;
 
     /* Create a windowed mode window and its OpenGL context */
-    window = glfwCreateWindow(800, 800, "Pescado Engine", NULL, NULL);
+    window = glfwCreateWindow(screenWidth, screenHeight, "Pescado Engine", NULL, NULL);
     if (!window)
     {
         glfwTerminate();
