@@ -114,7 +114,7 @@ float persp[4][4] = {
 };
 
 // Perspective Projection Matrix
-float outerPersp[4][4] = {
+float weakPersp[4][4] = {
     {1, 0, 0, 0},
     {0, 1, 0, 0},
     {0, 0, 1, 0},
@@ -137,7 +137,7 @@ float undoAspect[4][4] = {
 };
 
 Matrix4x4 perspectiveProjectionMatrix = persp;
-Matrix4x4 outerPerspectiveProjectionMatrix = outerPersp;
+Matrix4x4 weakPerspectiveProjectionMatrix = weakPersp;
 Matrix4x4 orthographicProjectionMatrix = ortho;
 Matrix4x4 undoAspectRatio = undoAspect;
 
@@ -754,7 +754,7 @@ private:
 
             if (CameraSettings::outsiderViewPerspective) 
             {
-                Matrix4x4 pictureMatrix = outerPerspectiveProjectionMatrix * Camera::outsider->TRInverse();
+                Matrix4x4 pictureMatrix = weakPerspectiveProjectionMatrix * Camera::outsider->TRInverse();
                 
                 for (size_t k = 0; k < 3; k++)
                 {
