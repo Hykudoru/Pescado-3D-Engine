@@ -279,7 +279,7 @@ static void Physics(GLFWwindow* window)
     Camera* cam;
     if (CameraSettings::outsiderViewPerspective)
     {
-        cam = Camera::outsider;
+        cam = Camera::projector;
     }
     else {
         cam = Camera::main;

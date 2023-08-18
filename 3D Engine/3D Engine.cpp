@@ -82,7 +82,7 @@ void Init(GLFWwindow* window)
     child->parent = parent;
     grandchild->parent = child;
 
-    obj1 = new CubeMesh(1, Vec3(0, 0, 0), Vec3(0, 90, 0));
+    obj1 = new CubeMesh(1, Vec3(0, 10, 0), Vec3(0, 90, 0));
     obj2 = new CubeMesh(2, Vec3(0, 0, -2), Vec3(0, 90, 0));
     obj3 = new CubeMesh(2, Vec3(0, 0, -2), Vec3(0, 90, 0));
     obj4 = new CubeMesh(2, Vec3(0, 0, -2), Vec3(0, 90, 0));
@@ -99,11 +99,11 @@ void Init(GLFWwindow* window)
     //chair->position += (Camera::main->Forward() * 10) + Camera::main->Left();
 
     //Plane* plane = new Plane(1, Vec3(0, 0, 0), Vec3(0, 0, 0));
-
-  //  Mesh* cameraMesh = new CubeMesh();
-    //cameraMesh->parent = camera2;
-    Mesh* cameraMesh = LoadMeshFromOBJFile("Objects/Camera.obj");
-    cameraMesh->SetParent(Camera::main);
+    for (size_t i = 1; i < Camera::cameras.size(); i++)//starts at 1 to avoid projector camera
+    {
+       Mesh* cameraMesh = LoadMeshFromOBJFile("Objects/Camera.obj");
+       cameraMesh->SetParent(Camera::cameras[i]);
+    }
 }
  
 void Update(GLFWwindow* window)

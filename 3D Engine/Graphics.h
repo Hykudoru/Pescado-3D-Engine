@@ -447,7 +447,7 @@ class Camera : public Transform
 {
 public:
     static Camera* main;
-    static Camera* outsider;
+    static Camera* projector;
     static List<Camera*> cameras;
     static int cameraCount;
 
@@ -457,14 +457,15 @@ public:
     : Transform(1, position, rotationEuler)
     {
         cameras.emplace(cameras.begin() + cameraCount++, this);
-        name = "Camera " + cameraCount;
+        name = std::string("Camera " + cameraCount);
     }
 };
 List<Camera*> Camera::cameras = List<Camera*>();
 int Camera::cameraCount = 0;
-Camera* Camera::outsider = new Camera();
-Camera* Camera::main = new Camera();
+Camera* Camera::projector = new Camera();
+Camera* camera1 = new Camera();
 Camera* camera2 = new Camera(Vec3(0, 50, 0), Vec3(-90 * PI / 180, 0, 0));
+Camera* Camera::main = camera1;
 
 Plane topClippingPlane = Plane(Direction::up + Direction::forward, Direction::down);
 Plane rightClippingPlane = Plane(Direction::right + Direction::forward, Direction::left);
@@ -544,7 +545,7 @@ public:
                 if (tooSmallToSee) {
                     return;
                 }*/
-                bool behindCamera = DotProduct(Mesh::objects[i]->position - Camera::main->position, Camera::main->Forward()) < 0.0;
+                bool behindCamera = false;// DotProduct(Camera::main->Forward(), Mesh::objects[i]->position - Camera::main->position) <= 0.0;
                 if (behindCamera) {
                     continue;
                 }
@@ -752,13 +753,14 @@ private:
 
             projectedTri.centroid = projectionMatrix * camSpaceTri.centroid;
 
+            // Nested Projection or Double Projection
             if (CameraSettings::outsiderViewPerspective) 
             {
-                Matrix4x4 pictureMatrix = weakPerspectiveProjectionMatrix * Camera::outsider->TRInverse();
+                Matrix4x4 nestedProjectionMatrix = weakPerspectiveProjectionMatrix * Camera::projector->TRInverse();
                 
                 for (size_t k = 0; k < 3; k++)
                 {
-                    projectedTri.verts[k] = pictureMatrix * projectedTri.verts[k];
+                    projectedTri.verts[k] = nestedProjectionMatrix * projectedTri.verts[k];
                 }
             }
             

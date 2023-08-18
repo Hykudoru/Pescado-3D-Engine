@@ -29,7 +29,7 @@ void OnMouseMoveEvent(GLFWwindow* window, double mouseX, double mouseY)
         double xAngle = rad * mouseSensitivity * -deltaMouseY;// *deltaTime;
         double yAngle = 0.0000001 + rad * mouseSensitivity * -deltaMouseX;// * deltaTime; // 0.0000001 so no gimbal lock
         if (CameraSettings::outsiderViewPerspective) {
-            Camera::outsider->rotation *= YPR(xAngle, yAngle, 0);
+            Camera::projector->rotation *= YPR(xAngle, yAngle, 0);
         }
         else {
             Camera::main->rotation *= YPR(xAngle, yAngle, 0);
@@ -88,8 +88,8 @@ void OnKeyPressEvent(GLFWwindow* window, int key, int scancode, int action, int 
         }
         else if (glfwGetKey(window, GLFW_KEY_3) == GLFW_PRESS) {
             CameraSettings::outsiderViewPerspective = !CameraSettings::outsiderViewPerspective;
-            Camera::outsider->rotation = Identity3x3;
-            Camera::outsider->position = Vec3();
+            Camera::projector->rotation = Identity3x3;
+            Camera::projector->position = Vec3();
         }
         // Spawn
         else if (glfwGetKey(window, GLFW_KEY_9) == GLFW_PRESS) {
@@ -251,7 +251,7 @@ static void Input()
 {
     if (CameraSettings::outsiderViewPerspective)
     {
-        CameraControl(Camera::outsider);
+        CameraControl(Camera::projector);
     }
     else 
     {
