@@ -545,10 +545,13 @@ public:
                 if (tooSmallToSee) {
                     return;
                 }*/
-                bool behindCamera = false;// DotProduct(Camera::main->Forward(), Mesh::objects[i]->position - Camera::main->position) <= 0.0;
-                if (behindCamera) {
-                    continue;
+                if (Camera::main != Mesh::objects[i]->root) {
+                    bool behindCamera =  DotProduct((Mesh::objects[i]->root->position - Camera::main->position), Camera::main->Forward()) <= 0.0;
+                    if (behindCamera) {
+                        continue;
+                    }
                 }
+                
                 /*
                 if (Mesh::objects[i]->vertices)
                 {
@@ -682,19 +685,19 @@ private:
                 }
 
                 Range range = ProjectVertsOntoAxis(projectedTri.verts, 3, Direction::left);
-                if (range.min > 1) {
+                if (range.min > 1 && range.max > 1) {
                     continue;
                 }
                 range = ProjectVertsOntoAxis(projectedTri.verts, 3, Direction::right);
-                if (range.min > 1) {
+                if (range.min > 1 && range.max > 1) {
                     continue;
                 }
                 range = ProjectVertsOntoAxis(projectedTri.verts, 3, Direction::up);
-                if (range.min > 1) {
+                if (range.min > 1 && range.max > 1) {
                     continue;
                 }
                 range = ProjectVertsOntoAxis(projectedTri.verts, 3, Direction::down);
-                if (range.min > 1) {
+                if (range.min > 1 && range.max > 1) {
                     continue;
                 }
             }
