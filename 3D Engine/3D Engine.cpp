@@ -38,6 +38,7 @@ void Debug()
 
 Mesh* textHelloWorld;
 Mesh* planet;
+Mesh* spaceShip;
 CubeMesh* obj1;
 CubeMesh* obj2;
 CubeMesh* obj3;
@@ -76,13 +77,16 @@ void Init(GLFWwindow* window)
     textHelloWorld->position = Vec3(0, 0, -490);
     textHelloWorld->color = RGB::green;
     
+    spaceShip = LoadMeshFromOBJFile("Objects/SpaceShip_2.2.obj");
+    spaceShip->position = Direction::left * 30 + Direction::forward * 10;
+
     Mesh* parent = new CubeMesh();
     Mesh* child = new CubeMesh();
     Mesh* grandchild = new CubeMesh();
     child->parent = parent;
     grandchild->parent = child;
 
-    obj1 = new CubeMesh(1, Vec3(0, 10, 0), Vec3(0, 90, 0));
+    obj1 = new CubeMesh(1, Vec3(0, 10, 50), Vec3(0, 90, 0));
     obj2 = new CubeMesh(2, Vec3(0, 0, -2), Vec3(0, 90, 0));
     obj3 = new CubeMesh(2, Vec3(0, 0, -2), Vec3(0, 90, 0));
     obj4 = new CubeMesh(2, Vec3(0, 0, -2), Vec3(0, 90, 0));

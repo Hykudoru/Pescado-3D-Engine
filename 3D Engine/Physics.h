@@ -274,6 +274,7 @@ Vec3 moveDir = Vec3(0, 0, 0);
 Vec3 velocity = Vec3(0, 0, 0);
 
 extern Mesh* planet;
+extern Mesh* spaceShip;
 static void Physics(GLFWwindow* window)
 {
     Camera* cam;
@@ -307,6 +308,13 @@ static void Physics(GLFWwindow* window)
     if (planet) {
         float planetRotationSpeed = (1.5 * PI / 180) * deltaTime;
         planet->rotation = Matrix3x3::RotX(-planetRotationSpeed) * Matrix3x3::RotY(planetRotationSpeed + 0.000001) * planet->rotation;// MatrixMultiply(YPR(angle * ((screenWidth / 2)), angle * -((screenWidth / 2)), 0), Mesh.meshes[1].rotation);
+    }
+
+    if (spaceShip)
+    {
+        float shipRotationSpeed = (10 * PI / 180) * deltaTime;
+        spaceShip->rotation = Matrix3x3::RotY(-shipRotationSpeed) * spaceShip->rotation;// MatrixMultiply(YPR(angle * ((screenWidth / 2)), angle * -((screenWidth / 2)), 0), Mesh.meshes[1].rotation);
+        spaceShip->position += spaceShip->Forward() * 10 * deltaTime;
     }
 
     /*for (size_t i = 0; i < Mesh::meshes.size(); i++)
