@@ -11,6 +11,7 @@
 #include <Physics.h>
 #include <Input.h>
 using namespace std;
+GLFWwindow* window;
 
 // Checking if DEBUGGING true in other scripts before using cout also ensures readable slow incremental output.
 bool DEBUGGING = false;
@@ -103,14 +104,14 @@ void Init(GLFWwindow* window)
     //chair->position += (Camera::main->Forward() * 10) + Camera::main->Left();
 
     //Plane* plane = new Plane(1, Vec3(0, 0, 0), Vec3(0, 0, 0));
-    for (size_t i = 1; i < Camera::cameras.size(); i++)//starts at 1 to avoid projector camera
+    /*for (size_t i = 1; i < Camera::cameras.size(); i++)//starts at 1 to avoid projector camera
     {
        Mesh* cameraMesh = LoadMeshFromOBJFile("Objects/Camera.obj");
        cameraMesh->SetParent(Camera::cameras[i]);
-    }
+    }*/
 }
  
-void Update(GLFWwindow* window)
+void Update()
 {
    
 }
@@ -135,7 +136,7 @@ void Draw()
     lineBuffer->clear();
 }
 
-GLFWwindow* window;
+
 int main(void)
 {
     //GLFWwindow* window;
@@ -170,8 +171,8 @@ int main(void)
         {
             Time();
             Input();
-            Physics(window);
-            Update(window);
+            Physics();
+            Update();
             Draw();
             Debug();
         }

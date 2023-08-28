@@ -9,6 +9,7 @@ using namespace std;
 #ifndef PHYSICS_H
 #define PHYSICS_H
 extern bool DEBUGGING;
+extern GLFWwindow* window;
 
 class Physics
 {
@@ -275,7 +276,7 @@ Vec3 velocity = Vec3(0, 0, 0);
 
 extern Mesh* planet;
 extern Mesh* spaceShip;
-static void Physics(GLFWwindow* window)
+static void Physics()
 {
     Camera* cam;
     if (CameraSettings::outsiderViewPerspective)
