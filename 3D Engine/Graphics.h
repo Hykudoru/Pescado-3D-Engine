@@ -584,22 +584,16 @@ public:
                 {
                     Matrix4x4 mvp = ProjectionMatrix() * Camera::main->TRInverse() * Mesh::objects[i]->TRS();
 
-                    Vec3 center_p = mvp * Vec4(0,0,0,1);
-                    Vec3 xAxis_p = mvp * Vec3(0.5, 0, 0);
-                    Vec3 yAxis_p = mvp * Vec3(0, 0.5, 0);
-                    Vec3 zAxis_p = mvp * Vec3(0, 0, 0.5);
-                    
-                    Vec3 right_p = mvp * (Direction::right + Direction::forward * 0.01);
-                    Vec3 up_p = mvp * (Direction::up+Direction::forward*0.01);
-                    Vec3 forward_p = mvp * (Direction::forward);
+                    Vec2 center_p = mvp * Vec4(0,0,0,1);
+                    Vec2 xAxis_p = mvp * Vec4(0.5, 0, 0, 1);
+                    Vec2 yAxis_p = mvp * Vec4(0, 0.5, 0, 1);
+                    Vec2 zAxis_p = mvp * Vec4(0, 0, 0.5, 1);
+                    Vec2 forward_p = mvp * (Direction::forward);
 
                     pointBuffer->emplace_back(Point(center_p, RGB::red, 4));
                     lineBuffer->emplace_back(Line(center_p, xAxis_p, RGB::red));
                     lineBuffer->emplace_back(Line(center_p, yAxis_p, RGB::yellow));
                     lineBuffer->emplace_back(Line(center_p, zAxis_p, RGB::blue));
-
-                    //lineBuffer->emplace_back(Line(center_p, right_p, RGB::red));
-                    //lineBuffer->emplace_back(Line(center_p, up_p, RGB::yellow));
                     lineBuffer->emplace_back(Line(center_p, mvp*(Direction::forward), RGB::turquoise, 3));
                 }
             }
