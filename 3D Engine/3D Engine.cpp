@@ -40,6 +40,7 @@ void Debug()
 Mesh* textHelloWorld;
 Mesh* planet;
 Mesh* spaceShip;
+Mesh* spaceShip2;
 CubeMesh* obj1;
 CubeMesh* obj2;
 CubeMesh* obj3;
@@ -80,6 +81,11 @@ void Init(GLFWwindow* window)
     
     spaceShip = LoadMeshFromOBJFile("Objects/SpaceShip_2.2.obj");
     spaceShip->position = Direction::left * 30 + Direction::forward * 10;
+
+    spaceShip2 = LoadMeshFromOBJFile("Objects/SpaceShip_3.obj");
+    spaceShip2->position = Direction::right * 40 + Direction::forward * 100;
+    spaceShip2->rotation = Matrix3x3::RotY(PI);
+
 
     Mesh* parent = new CubeMesh();
     Mesh* child = new CubeMesh();
