@@ -41,6 +41,7 @@ Mesh* textHelloWorld;
 Mesh* planet;
 Mesh* spaceShip;
 Mesh* spaceShip2;
+Mesh* spaceShip3;
 CubeMesh* obj1;
 CubeMesh* obj2;
 CubeMesh* obj3;
@@ -69,23 +70,25 @@ void Init(GLFWwindow* window)
     CubeMesh* cube7 = new CubeMesh(1, Vec3(5, 5, 30));
     CubeMesh* cube8 = new CubeMesh(10, Vec3(5, -5, 40));
 
-    planet = LoadMeshFromOBJFile("Objects/Sphere.obj");
+    planet = LoadMeshFromOBJFile("Sphere.obj");
     planet->scale = Vec3(500, 500, 500);
     planet->position += Direction::forward * 1000;
     planet->color = RGB::white;
     
-    textHelloWorld = LoadMeshFromOBJFile("Objects/Hello3DWorldText.obj");
+    textHelloWorld = LoadMeshFromOBJFile("Hello3DWorldText.obj");
     textHelloWorld->scale = Vec3(2, 2, 2);
     textHelloWorld->position = Vec3(0, 0, -490);
     textHelloWorld->color = RGB::green;
     
-    spaceShip = LoadMeshFromOBJFile("Objects/SpaceShip_2.2.obj");
+    spaceShip = LoadMeshFromOBJFile("SpaceShip_2.2.obj");
     spaceShip->position = Direction::left * 30 + Direction::forward * 10;
 
-    spaceShip2 = LoadMeshFromOBJFile("Objects/SpaceShip_3.obj");
+    spaceShip2 = LoadMeshFromOBJFile("SpaceShip_3.obj");
     spaceShip2->position = Direction::right * 40 + Direction::forward * 100;
     spaceShip2->rotation = Matrix3x3::RotY(PI);
 
+    spaceShip3 = LoadMeshFromOBJFile("SpaceShip_5.obj");
+    spaceShip3->position = Direction::right * 20 + Direction::up * 10;
 
     Mesh* parent = new CubeMesh();
     Mesh* child = new CubeMesh();

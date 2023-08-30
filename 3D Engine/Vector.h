@@ -296,7 +296,7 @@ public:
     operator Vector4<T>();
 };
 template <typename T>
-Vector3<T> Vector3<T>::zero = { 0, 0, 0};
+Vector3<T> Vector3<T>::zero = { 0, 0, 0 };
 
 // Constructors
 template <typename T>
@@ -333,8 +333,9 @@ public:
     T w = 1.0;
 
     Vector4();
-    Vector4(T xVal, T yVal, T zVal, T wVal = 1.0);
+    Vector4(T x, T y, T z, T w = 1.0);
     Vector4(T xyzw[]);
+    Vector4(Vector3<T> vec3, T w);
 
     operator Vector3<T>();
     operator Vector2<T>();
@@ -349,12 +350,12 @@ Vector4<T>::Vector4()
     w = 1.0;
 }
 template <typename T>
-Vector4<T>::Vector4(T xVal, T yVal, T zVal, T wVal)
+Vector4<T>::Vector4(T x, T y, T z, T w)
 {
-    x = xVal;
-    y = yVal;
-    z = zVal;
-    w = wVal;
+    this->x = x;
+    this->y = y;
+    this->z = z;
+    this->w = w;
 }
 
 template <typename T>
@@ -365,8 +366,14 @@ Vector4<T>::Vector4(T xyzw[])
     z = xyzw[2];
     w = xyzw[3];
 }
-
-
+template <typename T>
+Vector4<T>::Vector4(Vector3<T> vec3, T w)
+{
+    this->x = vec3.x;
+    this->y = vec3.y;
+    this->z = vec3.z;
+    this->w = w;
+}
 //================================
 // Casting
 template <typename T>
@@ -393,7 +400,6 @@ template <typename T>
 Vector4<T>::operator Vector3<T>()
 {
     Vector3<T> vec3(x, y, z);
-
     return vec3;
 }
 template <typename T>

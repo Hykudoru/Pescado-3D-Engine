@@ -98,19 +98,19 @@ void OnKeyPressEvent(GLFWwindow* window, int key, int scancode, int action, int 
             mesh->rotation = Camera::main->rotation;
         }
         else if (glfwGetKey(window, GLFW_KEY_8) == GLFW_PRESS) {
-            Mesh* mesh = LoadMeshFromOBJFile("Objects/Sphere.obj");
+            Mesh* mesh = LoadMeshFromOBJFile("Sphere.obj");
             mesh->position = Camera::main->position + (Camera::main->Forward() * 10);
             mesh->rotation = Camera::main->rotation;
         }
         else if (glfwGetKey(window, GLFW_KEY_7) == GLFW_PRESS) {
-            Mesh* mesh = LoadMeshFromOBJFile("Objects/Diamond.obj");
+            Mesh* mesh = LoadMeshFromOBJFile("Diamond.obj");
             mesh->position = Camera::main->position + (Camera::main->Forward() * 10);
             mesh->rotation = Camera::main->rotation;
             mesh->scale *= 0.1;
             mesh->color = RGB::red;
         }
         else if (glfwGetKey(window, GLFW_KEY_6) == GLFW_PRESS) {
-            Mesh* mesh = LoadMeshFromOBJFile("Objects/Icosahedron.obj");
+            Mesh* mesh = LoadMeshFromOBJFile("Icosahedron.obj");
             mesh->position = Camera::main->position + (Camera::main->Forward() * 10);
             mesh->rotation = Camera::main->rotation;
             mesh->scale *= 0.1;

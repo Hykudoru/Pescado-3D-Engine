@@ -79,6 +79,18 @@ Color RGB::yellow = Color(255, 255, 0);
 Color RGB::turquoise = Color(0, 255, 255);
 Color RGB::orange = Color(255, 158, 0);
 
+struct Material
+{
+    string name = "";
+    Color color = RGB::white;
+
+    Material(string id = "", Color color = RGB::white)
+    {
+        this->name = id;
+        this->color = color;
+    }
+};
+
 struct Direction
 {
     static Vec3 forward;
@@ -232,6 +244,7 @@ struct Triangle : Plane
     {
         color = RGB::white;
         centroid = Centroid();
+        mesh = nullptr;
     }
 
     Vec4 Centroid()
@@ -506,7 +519,13 @@ public:
                 int p1Index = (*indices)[i++];
                 int p2Index = (*indices)[i++];
                 int p3Index = (*indices)[i];
-                (*triangles)[t] = Triangle((*vertices)[p1Index], (*vertices)[p2Index], (*vertices)[p3Index]);
+                if ((*triangles)[t].verts) {
+                    (*triangles)[t] = Triangle((*vertices)[p1Index], (*vertices)[p2Index], (*vertices)[p3Index]);
+                } else {
+                    (*triangles)[t].verts[0] = (*vertices)[p1Index];
+                    (*triangles)[t].verts[1] = (*vertices)[p2Index];
+                    (*triangles)[t].verts[2] = (*vertices)[p3Index];
+                }
                 t++;
             }
         }
@@ -697,7 +716,8 @@ private:
             }
 
             // Calculate triangle suface Normal
-            camSpaceTri.Normal();
+            //camSpaceTri.Normal();
+            camSpaceTri.normal = worldToViewMatrix * modelToWorldMatrix * Vec4(camSpaceTri.normal, 0);
 
             if (GraphicSettings::invertNormals) {
                 camSpaceTri.normal = ((Vec3) camSpaceTri.normal) * -1.0;
@@ -847,46 +867,108 @@ public:
 
 //------------------------------HELPER FUNCTIONS------------------------------------------------
 
-Mesh* LoadMeshFromOBJFile(string objFile) 
+Mesh* LoadMeshFromOBJFile(string objFileName) 
 {
+    static string filePath = "Objects/";
+
+    string mtlFileName = "";
+    std::ifstream mtlFile;
+
     // ----------- Read object file -------------
     List<string> strings;
     string line;
-    std::ifstream file;
-
-    file.open(objFile);
-    if (file.is_open())
+    std::ifstream objFile;
+    objFile.open(filePath+objFileName);
+    if (objFile.is_open())
     {
-        while (file) {
+        while (objFile) {
             // 1st. Gets the next line.
             // 2nd. Seperates each word from that line then stores each word into the strings array.
-            getline(file, line);
-            string s;
+            getline(objFile, line);
+            string word;
             stringstream ss(line);
-            while (getline(ss, s, ' ')) {
-                strings.emplace_back(s);
+            while (getline(ss, word, ' ')) 
+            {
+                if (word == "mtllib") {
+                    getline(ss, word, ' ');
+                    mtlFileName = filePath+word;
+                }
+                else {
+                    strings.emplace_back(word);
+                }
             }
         }
     }
-    file.close();
+    objFile.close();
+
+    // Try opening Material file to see if it exists
+    mtlFile.open(mtlFileName);
+    if (mtlFile.fail()) {
+        mtlFileName = "";
+    }
+
     // -----------------Construct new mesh-------------------
     Mesh* mesh = new Mesh();
     List<Vec3>* verts = new List<Vec3>();
     List<int>* indices = new List<int>();
+    List<Triangle>* triangles = new List<Triangle>(indices->size() / 3);
+    //List<int>* materials = new List<int>();
+    Material material;
+    //string materialID = "";
+    int currentFaceCount = 0;
+    //Color color = RGB::white;
+    int triIndex = 0;
     for (size_t i = 0; i < strings.size(); i++)
     {
         // v = vertex
-        // f = face.
-        string str = strings[i];
+        // f = face
+        string objFileSubString = strings[i];
 
-        if (str == "v") {
+        // check if using material before looking for material key words
+        if (mtlFileName != "" && !mtlFile.fail()) 
+        {
+            // if .obj encounters "usemtl" then the next string will be material id.
+            if (objFileSubString == "usemtl")
+            {
+                material.name = strings[++i];
+                //materials->emplace_back(Material(materialID));
+                // search .mtl for material properties under the the current materialID
+                while (mtlFile) 
+                {
+                    // 1st. Gets the next line.
+                    // 2nd. Seperates each word from that line then stores each word into the strings array.
+                    getline(mtlFile, line);
+                    string word;
+                    stringstream ss(line);
+                    while (getline(ss, word, ' '))
+                    {    
+                        if (word == "newmtl")
+                        { 
+                            getline(ss, word, ' ');
+                            material.name = word;
+                        }
+                        if (word == "Ka") {
+                            getline(ss, word, ' ');
+                            float r = stof(word);
+                            getline(ss, word, ' ');
+                            float g = stof(word);
+                            getline(ss, word, ' ');
+                            float b = stof(word);
+                            material.color = Color(r, g, b);
+                        }
+                    }
+                }
+            }
+        }
+
+        if (objFileSubString == "v") {
             float x = stof(strings[++i]);
             float y = stof(strings[++i]);
             float z = stof(strings[++i]);
             verts->emplace_back(Vec3(x, y, z));
         }
         //f means the next 3 strings will be the indices for mapping vertices
-        else if (str == "f") {
+        else if (objFileSubString == "f") {
             int p3Index = stof(strings[++i]);
             int p2Index = stof(strings[++i]);
             int p1Index = stof(strings[++i]);
@@ -894,12 +976,18 @@ Mesh* LoadMeshFromOBJFile(string objFile)
             indices->emplace_back(p1Index - 1);
             indices->emplace_back(p2Index - 1);
             indices->emplace_back(p3Index - 1);
+
+            Triangle tri = Triangle((*verts)[p1Index], (*verts)[p2Index], (*verts)[p3Index]);
+            tri.color = material.color;
+            triangles->emplace_back(tri);
         }
     }
+    mtlFile.close();
 
     mesh->vertices = verts;
     mesh->indices = indices;
-    mesh->triangles = new List<Triangle>(indices->size() / 3);
+    mesh->triangles = triangles;
+    //mesh->materials = materials;
 
     return mesh;
 }
