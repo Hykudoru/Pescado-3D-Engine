@@ -520,7 +520,10 @@ public:
                 int p2Index = (*indices)[i++];
                 int p3Index = (*indices)[i];
                 if ((*triangles)[t].verts) {
-                    (*triangles)[t] = Triangle((*vertices)[p1Index], (*vertices)[p2Index], (*vertices)[p3Index]);
+                    Triangle tri = Triangle((*vertices)[p1Index], (*vertices)[p2Index], (*vertices)[p3Index]);
+                    tri.color = this->color;
+                    (*triangles)[t] = tri;
+                    
                 } else {
                     (*triangles)[t].verts[0] = (*vertices)[p1Index];
                     (*triangles)[t].verts[1] = (*vertices)[p2Index];
@@ -657,7 +660,6 @@ private:
         {
             Triangle tri = (*tris)[i];
             tri.mesh = this;
-            tri.color = this->color;
             Triangle worldSpaceTri = tri;
             Triangle camSpaceTri = tri;
             Triangle projectedTri = tri;
@@ -906,17 +908,13 @@ Mesh* LoadMeshFromOBJFile(string objFileName)
     List<Vec3>* verts = new List<Vec3>();
     List<int>* indices = new List<int>();
     List<Triangle>* triangles = new List<Triangle>(indices->size() / 3);
-    //List<int>* materials = new List<int>();
     Material material;
-    //string materialID = "";
-    int currentFaceCount = 0;
-    //Color color = RGB::white;
-    int triIndex = 0;
     for (size_t i = 0; i < strings.size(); i++)
     {
         // v = vertex
         // f = face
         string objFileSubString = strings[i];
+        
         // if .obj encounters "usemtl" then the next string will be material id.
         if (objFileSubString == "usemtl")
         {
@@ -941,14 +939,14 @@ Mesh* LoadMeshFromOBJFile(string objFileName)
                             getline(ss, word, ' ');
                             material.name = word;
                         }
-                        if (word == "Ka") {
+                        if (word == "Kd") {
                             getline(ss, word, ' ');
                             float r = stof(word);
                             getline(ss, word, ' ');
                             float g = stof(word);
                             getline(ss, word, ' ');
                             float b = stof(word);
-                            material.color = Color(r, g, b);
+                            material.color = Color(255*r, 255*g, 255*b);
                         }
                     }
                 }
