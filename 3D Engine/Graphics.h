@@ -891,7 +891,7 @@ Mesh* LoadMeshFromOBJFile(string objFileName)
             {
                 if (word == "mtllib") {
                     getline(ss, word, ' ');
-                    mtlFileName = filePath+word;
+                    mtlFileName = word;
                 }
                 else {
                     strings.emplace_back(word);
@@ -900,12 +900,6 @@ Mesh* LoadMeshFromOBJFile(string objFileName)
         }
     }
     objFile.close();
-
-    // Try opening Material file to see if it exists
-    mtlFile.open(mtlFileName);
-    if (mtlFile.fail()) {
-        mtlFileName = "";
-    }
 
     // -----------------Construct new mesh-------------------
     Mesh* mesh = new Mesh();
@@ -923,14 +917,14 @@ Mesh* LoadMeshFromOBJFile(string objFileName)
         // v = vertex
         // f = face
         string objFileSubString = strings[i];
-
-        // check if using material before looking for material key words
-        if (mtlFileName != "" && !mtlFile.fail()) 
+        // if .obj encounters "usemtl" then the next string will be material id.
+        if (objFileSubString == "usemtl")
         {
-            // if .obj encounters "usemtl" then the next string will be material id.
-            if (objFileSubString == "usemtl")
+            // Try opening Material file to see if it exists
+            mtlFile.open(filePath + mtlFileName);
+            // check if using material before looking for material key words
+            if (mtlFile.is_open()) 
             {
-                material.name = strings[++i];
                 //materials->emplace_back(Material(materialID));
                 // search .mtl for material properties under the the current materialID
                 while (mtlFile) 
@@ -958,10 +952,11 @@ Mesh* LoadMeshFromOBJFile(string objFileName)
                         }
                     }
                 }
+                mtlFile.close();
             }
         }
 
-        if (objFileSubString == "v") {
+        else if (objFileSubString == "v") {
             float x = stof(strings[++i]);
             float y = stof(strings[++i]);
             float z = stof(strings[++i]);
@@ -969,20 +964,20 @@ Mesh* LoadMeshFromOBJFile(string objFileName)
         }
         //f means the next 3 strings will be the indices for mapping vertices
         else if (objFileSubString == "f") {
-            int p3Index = stof(strings[++i]);
-            int p2Index = stof(strings[++i]);
-            int p1Index = stof(strings[++i]);
+            int p3Index = stof(strings[++i]) - 1;
+            int p2Index = stof(strings[++i]) - 1;
+            int p1Index = stof(strings[++i]) - 1;
 
-            indices->emplace_back(p1Index - 1);
-            indices->emplace_back(p2Index - 1);
-            indices->emplace_back(p3Index - 1);
+            indices->emplace_back(p1Index);
+            indices->emplace_back(p2Index);
+            indices->emplace_back(p3Index);
 
             Triangle tri = Triangle((*verts)[p1Index], (*verts)[p2Index], (*verts)[p3Index]);
             tri.color = material.color;
             triangles->emplace_back(tri);
         }
     }
-    mtlFile.close();
+    //mtlFile.close();
 
     mesh->vertices = verts;
     mesh->indices = indices;
