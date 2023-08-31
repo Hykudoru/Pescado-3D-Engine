@@ -49,7 +49,7 @@ void OnMouseButtonEvent(GLFWwindow* window, int button, int action, int mods)
             Mesh* mesh = new CubeMesh();//LoadMeshFromOBJFile("Objects/Sphere.obj");
             mesh->position = Camera::main->position + (Camera::main->Forward() * 10);
             mesh->rotation = Camera::main->rotation;
-            mesh->color = RGB::turquoise;
+            mesh->color = &RGB::turquoise;
         }
         else if (button == 1) {
             Physics::raycasting = true;
@@ -107,14 +107,14 @@ void OnKeyPressEvent(GLFWwindow* window, int key, int scancode, int action, int 
             mesh->position = Camera::main->position + (Camera::main->Forward() * 10);
             mesh->rotation = Camera::main->rotation;
             mesh->scale *= 0.1;
-            mesh->color = RGB::red;
+            mesh->color = &RGB::red;
         }
         else if (glfwGetKey(window, GLFW_KEY_6) == GLFW_PRESS) {
             Mesh* mesh = LoadMeshFromOBJFile("Icosahedron.obj");
             mesh->position = Camera::main->position + (Camera::main->Forward() * 10);
             mesh->rotation = Camera::main->rotation;
             mesh->scale *= 0.1;
-            mesh->color = RGB::purple;
+            mesh->color = &RGB::purple;
         }
 
         //------------------Physics-------------------

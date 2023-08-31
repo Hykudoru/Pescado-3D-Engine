@@ -73,12 +73,12 @@ void Init(GLFWwindow* window)
     planet = LoadMeshFromOBJFile("Sphere.obj");
     planet->scale = Vec3(500, 500, 500);
     planet->position += Direction::forward * 1000;
-    planet->color = RGB::white;
+    planet->color = &RGB::white;
     
     textHelloWorld = LoadMeshFromOBJFile("Hello3DWorldText.obj");
     textHelloWorld->scale = Vec3(2, 2, 2);
     textHelloWorld->position = Vec3(0, 0, -490);
-    textHelloWorld->color = RGB::green;
+    textHelloWorld->color = &RGB::green;
     
     spaceShip = LoadMeshFromOBJFile("SpaceShip_2.2.obj");
     spaceShip->position = Direction::left * 30 + Direction::forward * 10;
@@ -103,10 +103,10 @@ void Init(GLFWwindow* window)
     obj2->SetParent(obj1);
     obj3->SetParent(obj2);
     obj4->SetParent(obj3);
-    obj1->color = RGB::red;
-    obj2->color = RGB::orange;
-    obj3->color = RGB::yellow;
-    obj4->color = RGB::green;
+    obj1->color = &RGB::red;
+    obj2->color = &RGB::orange;
+    obj3->color = &RGB::yellow;
+    obj4->color = &RGB::green;
     //Mesh* guitar = LoadMeshFromOBJFile("Objects/Guitar.obj");
     //guitar->position += (Camera::main->Forward() * 10) + Camera::main->Right();
     //Mesh* chair = LoadMeshFromOBJFile("Objects/Chair.obj");

@@ -494,7 +494,7 @@ public:
     List<Vec3>* vertices;
     List<int>* indices;
     List<Triangle>* triangles;
-    Color color = RGB::white;
+    Color* color;
 
     Mesh(float scale = 1, Vec3 position = Vec3(0, 0, 0), Vec3 rotationEuler = Vec3(0, 0, 0))
     : Transform(scale, position, rotationEuler), ManagedObjectPool(this)
@@ -519,16 +519,11 @@ public:
                 int p1Index = (*indices)[i++];
                 int p2Index = (*indices)[i++];
                 int p3Index = (*indices)[i];
-                if ((*triangles)[t].verts) {
-                    Triangle tri = Triangle((*vertices)[p1Index], (*vertices)[p2Index], (*vertices)[p3Index]);
-                    tri.color = this->color;
-                    (*triangles)[t] = tri;
-                    
-                } else {
-                    (*triangles)[t].verts[0] = (*vertices)[p1Index];
-                    (*triangles)[t].verts[1] = (*vertices)[p2Index];
-                    (*triangles)[t].verts[2] = (*vertices)[p3Index];
-                }
+                
+                (*triangles)[t].verts[0] = (*vertices)[p1Index];
+                (*triangles)[t].verts[1] = (*vertices)[p2Index];
+                (*triangles)[t].verts[2] = (*vertices)[p3Index];
+                
                 t++;
             }
         }
@@ -660,6 +655,9 @@ private:
         {
             Triangle tri = (*tris)[i];
             tri.mesh = this;
+            if (color) {
+                tri.color = *color;
+            }
             Triangle worldSpaceTri = tri;
             Triangle camSpaceTri = tri;
             Triangle projectedTri = tri;
@@ -980,7 +978,6 @@ Mesh* LoadMeshFromOBJFile(string objFileName)
     mesh->vertices = verts;
     mesh->indices = indices;
     mesh->triangles = triangles;
-    //mesh->materials = materials;
 
     return mesh;
 }
