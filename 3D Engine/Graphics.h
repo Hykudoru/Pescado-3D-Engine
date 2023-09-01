@@ -480,6 +480,7 @@ Camera* camera1 = new Camera();
 Camera* camera2 = new Camera(Vec3(0, 50, 0), Vec3(-90 * PI / 180, 0, 0));
 Camera* Camera::main = camera1;
 
+//TO-DO
 Plane topClippingPlane = Plane(Direction::up + Direction::forward, Direction::down);
 Plane rightClippingPlane = Plane(Direction::right + Direction::forward, Direction::left);
 Plane bottomClippingPlane = Plane(Direction::down + Direction::forward, Direction::up);
@@ -716,8 +717,7 @@ private:
             }
 
             // Calculate triangle suface Normal
-            //camSpaceTri.Normal();
-            camSpaceTri.normal = worldToViewMatrix * modelToWorldMatrix * Vec4(camSpaceTri.normal, 0);
+            camSpaceTri.Normal();//camSpaceTri.normal = worldToViewMatrix * modelToWorldMatrix * Vec4(camSpaceTri.normal, 0);
 
             if (GraphicSettings::invertNormals) {
                 camSpaceTri.normal = ((Vec3) camSpaceTri.normal) * -1.0;
