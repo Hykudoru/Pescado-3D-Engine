@@ -869,7 +869,7 @@ public:
 
 Mesh* LoadMeshFromOBJFile(string objFileName) 
 {
-    static string filePath = "Objects/";
+    static string filePath = "./Objects/";
 
     string mtlFileName = "";
     std::ifstream mtlFile;

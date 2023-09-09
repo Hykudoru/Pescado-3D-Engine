@@ -70,18 +70,30 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ExtensionsToDeleteOnClean>*.cdf;*.cache;*.obj.enc;*.ilk;*.ipdb;*.iobj;*.resources;*.tlb;*.tli;*.tlh;*.tmp;*.rsp;*.pgc;*.pgd;*.meta;*.tlog;*.manifest;*.res;*.pch;*.exp;*.idb;*.rep;*.xdc;*.pdb;*_manifest.rc;*.bsc;*.sbr;*.xml;*.metagen;*.bi</ExtensionsToDeleteOnClean>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ExtensionsToDeleteOnClean>*.cdf;*.cache;*.obj.enc;*.ilk;*.ipdb;*.iobj;*.resources;*.tlb;*.tli;*.tlh;*.tmp;*.rsp;*.pgc;*.pgd;*.meta;*.tlog;*.manifest;*.res;*.pch;*.exp;*.idb;*.rep;*.xdc;*.pdb;*_manifest.rc;*.bsc;*.sbr;*.xml;*.metagen;*.bi</ExtensionsToDeleteOnClean>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ExtensionsToDeleteOnClean>*.cdf;*.cache;*.obj.enc;*.ilk;*.ipdb;*.iobj;*.resources;*.tlb;*.tli;*.tlh;*.tmp;*.rsp;*.pgc;*.pgd;*.meta;*.tlog;*.manifest;*.res;*.pch;*.exp;*.idb;*.rep;*.xdc;*.pdb;*_manifest.rc;*.bsc;*.sbr;*.xml;*.metagen;*.bi</ExtensionsToDeleteOnClean>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ExtensionsToDeleteOnClean>*.cdf;*.cache;*.obj.enc;*.ilk;*.ipdb;*.iobj;*.resources;*.tlb;*.tli;*.tlh;*.tmp;*.rsp;*.pgc;*.pgd;*.meta;*.tlog;*.manifest;*.res;*.pch;*.exp;*.idb;*.rep;*.xdc;*.pdb;*_manifest.rc;*.bsc;*.sbr;*.xml;*.metagen;*.bi</ExtensionsToDeleteOnClean>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>GLEW_STATIC;WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>Z:\3D Engine\3D Engine;Z:\3D Engine\Dependencies\glfw-3.3.8.bin.WIN64\glfw-3.3.8.bin.WIN64\include;Z:\3D Engine\Dependencies\glew-2.1.0-win32\glew-2.1.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)3D Engine;$(SolutionDir)Dependencies\glfw-3.3.8.bin.WIN32\glfw-3.3.8.bin.WIN32\lib-vc2022;$(SolutionDir)Dependencies\glew-2.1.0-win32\glew-2.1.0\lib\Release\Win32;$(SolutionDir)Dependencies\glfw-3.3.8.bin.WIN32\glfw-3.3.8.bin.WIN32\include;$(SolutionDir)Dependencies\glew-2.1.0-win32\glew-2.1.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>Z:\3D Engine\3D Engine;Z:\3D Engine\Dependencies\glfw-3.3.8.bin.WIN64\glfw-3.3.8.bin.WIN64\lib-vc2022;Z:\3D Engine\Dependencies\glew-2.1.0-win32\glew-2.1.0\lib\Release\Win32;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)3D Engine;$(SolutionDir)Dependencies\glfw-3.3.8.bin.WIN32\glfw-3.3.8.bin.WIN32\lib-vc2022;$(SolutionDir)Dependencies\glew-2.1.0-win32\glew-2.1.0\lib\Release\Win32;$(SolutionDir)Dependencies\glfw-3.3.8.bin.WIN32\glfw-3.3.8.bin.WIN32\include;$(SolutionDir)Dependencies\glew-2.1.0-win32\glew-2.1.0\include;%(AdditionalIncludeDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>glew32s.lib;glfw3.lib;opengl32.lib;user32.lib;gdi32.lib;shell32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -93,14 +105,14 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>GLEW_STATIC;WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>Z:\3D Engine\3D Engine;Z:\3D Engine\Dependencies\glfw-3.3.8.bin.WIN64\glfw-3.3.8.bin.WIN64\include;Z:\3D Engine\Dependencies\glew-2.1.0-win32\glew-2.1.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)3D Engine;$(SolutionDir)Dependencies\glfw-3.3.8.bin.WIN32\glfw-3.3.8.bin.WIN32\lib-vc2022;$(SolutionDir)Dependencies\glew-2.1.0-win32\glew-2.1.0\lib\Release\Win32;$(SolutionDir)Dependencies\glfw-3.3.8.bin.WIN32\glfw-3.3.8.bin.WIN32\include;$(SolutionDir)Dependencies\glew-2.1.0-win32\glew-2.1.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>Z:\3D Engine\3D Engine;Z:\3D Engine\Dependencies\glfw-3.3.8.bin.WIN64\glfw-3.3.8.bin.WIN64\lib-vc2022;Z:\3D Engine\Dependencies\glew-2.1.0-win32\glew-2.1.0\lib\Release\Win32;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)3D Engine;$(SolutionDir)Dependencies\glfw-3.3.8.bin.WIN32\glfw-3.3.8.bin.WIN32\lib-vc2022;$(SolutionDir)Dependencies\glew-2.1.0-win32\glew-2.1.0\lib\Release\Win32;$(SolutionDir)Dependencies\glfw-3.3.8.bin.WIN32\glfw-3.3.8.bin.WIN32\include;$(SolutionDir)Dependencies\glew-2.1.0-win32\glew-2.1.0\include;%(AdditionalIncludeDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>glew32s.lib;glfw3.lib;opengl32.lib;user32.lib;gdi32.lib;shell32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -111,12 +123,12 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile />
-      <AdditionalIncludeDirectories>Z:\3D Engine\3D Engine;Z:\3D Engine\Dependencies\glfw-3.3.8.bin.WIN64\glfw-3.3.8.bin.WIN64\include;Z:\3D Engine\Dependencies\glew-2.1.0-win32\glew-2.1.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)3D Engine;$(SolutionDir)Dependencies\glfw-3.3.8.bin.WIN32\glfw-3.3.8.bin.WIN32\lib-vc2022;$(SolutionDir)Dependencies\glew-2.1.0-win32\glew-2.1.0\lib\Release\Win32;$(SolutionDir)Dependencies\glfw-3.3.8.bin.WIN32\glfw-3.3.8.bin.WIN32\include;$(SolutionDir)Dependencies\glew-2.1.0-win32\glew-2.1.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>Z:\3D Engine\3D Engine;Z:\3D Engine\Dependencies\glfw-3.3.8.bin.WIN64\glfw-3.3.8.bin.WIN64\lib-vc2022;Z:\3D Engine\Dependencies\glew-2.1.0-win32\glew-2.1.0\lib\Release\Win32;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)3D Engine;$(SolutionDir)Dependencies\glfw-3.3.8.bin.WIN32\glfw-3.3.8.bin.WIN32\lib-vc2022;$(SolutionDir)Dependencies\glew-2.1.0-win32\glew-2.1.0\lib\Release\Win32;$(SolutionDir)Dependencies\glfw-3.3.8.bin.WIN32\glfw-3.3.8.bin.WIN32\include;$(SolutionDir)Dependencies\glew-2.1.0-win32\glew-2.1.0\include;%(AdditionalIncludeDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>glew32s.lib;glfw3.lib;opengl32.lib;user32.lib;gdi32.lib;shell32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -128,14 +140,14 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>Z:\3D Engine\3D Engine;Z:\3D Engine\Dependencies\glfw-3.3.8.bin.WIN64\glfw-3.3.8.bin.WIN64\include;Z:\3D Engine\Dependencies\glew-2.1.0-win32\glew-2.1.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)3D Engine;$(SolutionDir)Dependencies\glfw-3.3.8.bin.WIN32\glfw-3.3.8.bin.WIN32\lib-vc2022;$(SolutionDir)Dependencies\glew-2.1.0-win32\glew-2.1.0\lib\Release\Win32;$(SolutionDir)Dependencies\glfw-3.3.8.bin.WIN32\glfw-3.3.8.bin.WIN32\include;$(SolutionDir)Dependencies\glew-2.1.0-win32\glew-2.1.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>Z:\3D Engine\3D Engine;Z:\3D Engine\Dependencies\glfw-3.3.8.bin.WIN64\glfw-3.3.8.bin.WIN64\lib-vc2022;Z:\3D Engine\Dependencies\glew-2.1.0-win32\glew-2.1.0\lib\Release\Win32;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)3D Engine;$(SolutionDir)Dependencies\glfw-3.3.8.bin.WIN32\glfw-3.3.8.bin.WIN32\lib-vc2022;$(SolutionDir)Dependencies\glew-2.1.0-win32\glew-2.1.0\lib\Release\Win32;$(SolutionDir)Dependencies\glfw-3.3.8.bin.WIN32\glfw-3.3.8.bin.WIN32\include;$(SolutionDir)Dependencies\glew-2.1.0-win32\glew-2.1.0\include;%(AdditionalIncludeDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>glew32s.lib;glfw3.lib;opengl32.lib;user32.lib;gdi32.lib;shell32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>

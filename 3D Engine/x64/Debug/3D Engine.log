@@ -73,7 +73,7 @@ Z:\3D Engine\3D Engine\Graphics.h(293,37): warning C4244: 'argument': conversion
 Z:\3D Engine\3D Engine\Graphics.h(294,34): warning C4244: 'argument': conversion from 'float' to 'GLubyte', possible loss of data
 Z:\3D Engine\3D Engine\Graphics.h(294,31): warning C4244: 'argument': conversion from 'float' to 'GLubyte', possible loss of data
 Z:\3D Engine\3D Engine\Graphics.h(294,28): warning C4244: 'argument': conversion from 'float' to 'GLubyte', possible loss of data
-Z:\3D Engine\3D Engine\Graphics.h(621,55): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+Z:\3D Engine\3D Engine\Graphics.h(622,55): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
 Z:\3D Engine\3D Engine\Graphics.h(741,89): warning C4305: 'argument': truncation from 'double' to 'const T'
           with
           [
@@ -172,6 +172,11 @@ Z:\3D Engine\3D Engine\Input.h(226,54): warning C4244: 'argument': conversion fr
 Z:\3D Engine\3D Engine\Input.h(230,55): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
 Z:\3D Engine\3D Engine\Input.h(234,54): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
 Z:\3D Engine\3D Engine\Input.h(238,55): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
-  LINK : Z:\3D Engine\x64\Debug\3D Engine.exe not found or not built by the last incremental link; performing full link
-LINK : warning LNK4098: defaultlib 'MSVCRT' conflicts with use of other libs; use /NODEFAULTLIB:library
-  3D Engine.vcxproj -> Z:\3D Engine\x64\Debug\3D Engine.exe
+  Graphics.cpp
+  Input.cpp
+  Matrix.cpp
+  Physics.cpp
+  Utility.cpp
+  Vector.cpp
+  Generating Code...
+LINK : fatal error LNK1104: cannot open file 'glew32s.lib'
