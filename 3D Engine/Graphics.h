@@ -487,7 +487,8 @@ Plane bottomClippingPlane = Plane(Direction::down + Direction::forward, Directio
 Plane leftClippingPlane = Plane(Direction::left + Direction::forward, Direction::right);
 
 //---------------------------------MESH---------------------------------------------
-
+Matrix4x4 worldToViewMatrix;
+Matrix4x4 projectionMatrix;
 class Mesh : public Transform, public ManagedObjectPool<Mesh>
 {
 public:
@@ -552,6 +553,13 @@ public:
             Mesh::objects.shrink_to_fit();
             init = true;
         }
+
+        // Camera TRInverse = (TR)^-1 = R^-1*T^-1 = M = Mcw = World to Camera coords. 
+        // This matrix isn't used on the camera itself, but we record the reverse transformations of the camera going from world space back to local camera space.
+        // Every point then in world space multiplied by this matrix will end up in a position relative to the camera's point of view when it was in world space. 
+        // The camera could now be considered as the origin (0,0,0) with the zero rotation (identity matrix). 
+        worldToViewMatrix = Camera::main->TRInverse();
+        projectionMatrix = ProjectionMatrix();
 
         // ---------- Transform -----------
         for (int i = 0; i < Mesh::count; i++)
@@ -647,8 +655,6 @@ private:
         }
         
         Matrix4x4 modelToWorldMatrix = this->TRS();
-        Matrix4x4 worldToViewMatrix = Camera::main->TRInverse();
-        Matrix4x4 projectionMatrix = ProjectionMatrix();
 
         //Transform Triangles
         List<Triangle>* tris = MapVertsToTriangles();
