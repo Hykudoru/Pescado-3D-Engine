@@ -927,23 +927,27 @@ Mesh* LoadMeshFromOBJFile(string objFileName)
             // check if using material before looking for material key words
             if (mtlFile.is_open()) 
             {
+                string mtlID = strings[++i];
+                bool mtlIDFound = false;
                 //materials->emplace_back(Material(materialID));
                 // search .mtl for material properties under the the current materialID
-                while (mtlFile) 
+                while (!mtlIDFound && mtlFile) 
                 {
                     // 1st. Gets the next line.
                     // 2nd. Seperates each word from that line then stores each word into the strings array.
                     getline(mtlFile, line);
                     string word;
                     stringstream ss(line);
-                    while (getline(ss, word, ' '))
+                    while (!mtlIDFound && getline(ss, word, ' '))
                     {    
                         if (word == "newmtl")
                         { 
                             getline(ss, word, ' ');
-                            material.name = word;
+                            if (mtlID == word) {
+                                material.name = word;
+                            }
                         }
-                        if (word == "Kd") {
+                        else if (mtlID == material.name && word == "Kd") {
                             getline(ss, word, ' ');
                             float r = stof(word);
                             getline(ss, word, ' ');
@@ -951,6 +955,8 @@ Mesh* LoadMeshFromOBJFile(string objFileName)
                             getline(ss, word, ' ');
                             float b = stof(word);
                             material.color = Color(255*r, 255*g, 255*b);
+
+                            mtlIDFound = true;
                         }
                     }
                 }
