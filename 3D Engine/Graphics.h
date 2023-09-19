@@ -578,7 +578,6 @@ public:
                     }
                 }
                 
-                /*
                 if (Mesh::objects[i]->vertices)
                 {
                     List<Vec3> verts = *(Mesh::objects[i]->vertices);
@@ -588,22 +587,14 @@ public:
                     }
 
                     Range range = ProjectVertsOntoAxis(verts.data(), verts.size(), Direction::left);
-                    if (range.min >= 1 && range.max >= 1) {
-                        continue;
-                    }
-                    range = ProjectVertsOntoAxis(verts.data(), verts.size(), Direction::right);
-                    if (range.min >= 1 && range.max >= 1) {
-                        continue;
-                    }
-                    range = ProjectVertsOntoAxis(verts.data(), verts.size(), Direction::up);
-                    if (range.min >= 1 && range.max >= 1) {
+                    if ((range.min > 1 && range.max > 1) || (range.min < -2 && range.max < -2)) {
                         continue;
                     }
                     range = ProjectVertsOntoAxis(verts.data(), verts.size(), Direction::down);
-                    if (range.min >= 1 && range.max >= 1) {
+                    if ((range.min > 1 && range.max > 1) || (range.min < -2 && range.max < -2)) {
                         continue;
                     }
-                }*/
+                }
                 
                 // ---------- Debug -----------
                 if (GraphicSettings::debugAxes)
@@ -698,26 +689,26 @@ private:
             if (GraphicSettings::frustumCulling)
             {
                 bool tooCloseToCamera = (p1_c.z >= nearClippingPlane || p2_c.z >= nearClippingPlane || p3_c.z >= nearClippingPlane || camSpaceTri.centroid.z >= nearClippingPlane);
+                if (tooCloseToCamera) {
+                    continue;
+                }
+
                 bool tooFarFromCamera = (p1_c.z <= farClippingPlane || p2_c.z <= farClippingPlane || p3_c.z <= farClippingPlane || camSpaceTri.centroid.z <= farClippingPlane);
+                if (tooFarFromCamera){
+                    continue;
+                }
+
                 bool behindCamera = DotProduct((Vec3)camSpaceTri.centroid, Direction::forward) <= 0.0;
-                if (tooCloseToCamera || tooFarFromCamera || behindCamera) {
+                if (behindCamera) {
                     continue; // Skip triangle if it's out of cam view.
                 }
 
                 Range range = ProjectVertsOntoAxis(projectedTri.verts, 3, Direction::left);
-                if (range.min > 1 && range.max > 1) {
-                    continue;
-                }
-                range = ProjectVertsOntoAxis(projectedTri.verts, 3, Direction::right);
-                if (range.min > 1 && range.max > 1) {
-                    continue;
-                }
-                range = ProjectVertsOntoAxis(projectedTri.verts, 3, Direction::up);
-                if (range.min > 1 && range.max > 1) {
+                if ((range.min > 1 && range.max > 1) || (range.min < -2 && range.max < -2)) {
                     continue;
                 }
                 range = ProjectVertsOntoAxis(projectedTri.verts, 3, Direction::down);
-                if (range.min > 1 && range.max > 1) {
+                if ((range.min > 1 && range.max > 1) || (range.min < -2 && range.max < -2)) {
                     continue;
                 }
             }
@@ -755,7 +746,8 @@ private:
             {
                 Vec3 screenLeftSide = Vec3(-1, 0, 0);
                 Vec3 screenRightSide = Vec3(1, 0, 0);
-                bool leftHalfScreenX = DotProduct(screenLeftSide, (Vec3)projectedTri.Centroid()) < 0.0;
+                Range range = ProjectVertsOntoAxis(projectedTri.verts, 3, screenRightSide);
+                bool leftHalfScreenX = range.min > 0 && range.max > 0;
 
                 if (leftHalfScreenX) {
                     projectedTri.color = Color(0, 0, 255);// std::cout << "Inside" << std::endl;
