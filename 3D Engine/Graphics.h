@@ -13,11 +13,74 @@ using namespace std;
 #ifndef GRAPHICS_H
 #define GRAPHICS_H
 
+#define Color Vector3<float>
 class Mesh;
 struct Plane;
 class  Triangle;
-//-----------GRAPHICS---------------
+struct RGB;
 
+static struct DrawAPI
+{
+    static void SetDrawColor(Color color)
+    {
+        glColor3ub(color.x, color.y, color.z);
+    }
+
+    static void SetDrawColor(float r, float g, float b)
+    {
+        glColor3ub(r, g, b);
+    }
+
+    static void SetLineWidth(int width)
+    {
+        glLineWidth(width);
+    }
+
+    static void SetPointSize(int size)
+    {
+        glPointSize(size);
+    }
+
+    static void DrawPoint(Vec3 point)
+    {
+        glBegin(GL_POINTS);
+        glVertex2f(point.x, point.y);
+        glEnd();
+    }
+
+    static void DrawLine(Vec3 from, Vec3 to)
+    {
+        glBegin(GL_LINES);
+        glVertex2f(from.x, from.y);
+        glVertex2f(to.x, to.y);
+        glEnd();
+    }
+
+    static void DrawTriangle(Vec3 p1, Vec3 p2, Vec3 p3)
+    {
+        glBegin(GL_LINES);
+        glVertex2f(p1.x, p1.y);
+        glVertex2f(p2.x, p2.y);
+
+        glVertex2f(p2.x, p2.y);
+        glVertex2f(p3.x, p3.y);
+
+        glVertex2f(p3.x, p3.y);
+        glVertex2f(p1.x, p1.y);
+        glEnd();
+    }
+
+    static void DrawTriangleFilled(Vec3 p1, Vec3 p2, Vec3 p3)
+    {
+        glBegin(GL_TRIANGLES);
+        glVertex2f(p1.x, p1.y);
+        glVertex2f(p2.x, p2.y);
+        glVertex2f(p3.x, p3.y);
+        glEnd();
+    }
+};
+
+//-----------GRAPHICS---------------
 struct GraphicSettings
 {
     static bool frustumCulling;
@@ -192,12 +255,9 @@ struct Point
 
     void Draw()
     {
-        glPointSize(size);
-        glColor3ub(color.x, color.y, color.z);
-
-        glBegin(GL_POINTS);
-        glVertex2f(point.x, point.y);
-        glEnd();
+        DrawAPI::SetPointSize(size);
+        DrawAPI::SetDrawColor(color.x, color.y, color.z);
+        DrawAPI::DrawPoint(point);
     }
 };
 
@@ -218,13 +278,9 @@ struct Line
 
     void Draw()
     {
-        glLineWidth(width);
-        glColor3ub(color.x, color.y, color.z);
-
-        glBegin(GL_LINES);
-        glVertex2f(from.x, from.y);
-        glVertex2f(to.x, to.y);
-        glEnd();
+        DrawAPI::SetLineWidth(width);
+        DrawAPI::SetDrawColor(color.x, color.y, color.z);
+        DrawAPI::DrawLine(from, to);
     }
 };
 
@@ -273,38 +329,28 @@ struct Triangle : Plane
         //glColor3ub(255, 255, 255);
         if (GraphicSettings::matrixMode)
         {
-            glColor3ub(0, 255, 0);
+            DrawAPI::SetDrawColor(0, 255, 0);
         }
 
         if (GraphicSettings::fillTriangles)
-        {   glColor3ub(color.x, color.y, color.z);
-            glBegin(GL_TRIANGLES);
-            glVertex2f(p1.x, p1.y);
-            glVertex2f(p2.x, p2.y);
-            glVertex2f(p3.x, p3.y);
-            glEnd();
+        {
+            DrawAPI::SetDrawColor(color.x, color.y, color.z);
+            DrawAPI::DrawTriangleFilled(p1, p2, p3);
         }
 
         if (GraphicSettings::displayWireFrames)
         {
-            glBegin(GL_LINES);
             if (GraphicSettings::fillTriangles)
             {
                 float c = Clamp(1.0 / (0.000001 + (color.x + color.y + color.z) / 3), 0, 255);
-                glColor3ub(c, c, c);
+                DrawAPI::SetDrawColor(c, c, c);
             }
-            glVertex2f(p1.x, p1.y);
-            glVertex2f(p2.x, p2.y);
-
-            glVertex2f(p2.x, p2.y);
-            glVertex2f(p3.x, p3.y);
-
-            glVertex2f(p3.x, p3.y);
-            glVertex2f(p1.x, p1.y);
-            glEnd();
+            DrawAPI::DrawLine(p1, p2);
+            DrawAPI::DrawLine(p2, p3);
+            DrawAPI::DrawLine(p3, p1);
         }
         
-        glColor3ub(255, 255, 255);
+        DrawAPI::SetDrawColor(255, 255, 255);
     }
 };
 
