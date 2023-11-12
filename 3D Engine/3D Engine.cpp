@@ -122,29 +122,7 @@ void Init(GLFWwindow* window)
  
 void Update()
 {
-   
 }
-
-extern List<Point>* pointbuffer;
-extern List<Line>* lineBuffer;
-void Draw()
-{
-    Mesh::DrawMeshes();
-
-    for (size_t i = 0; i < lineBuffer->size(); i++)
-    {
-        (*lineBuffer)[i].Draw();
-    }
-
-    for (size_t i = 0; i < pointBuffer->size(); i++)
-    {
-        (*pointBuffer)[i].Draw();
-    }
-
-    pointBuffer->clear();
-    lineBuffer->clear();
-}
-
 
 int main(void)
 {

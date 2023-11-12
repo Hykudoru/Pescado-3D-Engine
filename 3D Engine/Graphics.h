@@ -16,8 +16,14 @@ using namespace std;
 #define Color Vector3<float>
 class Mesh;
 struct Plane;
-class  Triangle;
+struct Point;
+struct Line;
+struct  Triangle;
 struct RGB;
+
+List<Point>* pointBuffer = new List<Point>();
+List<Line>* lineBuffer = new List<Line>();
+List<Triangle>* triBuffer = new List<Triangle>();
 
 static struct DrawAPI
 {
@@ -171,8 +177,8 @@ Vec3 Direction::up = Vec3(0, 1, 0);
 Vec3 Direction::down = Vec3(0, -1, 0);
 
 static float worldScale = 1;
-int screenWidth = 1600;//700;//screen.width - 20;
-int screenHeight = 900; //screen.height - 20; //screen.height;// - 30;
+int screenWidth = 1600;
+int screenHeight = 900;
 float aspectRatio = screenWidth / screenHeight;
 float nearClippingPlane = -0.1;
 float farClippingPlane = -100000.0;
@@ -354,11 +360,6 @@ struct Triangle : Plane
     }
 };
 
-
-List<Point>* pointBuffer = new List<Point>();
-List<Line>* lineBuffer = new List<Line>();
-List<Triangle>* triBuffer = new List<Triangle>(100000);
-
 //-------------------------------TRANSFORM---------------------------------------------
 class Transform
 {
@@ -526,12 +527,6 @@ Camera* camera1 = new Camera();
 Camera* camera2 = new Camera(Vec3(0, 50, 0), Vec3(-90 * PI / 180, 0, 0));
 Camera* Camera::main = camera1;
 
-//TO-DO
-Plane topClippingPlane = Plane(Direction::up + Direction::forward, Direction::down);
-Plane rightClippingPlane = Plane(Direction::right + Direction::forward, Direction::left);
-Plane bottomClippingPlane = Plane(Direction::down + Direction::forward, Direction::up);
-Plane leftClippingPlane = Plane(Direction::left + Direction::forward, Direction::right);
-
 //---------------------------------MESH---------------------------------------------
 Matrix4x4 worldToViewMatrix;
 Matrix4x4 projectionMatrix;
@@ -591,99 +586,7 @@ public:
         return verts;
     }
 
-    static void DrawMeshes()
-    {
-        static bool init = false;
-        if (!init) {
-            Mesh::objects.resize(count);
-            Mesh::objects.shrink_to_fit();
-            init = true;
-        }
-
-        // Camera TRInverse = (TR)^-1 = R^-1*T^-1 = M = Mcw = World to Camera coords. 
-        // This matrix isn't used on the camera itself, but we record the reverse transformations of the camera going from world space back to local camera space.
-        // Every point then in world space multiplied by this matrix will end up in a position relative to the camera's point of view when it was in world space. 
-        // The camera could now be considered as the origin (0,0,0) with the zero rotation (identity matrix). 
-        worldToViewMatrix = Camera::main->TRInverse();
-        projectionMatrix = ProjectionMatrix();
-
-        // ---------- Transform -----------
-        for (int i = 0; i < Mesh::count; i++)
-        {
-            if (GraphicSettings::frustumCulling)
-            {
-                // Scale/Distance ratio culling
-                /*bool tooSmallToSee = Mesh::objects[i]->scale.SqrMagnitude() / (Mesh::objects[i]->position - Camera::main->position).SqrMagnitude() < 0.000000125;
-                if (tooSmallToSee) {
-                    return;
-                }*/
-                if (Camera::main != Mesh::objects[i]->root) {
-                    bool behindCamera =  DotProduct((Mesh::objects[i]->root->position - Camera::main->position), Camera::main->Forward()) <= 0.0;
-                    if (behindCamera) {
-                        continue;
-                    }
-                }
-                
-                if (Mesh::objects[i]->vertices)
-                {
-                    List<Vec3> verts = *(Mesh::objects[i]->vertices);
-                    for (size_t j = 0; j < verts.size(); j++)
-                    {
-                        verts[j] = ProjectionMatrix() * Camera::main->TRInverse() * Mesh::objects[i]->TRS() * verts[j];
-                    }
-
-                    Range range = ProjectVertsOntoAxis(verts.data(), verts.size(), Direction::left);
-                    if ((range.min > 1 && range.max > 1) || (range.min < -2 && range.max < -2)) {
-                        continue;
-                    }
-                    range = ProjectVertsOntoAxis(verts.data(), verts.size(), Direction::down);
-                    if ((range.min > 1 && range.max > 1) || (range.min < -2 && range.max < -2)) {
-                        continue;
-                    }
-                }
-                
-                // ---------- Debug -----------
-                if (GraphicSettings::debugAxes)
-                {
-                    Matrix4x4 mvp = ProjectionMatrix() * Camera::main->TRInverse() * Mesh::objects[i]->TRS();
-
-                    Vec2 center_p = mvp * Vec4(0,0,0,1);
-                    Vec2 xAxis_p = mvp * Vec4(0.5, 0, 0, 1);
-                    Vec2 yAxis_p = mvp * Vec4(0, 0.5, 0, 1);
-                    Vec2 zAxis_p = mvp * Vec4(0, 0, 0.5, 1);
-                    Vec2 forward_p = mvp * (Direction::forward);
-
-                    pointBuffer->emplace_back(Point(center_p, RGB::red, 4));
-                    lineBuffer->emplace_back(Line(center_p, xAxis_p, RGB::red));
-                    lineBuffer->emplace_back(Line(center_p, yAxis_p, RGB::yellow));
-                    lineBuffer->emplace_back(Line(center_p, zAxis_p, RGB::blue));
-                    lineBuffer->emplace_back(Line(center_p, mvp*(Direction::forward), RGB::turquoise, 3));
-                }
-            }
-            
-            Mesh::objects[i]->transformTriangles();
-        }
-
-        Mesh::worldTriangleDrawCount = triBuffer->size();
-
-        // ---------- Sort (Painter's algorithm) -----------
-        sort(triBuffer->begin(), triBuffer->end(), [](const Triangle& triA, const Triangle& triB) -> bool
-        {
-           return triA.centroid.w > triB.centroid.w;
-        });
-
-        // ---------- Draw -----------
-        for (int i = 0; i < triBuffer->size(); i++)
-        {
-            (*triBuffer)[i].Draw();
-        }
-
-        triBuffer->clear();
-    }
-
-private:
-
-    void transformTriangles() 
+    void TransformTriangles() 
     {
         // Scale/Distance ratio culling
         bool tooSmallToSee = scale.SqrMagnitude() / (position - Camera::main->position).SqrMagnitude() < 0.000000125;
@@ -1030,5 +933,100 @@ Mesh* LoadMeshFromOBJFile(string objFileName)
     mesh->triangles = triangles;
 
     return mesh;
+}
+
+void Draw()
+{
+    // Camera TRInverse = (TR)^-1 = R^-1*T^-1 = M = Mcw = World to Camera coords. 
+    // This matrix isn't used on the camera itself, but we record the reverse transformations of the camera going from world space back to local camera space.
+    // Every point then in world space multiplied by this matrix will end up in a position relative to the camera's point of view when it was in world space. 
+    // The camera could now be considered as the origin (0,0,0) with the zero rotation (identity matrix). 
+    worldToViewMatrix = Camera::main->TRInverse();
+    projectionMatrix = ProjectionMatrix();
+
+    // ---------- Transform -----------
+    for (int i = 0; i < Mesh::count; i++)
+    {
+        if (GraphicSettings::frustumCulling)
+        {
+            // Scale/Distance ratio culling
+            /*bool tooSmallToSee = Mesh::objects[i]->scale.SqrMagnitude() / (Mesh::objects[i]->position - Camera::main->position).SqrMagnitude() < 0.000000125;
+            if (tooSmallToSee) {
+                return;
+            }*/
+            if (Camera::main != Mesh::objects[i]->root) {
+                bool behindCamera = DotProduct((Mesh::objects[i]->root->position - Camera::main->position), Camera::main->Forward()) <= 0.0;
+                if (behindCamera) {
+                    continue;
+                }
+            }
+
+            if (Mesh::objects[i]->vertices)
+            {
+                List<Vec3> verts = *(Mesh::objects[i]->vertices);
+                for (size_t j = 0; j < verts.size(); j++)
+                {
+                    verts[j] = ProjectionMatrix() * Camera::main->TRInverse() * Mesh::objects[i]->TRS() * verts[j];
+                }
+
+                Range range = ProjectVertsOntoAxis(verts.data(), verts.size(), Direction::left);
+                if ((range.min > 1 && range.max > 1) || (range.min < -2 && range.max < -2)) {
+                    continue;
+                }
+                range = ProjectVertsOntoAxis(verts.data(), verts.size(), Direction::down);
+                if ((range.min > 1 && range.max > 1) || (range.min < -2 && range.max < -2)) {
+                    continue;
+                }
+            }
+
+            // ---------- Debug -----------
+            if (GraphicSettings::debugAxes)
+            {
+                Matrix4x4 mvp = ProjectionMatrix() * Camera::main->TRInverse() * Mesh::objects[i]->TRS();
+
+                Vec2 center_p = mvp * Vec4(0, 0, 0, 1);
+                Vec2 xAxis_p = mvp * Vec4(0.5, 0, 0, 1);
+                Vec2 yAxis_p = mvp * Vec4(0, 0.5, 0, 1);
+                Vec2 zAxis_p = mvp * Vec4(0, 0, 0.5, 1);
+                Vec2 forward_p = mvp * (Direction::forward);
+
+                pointBuffer->emplace_back(Point(center_p, RGB::red, 4));
+                lineBuffer->emplace_back(Line(center_p, xAxis_p, RGB::red));
+                lineBuffer->emplace_back(Line(center_p, yAxis_p, RGB::yellow));
+                lineBuffer->emplace_back(Line(center_p, zAxis_p, RGB::blue));
+                lineBuffer->emplace_back(Line(center_p, mvp * (Direction::forward), RGB::turquoise, 3));
+            }
+        }
+
+        Mesh::objects[i]->TransformTriangles();
+    }
+
+    Mesh::worldTriangleDrawCount = triBuffer->size();
+
+    // ---------- Sort (Painter's algorithm) -----------
+    sort(triBuffer->begin(), triBuffer->end(), [](const Triangle& triA, const Triangle& triB) -> bool
+        {
+            return triA.centroid.w > triB.centroid.w;
+        });
+
+    // ---------- Draw -----------
+    for (int i = 0; i < triBuffer->size(); i++)
+    {
+        (*triBuffer)[i].Draw();
+    }
+
+    for (size_t i = 0; i < lineBuffer->size(); i++)
+    {
+        (*lineBuffer)[i].Draw();
+    }
+
+    for (size_t i = 0; i < pointBuffer->size(); i++)
+    {
+        (*pointBuffer)[i].Draw();
+    }
+
+    pointBuffer->clear();
+    lineBuffer->clear();
+    triBuffer->clear();
 }
 #endif
