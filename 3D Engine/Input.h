@@ -4,6 +4,7 @@
 #include <GLFW/glfw3.h>
 #include <Graphics.h>
 #include <Physics.h>
+
 //-----------------Input----------------------
 static double deltaMouseX;
 static double deltaMouseY;
@@ -27,7 +28,7 @@ void OnMouseMoveEvent(GLFWwindow* window, double mouseX, double mouseY)
         glfwSetCursorPos(window, screenCenterX, screenCenterY);
         static float rad = PI / 180;
         double xAngle = rad * mouseSensitivity * -deltaMouseY;// *deltaTime;
-        double yAngle = 0.0000001 + rad * mouseSensitivity * -deltaMouseX;// * deltaTime; // 0.0000001 so no gimbal lock
+        double yAngle = numeric_limits<float>::epsilon() + rad * mouseSensitivity * -deltaMouseX;// * deltaTime; // 0.0000001 so no gimbal lock
         if (CameraSettings::outsiderViewPerspective) {
             Camera::projector->rotation *= YPR(xAngle, yAngle, 0);
         }
@@ -92,12 +93,21 @@ void OnKeyPressEvent(GLFWwindow* window, int key, int scancode, int action, int 
             Camera::projector->position = Vec3();
         }
         // Spawn
-        else if (glfwGetKey(window, GLFW_KEY_9) == GLFW_PRESS) {
-            Mesh* mesh = new CubeMesh();//LoadMeshFromOBJFile("Objects/Sphere.obj");
+        else if (glfwGetKey(window, GLFW_KEY_4) == GLFW_PRESS) {
+            Mesh* mesh = (Mesh*)new PhysicsObject();//LoadMeshFromOBJFile("Objects/Sphere.obj");
             mesh->position = Camera::main->position + (Camera::main->Forward() * 10);
             mesh->rotation = Camera::main->rotation;
+            mesh->color = &RGB::orange;
         }
-        else if (glfwGetKey(window, GLFW_KEY_8) == GLFW_PRESS) {
+        else if (glfwGetKey(window, GLFW_KEY_5) == GLFW_PRESS) {
+            PhysicsObject* obj = new PhysicsObject();//LoadMeshFromOBJFile("Objects/Sphere.obj");
+            obj->isStatic = true;
+            Transform* objTransform = ((Transform*)obj);
+            objTransform->position = Camera::main->position + (Camera::main->Forward() * 10);
+            objTransform->rotation = Camera::main->rotation;
+            obj->color = &RGB::white;
+        }
+        else if (glfwGetKey(window, GLFW_KEY_6) == GLFW_PRESS) {
             Mesh* mesh = LoadMeshFromOBJFile("Sphere.obj");
             mesh->position = Camera::main->position + (Camera::main->Forward() * 10);
             mesh->rotation = Camera::main->rotation;
@@ -109,7 +119,7 @@ void OnKeyPressEvent(GLFWwindow* window, int key, int scancode, int action, int 
             mesh->scale *= 0.1;
             mesh->color = &RGB::red;
         }
-        else if (glfwGetKey(window, GLFW_KEY_6) == GLFW_PRESS) {
+        else if (glfwGetKey(window, GLFW_KEY_8) == GLFW_PRESS) {
             Mesh* mesh = LoadMeshFromOBJFile("Icosahedron.obj");
             mesh->position = Camera::main->position + (Camera::main->Forward() * 10);
             mesh->rotation = Camera::main->rotation;

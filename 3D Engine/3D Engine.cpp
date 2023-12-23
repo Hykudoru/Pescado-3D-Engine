@@ -26,7 +26,7 @@ void Debug()
         DEBUGGING = true;
         coutTimer = 0;
     }
-
+     
     if (DEBUGGING)
     {
         std::cout << "--------GRAPHICS-------" << endl;
@@ -46,6 +46,7 @@ CubeMesh* obj1;
 CubeMesh* obj2;
 CubeMesh* obj3;
 CubeMesh* obj4;
+Transform* physicsBox;
 void Init(GLFWwindow* window)
 {
     glfwSetCursorPosCallback(window, OnMouseMoveEvent);
@@ -118,10 +119,15 @@ void Init(GLFWwindow* window)
        Mesh* cameraMesh = LoadMeshFromOBJFile("Objects/Camera.obj");
        cameraMesh->SetParent(Camera::cameras[i]);
     }*/
+
+    PhysicsObject* physObj = new PhysicsObject();
+    physObj->isStatic = true;
+    physicsBox = (Transform*)physObj;
 }
- 
+
 void Update()
 {
+    physicsBox->position = Camera::main->position;
 }
 
 int main(void)

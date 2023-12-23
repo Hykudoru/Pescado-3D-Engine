@@ -179,7 +179,6 @@ Vec3 Direction::down = Vec3(0, -1, 0);
 static float worldScale = 1;
 int screenWidth = 1600;
 int screenHeight = 900;
-float aspectRatio = screenWidth / screenHeight;
 float nearClippingPlane = -0.1;
 float farClippingPlane = -100000.0;
 float fieldOfViewDeg = 60;

@@ -10,6 +10,20 @@ using namespace std;
 #define PHYSICS_H
 extern bool DEBUGGING;
 extern GLFWwindow* window;
+Vec3 gravity = Vec3(0, -9.81, 0);
+const float defaultAcceleration = 50;
+float accel = defaultAcceleration;
+float decel = -5;
+float rotateSpeed = PI / 2;
+bool isKinematic = false;
+bool dampenersActive = true;
+Vec3 moveDir = Vec3(0, 0, 0);
+Vec3 velocity = Vec3(0, 0, 0);
+
+extern Mesh* planet;
+extern Mesh* spaceShip;
+extern Mesh* spaceShip2;
+extern Mesh* spaceShip3;
 
 class Physics
 {
@@ -109,34 +123,41 @@ public:
 };
 
 
-class Collider : public ManagedObjectPool<Collider>
+class Collider
 {
 public:
     bool isStatic = false;
-    Collider():ManagedObjectPool(this)
+};
+
+class PhysicsObject: public CubeMesh, public RigidBody, public Collider, public ManagedObjectPool<PhysicsObject>
+{
+public:
+    PhysicsObject():ManagedObjectPool<PhysicsObject>(this)
     {
+
     }
 };
 
-class BoxCollider : public Collider
-{
-
-};
-
 // Oriented Bounding Box (OBB) with Separating Axis Theorem (SAT) algorithm
-bool Collision(CubeMesh& mesh1, CubeMesh& mesh2, bool resolve = true)
+bool Collision(PhysicsObject& physObj1, PhysicsObject& physObj2, bool resolve = true)
 {
+    CubeMesh& mesh1 = (CubeMesh&)(physObj1);
+    CubeMesh& mesh2 = (CubeMesh&)(physObj2);
     bool gap = false;
     float minDistProjection;
     Vec3 minDistProjectionAxis;
 
-    if (!mesh1.vertices || !mesh2.vertices) {
+    if (!physObj1.vertices || !physObj2.vertices) {
         return false;
     }
-    List<Vec3> mesh1Verts = mesh1.WorldVertices();
-    List<Vec3> mesh2Verts = mesh2.WorldVertices();
-    List<Vec3> mesh1Normals = List<Vec3>{ mesh1.Right(), mesh1.Up(), mesh1.Forward() };// mesh1.WorldXYZNormals();
-    List<Vec3> mesh2Normals = List<Vec3>{ mesh2.Right(), mesh2.Up(), mesh2.Forward() }; //mesh2.WorldXYZNormals();
+    if (physObj1.isStatic && physObj2.isStatic)
+    {
+        return false;
+    }
+    List<Vec3> physObj1Verts = physObj1.WorldVertices();
+    List<Vec3> physObj2Verts = physObj2.WorldVertices();
+    List<Vec3> physObj1Normals = List<Vec3>{ physObj1.Right(), physObj1.Up(), physObj1.Forward() };// mesh1.WorldXYZNormals();
+    List<Vec3> physObj2Normals = List<Vec3>{ physObj2.Right(), physObj2.Up(), physObj2.Forward() }; //mesh2.WorldXYZNormals();
 
     // Note: Collision detection stops if at any time a gap is found.
     // Note: Cache the minimum distance projection and axis for later use to resolve the collision if needed.
@@ -144,11 +165,11 @@ bool Collision(CubeMesh& mesh1, CubeMesh& mesh2, bool resolve = true)
     // Step 2: Project both meshes onto Mesh B's normal axes.
     for (size_t i = 0; i < 2; i++)
     {
-        for (size_t j = 0; j < mesh1Normals.size(); j++)
+        for (size_t j = 0; j < physObj1Normals.size(); j++)
         {
-            Vec3 n1 = mesh1Normals[j];
-            Range rangeA = ProjectVertsOntoAxis(mesh1Verts.data(), mesh1Verts.size(), n1);
-            Range rangeB = ProjectVertsOntoAxis(mesh2Verts.data(), mesh2Verts.size(), n1);
+            Vec3 n1 = physObj1Normals[j];
+            Range rangeA = ProjectVertsOntoAxis(physObj1Verts.data(), physObj1Verts.size(), n1);
+            Range rangeB = ProjectVertsOntoAxis(physObj2Verts.data(), physObj2Verts.size(), n1);
             gap = !((rangeA.max >= rangeB.min && rangeB.max >= rangeA.min));// || (mesh1Range.max < mesh2Range.min && mesh2Range.max < mesh1Range.min));
             if (gap) {
                 break;
@@ -174,34 +195,34 @@ bool Collision(CubeMesh& mesh1, CubeMesh& mesh2, bool resolve = true)
             break;
         }
         //Swap and repeat once more for the other mesh
-        mesh1Verts.swap(mesh2Verts);
-        mesh1Normals.swap(mesh2Normals);
+        physObj1Verts.swap(physObj2Verts);
+        physObj1Normals.swap(physObj2Normals);
     }
 
     // Step 3: Must continue searching for possible 3D Edge-Edge collision
     if (!gap) 
     {
-        for (size_t i = 0; i < mesh1Normals.size(); i++)
+        for (size_t i = 0; i < physObj1Normals.size(); i++)
         {
-            for (size_t j = 0; j < mesh2Normals.size(); j++)
+            for (size_t j = 0; j < physObj2Normals.size(); j++)
             {
                 Vec3 axis;
-                Vec3 nA = mesh1Normals[i];
-                Vec3 nB = mesh2Normals[j];
+                Vec3 nA = physObj1Normals[i];
+                Vec3 nB = physObj2Normals[j];
                 //Make sure normals are not the same before using them to calculate the cross product (otherwise the axis would be <0, 0, 0>).
                 if (nA.x == nB.x && nA.y == nB.y && nA.z == nB.z)
                 {
-                    if ((j + 1) >= mesh2Normals.size()) {
-                        nB = mesh2Normals[j - 1];
+                    if ((j + 1) >= physObj2Normals.size()) {
+                        nB = physObj2Normals[j - 1];
                     }
                     else {
-                        nB = mesh2Normals[j + 1];
+                        nB = physObj2Normals[j + 1];
                     }
                 }
                 // Search for possible 3D Edge-Edge collision
                 axis = CrossProduct(nA, nB);
-                Range rangeA = ProjectVertsOntoAxis(mesh1Verts.data(), mesh1Verts.size(), axis);
-                Range rangeB = ProjectVertsOntoAxis(mesh2Verts.data(), mesh2Verts.size(), axis);
+                Range rangeA = ProjectVertsOntoAxis(physObj1Verts.data(), physObj1Verts.size(), axis);
+                Range rangeB = ProjectVertsOntoAxis(physObj2Verts.data(), physObj2Verts.size(), axis);
                 gap = !((rangeA.max >= rangeB.min && rangeB.max >= rangeA.min));// || (mesh1Range.max < mesh2Range.min && mesh2Range.max < mesh1Range.min));
                 if (gap) {
                     break;
@@ -215,8 +236,32 @@ bool Collision(CubeMesh& mesh1, CubeMesh& mesh2, bool resolve = true)
 
     if (!gap && resolve)
     {
-        mesh1.root->position -= minDistProjectionAxis * (minDistProjection/2.0);
-        mesh2.root->position += minDistProjectionAxis * (minDistProjection/2.0);
+        Vec3 offset = minDistProjectionAxis * minDistProjection;
+
+        bool neitherStatic = !physObj1.isStatic && !physObj2.isStatic;
+        if (neitherStatic)
+        {
+            offset /= 2.0;
+            physObj1.root->position -= offset;
+            physObj2.root->position += offset;
+
+            return !gap;
+        }
+
+        //Only one is movable at this stage
+
+        if (physObj1.isStatic) {
+            physObj2.root->position += offset;
+        }
+        else
+        {
+            physObj1.root->position += offset;
+        }
+    }
+
+    if (gap)
+    {
+        return false;
     }
 
     return !gap;//No gap = collision
@@ -230,54 +275,32 @@ void DetectCollisions()
     // Compare B:C, B:D, B:E
     // Compare C:D, C:E
     // Compare D:E
-    for (size_t i = 0; i < Mesh::count; i++)
+    for (size_t i = 0; i < ManagedObjectPool<PhysicsObject>::count; i++)
     {
-        // exit if this is the last mesh
-        if ((i + 1) >= Mesh::count) {
+        // exit if this is the last Collider
+        if ((i + 1) >= ManagedObjectPool<PhysicsObject>::count) {
             break;
         }
+        
+        // Current Collider
 
-        // Current Mesh
-        // Check type
-        if (typeid(*Mesh::objects[i]) != typeid(CubeMesh)) {
-            continue;
-        }
+        PhysicsObject* physObj1 = ManagedObjectPool<PhysicsObject>::objects[i];
 
-        CubeMesh* mesh = (CubeMesh*)Mesh::objects[i];
+        for (size_t j = i + 1; j < ManagedObjectPool<PhysicsObject>::count; j++)
+        { 
+            // Next Collider
+            PhysicsObject* physObj2 = ManagedObjectPool<PhysicsObject>::objects[j];
 
-        for (size_t j = i + 1; j < Mesh::count; j++)
-        {
-            // Next Mesh
-            // Check type
-            if (typeid(*Mesh::objects[j]) != typeid(CubeMesh)) {
-                continue;
-            }
-
-            CubeMesh* mesh2 = (CubeMesh*)Mesh::objects[j];
-
-            if (Collision(*mesh, *mesh2))
+            if (Collision(*physObj1, *physObj2))
             {   
-                //mesh->color = RGB::pink;
+                //mesh1->color = RGB::pink;
                 //mesh2->color = RGB::pink;
             }
         }
     }
 }
 
-Vec3 gravity = Vec3(0, -9.81, 0);
-const float defaultAcceleration = 50;
-float accel = defaultAcceleration;
-float decel = -5;
-float rotateSpeed = PI / 2;
-bool isKinematic = false;
-bool dampenersActive = true;
-Vec3 moveDir = Vec3(0, 0, 0);
-Vec3 velocity = Vec3(0, 0, 0);
 
-extern Mesh* planet;
-extern Mesh* spaceShip;
-extern Mesh* spaceShip2;
-extern Mesh* spaceShip3;
 static void Physics()
 {
     Camera* cam;
