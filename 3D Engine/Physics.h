@@ -144,8 +144,8 @@ bool Collision(PhysicsObject& physObj1, PhysicsObject& physObj2, bool resolve = 
     CubeMesh& mesh1 = (CubeMesh&)(physObj1);
     CubeMesh& mesh2 = (CubeMesh&)(physObj2);
     bool gap = false;
-    float minDistProjection;
-    Vec3 minDistProjectionAxis;
+    float minOverlap = 0;
+    Vec3 minOverlapAxis;
 
     if (!physObj1.vertices || !physObj2.vertices) {
         return false;
@@ -176,18 +176,25 @@ bool Collision(PhysicsObject& physObj1, PhysicsObject& physObj2, bool resolve = 
             }
             
             //Compare and cache minimum projection distance and axis for later use if needed for collision resolution.
-            float min1 = rangeA.max - rangeB.min;
-            float min2 = rangeB.max - rangeA.min;
-            float min = min1 < min2 ? min1 : min2;
+            float potentialMinOverlap = 0;
+            Vec3 dir = n1;
+            if (rangeA.max > rangeB.max) {
+                potentialMinOverlap = rangeB.max - rangeA.min;
+                dir *= -1.0;// Reverse push direction since object B is in front of object A when comparing to object A's normal
+            }
+            else {
+                potentialMinOverlap = rangeA.max - rangeB.min;
+            }
+
             if (j == 0) 
             {   //Initialize minimum projection distance and axis
-                minDistProjection = min;
-                minDistProjectionAxis = n1;
+                minOverlap = potentialMinOverlap;
+                minOverlapAxis = dir;
             }
-            else if (min < minDistProjection)
+            else if (potentialMinOverlap < minOverlap)
             {
-                minDistProjection = min;
-                minDistProjectionAxis = n1;
+                minOverlap = potentialMinOverlap;
+                minOverlapAxis = dir;
             }
         }
 
@@ -204,10 +211,11 @@ bool Collision(PhysicsObject& physObj1, PhysicsObject& physObj2, bool resolve = 
     {
         for (size_t i = 0; i < physObj1Normals.size(); i++)
         {
+            Vec3 nA = physObj1Normals[i];
             for (size_t j = 0; j < physObj2Normals.size(); j++)
             {
                 Vec3 axis;
-                Vec3 nA = physObj1Normals[i];
+                
                 Vec3 nB = physObj2Normals[j];
                 //Make sure normals are not the same before using them to calculate the cross product (otherwise the axis would be <0, 0, 0>).
                 if (nA.x == nB.x && nA.y == nB.y && nA.z == nB.z)
@@ -236,14 +244,14 @@ bool Collision(PhysicsObject& physObj1, PhysicsObject& physObj2, bool resolve = 
 
     if (!gap && resolve)
     {
-        Vec3 offset = minDistProjectionAxis * minDistProjection;
+        Vec3 offset = minOverlapAxis * minOverlap;
 
         bool neitherStatic = !physObj1.isStatic && !physObj2.isStatic;
         if (neitherStatic)
         {
             offset /= 2.0;
-            physObj1.root->position -= offset;
-            physObj2.root->position += offset;
+            physObj1.root->position += offset;
+            physObj2.root->position -= offset;
 
             return !gap;
         }
@@ -251,7 +259,7 @@ bool Collision(PhysicsObject& physObj1, PhysicsObject& physObj2, bool resolve = 
         //Only one is movable at this stage
 
         if (physObj1.isStatic) {
-            physObj2.root->position += offset;
+            physObj2.root->position -= offset;
         }
         else
         {
@@ -356,13 +364,16 @@ static void Physics()
 
     }
 
-    /*for (size_t i = 0; i < Mesh::meshes.size(); i++)
-    {
-        if (Mesh::meshes[i])
-        {
-           Mesh::meshes[i]->position += Mesh::meshes[i]->position  * (-deltaTime / 10.0);
-        }
-    }*/
+    //for (size_t i = 0; i < ManagedObjectPool<PhysicsObject>::count; i++)
+    //{
+      //  PhysicsObject* obj = ManagedObjectPool<PhysicsObject>::objects[i];
+        //if (!obj->isStatic)
+        //{
+          //  Transform* t = ((Transform*)obj);
+           //t->position += gravity * deltaTime;
+           //t->rotation = Identity3x3;
+        //}
+    //}
 
     if (Physics::collisionDetection)
     {

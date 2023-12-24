@@ -121,13 +121,19 @@ void Init(GLFWwindow* window)
     }*/
 
     PhysicsObject* physObj = new PhysicsObject();
-    physObj->isStatic = true;
+   //physObj->isStatic = true;
     physicsBox = (Transform*)physObj;
+
+    PhysicsObject* ground = new PhysicsObject();
+    ground->isStatic = true;
+    ground->scale *= 20;
+    ((Transform*)ground)->position = Direction::down * 40;
 }
 
 void Update()
 {
-    physicsBox->position = Camera::main->position;
+    physicsBox->position = Camera::main->position + Camera::main->Forward() * 10;
+    physicsBox->rotation = Camera::main->rotation;
 }
 
 int main(void)

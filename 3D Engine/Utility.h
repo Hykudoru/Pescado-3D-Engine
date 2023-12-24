@@ -121,17 +121,13 @@ Vec3 ProjectOnPlane(Vec3 v, Vec3 n)
 
 Range ProjectVertsOntoAxis(const Vec3 verts[], const int& count, Vec3& axis)
 {
-    float min = 0;
-    float max = 0;
-    for (size_t k = 0; k < count; k++)
+    float dist = DotProduct(verts[0], axis);
+    float min = dist;
+    float max = dist;
+    for (size_t k = 1; k < count; k++)
     {
-        float dist = DotProduct(verts[k], axis);
-        if (k == 0)
-        {
-            min = dist;
-            max = dist;
-        }
-        else if (dist < min) {
+        dist = DotProduct(verts[k], axis);
+        if (dist < min) {
             min = dist;
         }
         else if (dist > max) {
