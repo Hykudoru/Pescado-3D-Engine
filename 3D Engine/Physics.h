@@ -29,10 +29,12 @@ class Physics
 {
 public:
     static bool collisionDetection;
+    static bool dynamics;
     static bool raycasting;
     static bool gravity;
 };
 bool Physics::collisionDetection = true;
+bool Physics::dynamics = true;
 bool Physics::raycasting = false;
 bool Physics::gravity = false;
 
@@ -48,7 +50,7 @@ void Time()
 
     static double t = 0;
     static int frames = 0;
-    
+
     t += deltaTime;
     frames++;
     fps = ((double)frames) / t;
@@ -58,56 +60,6 @@ void Time()
         frames = 0;
     }
 }
-/*
-class Component
-{
-
-};
-
-class GameObject
-{
-public:
-    static List<GameObject*> gameObjects;
-    static int gameObjectCount;
-    List<Component> components;
-    Transform* transform;
-    Mesh* mesh;
-    RigidBody* rigidBody;
-
-    GameObject(Mesh& mesh, RigidBody& rigidBody)
-    {
-        this->mesh = &mesh;
-        this->rigidBody = &rigidBody;
-        GameObject::gameObjects.emplace(gameObjects.begin() + gameObjectCount++, this);
-    }
-
-    ~GameObject()
-    {
-        if (transform)
-        {
-            delete transform;
-        }
-        if (mesh)
-        {
-            delete mesh;
-        }
-        if (rigidBody)
-        {
-            delete rigidBody;
-        }
-    }
-
-    static void Update()
-    {
-        for (size_t i = 0; i < gameObjectCount; i++)
-        {
-            if (gameObjects[i]->rigidBody)
-            {
-                gameObjects[i]->Update();
-            }
-        }
-    }
-};*/
 
 class RigidBody
 {
@@ -289,18 +241,23 @@ void DetectCollisions()
 
             if (Collision(*physObj1, *physObj2))
             {   
+                /*  
+                Although static objects themselves are not effected by momentum 
+                transfers, their velocity variable may still be updating from new collisions. 
+                Consequently, objects touching a static collider would be effected, so the 
+                velocity is zeroed out to prevent this.
+                */
                 if (physObj1->isStatic) {
-                    physObj1->velocity = Vec3::zero;
+                    physObj1->velocity = Vec3::zero; 
                 }
                 if (physObj2->isStatic) {
                     physObj2->velocity = Vec3::zero;
                 }
-
-                Vec3 vel1 = physObj1->velocity;
-                physObj1->velocity = physObj2->velocity;
-                physObj2->velocity = vel1;
-                //mesh1->color = RGB::pink;
-                //mesh2->color = RGB::pink;
+                
+                // Momentum transfer
+                Vec3 momentumObj1 = physObj1->velocity * physObj1->mass;
+                physObj1->velocity = (physObj2->velocity * physObj2->mass);
+                physObj2->velocity = momentumObj1;
             }
         }
     }
@@ -362,13 +319,18 @@ static void Physics()
 
     }
 
-    for (size_t i = 0; i < ManagedObjectPool<PhysicsObject>::count; i++)
+    if (Physics::dynamics)
     {
-        PhysicsObject* obj = ManagedObjectPool<PhysicsObject>::objects[i];
-        if (!obj->isStatic)
+        for (size_t i = 0; i < ManagedObjectPool<PhysicsObject>::count; i++)
         {
-            obj->velocity += gravity * deltaTime;
-            obj->position += obj->velocity * deltaTime;
+            PhysicsObject* obj = ManagedObjectPool<PhysicsObject>::objects[i];
+            if (!obj->isStatic)
+            {
+                if (Physics::gravity) {
+                    obj->velocity += gravity * deltaTime;
+                }
+                obj->position += obj->velocity * deltaTime;
+            }
         }
     }
 

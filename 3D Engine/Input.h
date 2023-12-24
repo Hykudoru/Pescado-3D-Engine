@@ -142,10 +142,13 @@ void OnKeyPressEvent(GLFWwindow* window, int key, int scancode, int action, int 
         }
 
         // Toggle Collision Detection
-        else if (key == GLFW_KEY_P) {
+        else if (key == GLFW_KEY_BACKSLASH) {
             Physics::collisionDetection = !Physics::collisionDetection;
         }
-
+        // Toggle Dynamic Physics
+        else if (key == GLFW_KEY_P) {
+            Physics::dynamics = !Physics::dynamics;
+        }
         // Toggle Gravity
         else if (key == GLFW_KEY_G) {
             Physics::gravity = !Physics::gravity;
