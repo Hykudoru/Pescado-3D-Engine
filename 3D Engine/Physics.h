@@ -116,10 +116,6 @@ public:
     bool isKinematic = false;
     Vec3 velocity = Vec3::zero;
     Vec3 angularVelocity = Vec3::zero;
-    Vec3 position = Vec3::zero;
-    Matrix3x3 rotation = Identity3x3;
-
-    //Collider collider;
 };
 
 
@@ -132,17 +128,12 @@ public:
 class PhysicsObject: public CubeMesh, public RigidBody, public Collider, public ManagedObjectPool<PhysicsObject>
 {
 public:
-    PhysicsObject():ManagedObjectPool<PhysicsObject>(this)
-    {
-
-    }
+    PhysicsObject():ManagedObjectPool<PhysicsObject>(this) {}
 };
 
 // Oriented Bounding Box (OBB) with Separating Axis Theorem (SAT) algorithm
 bool Collision(PhysicsObject& physObj1, PhysicsObject& physObj2, bool resolve = true)
 {
-    CubeMesh& mesh1 = (CubeMesh&)(physObj1);
-    CubeMesh& mesh2 = (CubeMesh&)(physObj2);
     bool gap = false;
     float minOverlap = 0;
     Vec3 minOverlapAxis;
@@ -214,8 +205,6 @@ bool Collision(PhysicsObject& physObj1, PhysicsObject& physObj2, bool resolve = 
             Vec3 nA = physObj1Normals[i];
             for (size_t j = 0; j < physObj2Normals.size(); j++)
             {
-                Vec3 axis;
-                
                 Vec3 nB = physObj2Normals[j];
                 //Make sure normals are not the same before using them to calculate the cross product (otherwise the axis would be <0, 0, 0>).
                 if (nA.x == nB.x && nA.y == nB.y && nA.z == nB.z)
@@ -228,7 +217,7 @@ bool Collision(PhysicsObject& physObj1, PhysicsObject& physObj2, bool resolve = 
                     }
                 }
                 // Search for possible 3D Edge-Edge collision
-                axis = CrossProduct(nA, nB);
+                Vec3 axis = CrossProduct(nA, nB);
                 Range rangeA = ProjectVertsOntoAxis(physObj1Verts.data(), physObj1Verts.size(), axis);
                 Range rangeB = ProjectVertsOntoAxis(physObj2Verts.data(), physObj2Verts.size(), axis);
                 gap = !((rangeA.max >= rangeB.min && rangeB.max >= rangeA.min));// || (mesh1Range.max < mesh2Range.min && mesh2Range.max < mesh1Range.min));
@@ -250,8 +239,8 @@ bool Collision(PhysicsObject& physObj1, PhysicsObject& physObj2, bool resolve = 
         if (neitherStatic)
         {
             offset /= 2.0;
-            physObj1.root->position += offset;
-            physObj2.root->position -= offset;
+            physObj1.root->position += (offset*1.01);
+            physObj2.root->position -= (offset*1.01);
 
             return !gap;
         }
@@ -291,7 +280,6 @@ void DetectCollisions()
         }
         
         // Current Collider
-
         PhysicsObject* physObj1 = ManagedObjectPool<PhysicsObject>::objects[i];
 
         for (size_t j = i + 1; j < ManagedObjectPool<PhysicsObject>::count; j++)
@@ -301,6 +289,16 @@ void DetectCollisions()
 
             if (Collision(*physObj1, *physObj2))
             {   
+                if (physObj1->isStatic) {
+                    physObj1->velocity = Vec3::zero;
+                }
+                if (physObj2->isStatic) {
+                    physObj2->velocity = Vec3::zero;
+                }
+
+                Vec3 vel1 = physObj1->velocity;
+                physObj1->velocity = physObj2->velocity;
+                physObj2->velocity = vel1;
                 //mesh1->color = RGB::pink;
                 //mesh2->color = RGB::pink;
             }
@@ -364,16 +362,15 @@ static void Physics()
 
     }
 
-    //for (size_t i = 0; i < ManagedObjectPool<PhysicsObject>::count; i++)
-    //{
-      //  PhysicsObject* obj = ManagedObjectPool<PhysicsObject>::objects[i];
-        //if (!obj->isStatic)
-        //{
-          //  Transform* t = ((Transform*)obj);
-           //t->position += gravity * deltaTime;
-           //t->rotation = Identity3x3;
-        //}
-    //}
+    for (size_t i = 0; i < ManagedObjectPool<PhysicsObject>::count; i++)
+    {
+        PhysicsObject* obj = ManagedObjectPool<PhysicsObject>::objects[i];
+        if (!obj->isStatic)
+        {
+            obj->velocity += gravity * deltaTime;
+            obj->position += obj->velocity * deltaTime;
+        }
+    }
 
     if (Physics::collisionDetection)
     {

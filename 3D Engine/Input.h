@@ -47,10 +47,11 @@ void OnMouseButtonEvent(GLFWwindow* window, int button, int action, int mods)
     {
         // Spawn Mesh
         if (button == 0) {
-            Mesh* mesh = new CubeMesh();//LoadMeshFromOBJFile("Objects/Sphere.obj");
-            mesh->position = Camera::main->position + (Camera::main->Forward() * 10);
-            mesh->rotation = Camera::main->rotation;
-            mesh->color = &RGB::turquoise;
+            PhysicsObject* obj = new PhysicsObject();//LoadMeshFromOBJFile("Objects/Sphere.obj");
+            obj->position = Camera::main->position + (Camera::main->Forward() * 10);
+            obj->rotation = Camera::main->rotation;
+            obj->velocity = obj->Forward() * 50;
+            obj->color = &RGB::turquoise;
         }
         else if (button == 1) {
             Physics::raycasting = true;

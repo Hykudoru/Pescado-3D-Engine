@@ -46,7 +46,7 @@ CubeMesh* obj1;
 CubeMesh* obj2;
 CubeMesh* obj3;
 CubeMesh* obj4;
-Transform* physicsBox;
+PhysicsObject* physicsBox;
 void Init(GLFWwindow* window)
 {
     glfwSetCursorPosCallback(window, OnMouseMoveEvent);
@@ -120,20 +120,19 @@ void Init(GLFWwindow* window)
        cameraMesh->SetParent(Camera::cameras[i]);
     }*/
 
-    PhysicsObject* physObj = new PhysicsObject();
+    physicsBox = new PhysicsObject();
    //physObj->isStatic = true;
-    physicsBox = (Transform*)physObj;
 
     PhysicsObject* ground = new PhysicsObject();
     ground->isStatic = true;
-    ground->scale *= 20;
-    ((Transform*)ground)->position = Direction::down * 40;
+    ground->scale *= 50;
+    ground->position = Direction::down * 100;
 }
 
 void Update()
 {
-    physicsBox->position = Camera::main->position + Camera::main->Forward() * 10;
-    physicsBox->rotation = Camera::main->rotation;
+    //physicsBox->position = Camera::main->position + Camera::main->Forward() * 10;
+    //physicsBox->rotation = Camera::main->rotation;
 }
 
 int main(void)
