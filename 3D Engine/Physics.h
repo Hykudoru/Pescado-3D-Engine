@@ -106,47 +106,46 @@ bool Collision(PhysicsObject& physObj1, PhysicsObject& physObj2, bool resolve = 
     // Note: Cache the minimum distance projection and axis for later use to resolve the collision if needed.
     // Step 1: Project both meshes onto Mesh A's normal axes.
     // Step 2: Project both meshes onto Mesh B's normal axes.
+    //Initialize minimum projection distance and axis
     for (size_t i = 0; i < 2; i++)
     {
-        for (size_t j = 0; j < physObj1Normals.size(); j++)
+        auto normals = i == 0 ? &physObj1Normals : &physObj2Normals;
+        for (size_t j = 0; j < normals->size(); j++)
         {
-            Vec3 n1 = physObj1Normals[j];
-            Range rangeA = ProjectVertsOntoAxis(physObj1Verts.data(), physObj1Verts.size(), n1);
-            Range rangeB = ProjectVertsOntoAxis(physObj2Verts.data(), physObj2Verts.size(), n1);
+            Vec3 axis = (*normals)[j];
+            Range rangeA = ProjectVertsOntoAxis(physObj1Verts.data(), physObj1Verts.size(), axis);
+            Range rangeB = ProjectVertsOntoAxis(physObj2Verts.data(), physObj2Verts.size(), axis);
             gap = !((rangeA.max >= rangeB.min && rangeB.max >= rangeA.min));// || (mesh1Range.max < mesh2Range.min && mesh2Range.max < mesh1Range.min));
             if (gap) {
                 break;
             }
-            
+
             //Compare and cache minimum projection distance and axis for later use if needed for collision resolution.
             float potentialMinOverlap = 0;
-            Vec3 dir = n1;
-            if (rangeA.max > rangeB.max) {
+            if (rangeA.max > rangeB.max) 
+            {
                 potentialMinOverlap = rangeB.max - rangeA.min;
-                dir *= -1.0;// Reverse push direction since object B is in front of object A when comparing to object A's normal
-            }
+                axis *= -1.0;// Reverse push direction since object B is behind object A and we will always push A backwards and B forwards.
+            } 
             else {
                 potentialMinOverlap = rangeA.max - rangeB.min;
             }
 
-            if (j == 0) 
-            {   //Initialize minimum projection distance and axis
+            if (i == 0)
+            {
                 minOverlap = potentialMinOverlap;
-                minOverlapAxis = dir;
+                minOverlapAxis = axis;
             }
             else if (potentialMinOverlap < minOverlap)
             {
                 minOverlap = potentialMinOverlap;
-                minOverlapAxis = dir;
+                minOverlapAxis = axis;
             }
         }
 
         if (gap) {
             break;
         }
-        //Swap and repeat once more for the other mesh
-        physObj1Verts.swap(physObj2Verts);
-        physObj1Normals.swap(physObj2Normals);
     }
 
     // Step 3: Must continue searching for possible 3D Edge-Edge collision
@@ -159,7 +158,7 @@ bool Collision(PhysicsObject& physObj1, PhysicsObject& physObj2, bool resolve = 
             {
                 Vec3 nB = physObj2Normals[j];
                 //Make sure normals are not the same before using them to calculate the cross product (otherwise the axis would be <0, 0, 0>).
-                if (nA.x == nB.x && nA.y == nB.y && nA.z == nB.z)
+                if (DotProduct(nA, nB) == 1.0)
                 {
                     if ((j + 1) >= physObj2Normals.size()) {
                         nB = physObj2Normals[j - 1];
@@ -190,9 +189,9 @@ bool Collision(PhysicsObject& physObj1, PhysicsObject& physObj2, bool resolve = 
         bool neitherStatic = !physObj1.isStatic && !physObj2.isStatic;
         if (neitherStatic)
         {
-            offset /= 2.0;
-            physObj1.root->position += (offset*1.01);
-            physObj2.root->position -= (offset*1.01);
+            offset *= 0.5;
+            physObj1.root->position -= (offset*1.01);
+            physObj2.root->position += (offset*1.01);
 
             return !gap;
         }
@@ -200,11 +199,11 @@ bool Collision(PhysicsObject& physObj1, PhysicsObject& physObj2, bool resolve = 
         //Only one is movable at this stage
 
         if (physObj1.isStatic) {
-            physObj2.root->position -= offset;
+            physObj2.root->position += offset;
         }
         else
         {
-            physObj1.root->position += offset;
+            physObj1.root->position -= offset;
         }
     }
 

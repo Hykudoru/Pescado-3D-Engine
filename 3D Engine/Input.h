@@ -50,7 +50,8 @@ void OnMouseButtonEvent(GLFWwindow* window, int button, int action, int mods)
             PhysicsObject* obj = new PhysicsObject();//LoadMeshFromOBJFile("Objects/Sphere.obj");
             obj->position = Camera::main->position + (Camera::main->Forward() * 10);
             obj->rotation = Camera::main->rotation;
-            obj->velocity = obj->Forward() * 50;
+            obj->velocity = obj->Forward() * 5;
+            obj->mass = 5;
             obj->color = &RGB::turquoise;
         }
         else if (button == 1) {
