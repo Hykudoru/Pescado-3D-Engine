@@ -15,8 +15,8 @@ void OnMouseMoveEvent(GLFWwindow* window, double mouseX, double mouseY)
 {
     if (mouseCameraControlEnabled)
     {
-        static  double screenCenterX = (screenWidth / 2.0);
-        static  double screenCenterY = (screenHeight / 2.0);
+        static double screenCenterX = (screenWidth / 2.0);
+        static double screenCenterY = (screenHeight / 2.0);
 
         glfwGetCursorPos(window, &mouseX, &mouseY);
 
@@ -29,10 +29,10 @@ void OnMouseMoveEvent(GLFWwindow* window, double mouseX, double mouseY)
         static float rad = PI / 180;
         double xAngle = rad * mouseSensitivity * -deltaMouseY;// *deltaTime;
         double yAngle = numeric_limits<float>::epsilon() + rad * mouseSensitivity * -deltaMouseX;// * deltaTime; // 0.0000001 so no gimbal lock
+        
         if (CameraSettings::outsiderViewPerspective) {
             Camera::projector->rotation *= YPR(xAngle, yAngle, 0);
-        }
-        else {
+        } else {
             Camera::main->rotation *= YPR(xAngle, yAngle, 0);
         }
         //Camera::main->rotation = Matrix3x3::RotX(rotateSpeed * -deltaMouseY) * Camera::main->rotation * Matrix3x3::RotY((0.00001 + rotateSpeed) * -deltaMouseX);
@@ -87,18 +87,18 @@ void OnKeyPressEvent(GLFWwindow* window, int key, int scancode, int action, int 
     if (action == GLFW_PRESS)
     {
         // Reset Camera
-        if (glfwGetKey(window, GLFW_KEY_0) == GLFW_PRESS) {
+        if (glfwGetKey(window, GLFW_KEY_0) == GLFW_PRESS || key == GLFW_KEY_BACKSPACE) {
             Camera::main->rotation = Identity3x3;
             Camera::main->position = Vec3();
         }
         // Switch between Cameras
-        else if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS) {
+        else if (glfwGetKey(window, GLFW_KEY_F1) == GLFW_PRESS) {
             Camera::main = Camera::cameras[1];
         }
-        else if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS) {
+        else if (glfwGetKey(window, GLFW_KEY_F2) == GLFW_PRESS) {
             Camera::main = Camera::cameras[2];
         }
-        else if (glfwGetKey(window, GLFW_KEY_3) == GLFW_PRESS) {
+        else if (glfwGetKey(window, GLFW_KEY_F3) == GLFW_PRESS) {
             CameraSettings::outsiderViewPerspective = !CameraSettings::outsiderViewPerspective;
             Camera::projector->rotation = Identity3x3;
             Camera::projector->position = Vec3();
@@ -139,13 +139,13 @@ void OnKeyPressEvent(GLFWwindow* window, int key, int scancode, int action, int 
 
         //------------------Physics-------------------
 
-        // Toggle Momentum
+        // Toggle Player's Momentum
         else if (key == GLFW_KEY_X) {
             velocity = Vec3(0, 0, 0);//Reset every toggle state
             isKinematic = !isKinematic;
         }
 
-        // Toggle Inertial Dampeners
+        // Toggle Player's Inertial Dampeners
         else if (key == GLFW_KEY_Z) {
             dampenersActive = !dampenersActive;
         }
@@ -189,11 +189,11 @@ void OnKeyPressEvent(GLFWwindow* window, int key, int scancode, int action, int 
         {
             mouseCameraControlEnabled = !mouseCameraControlEnabled;
         }
-        else if (key == GLFW_KEY_F1)
+        else if (key == GLFW_KEY_F4)
         {
             GraphicSettings::vfx = !GraphicSettings::vfx;
         }
-        else if (key == GLFW_KEY_F2)
+        else if (key == GLFW_KEY_F5)
         {
             GraphicSettings::matrixMode = !GraphicSettings::matrixMode;
         }
@@ -201,7 +201,7 @@ void OnKeyPressEvent(GLFWwindow* window, int key, int scancode, int action, int 
         else if (glfwGetKey(window, GLFW_KEY_CAPS_LOCK) == GLFW_PRESS) {
             Transform::parentHierarchyDefault = !Transform::parentHierarchyDefault;
         }
-        else if (key == GLFW_KEY_F3)
+        else if (key == GLFW_KEY_TAB)
         {
             temp = !temp;
         }

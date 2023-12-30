@@ -247,13 +247,13 @@ Matrix4x4 ProjectionMatrix()
 
 struct Point
 {
-    Vec3 point;
+    Vec3 position;
     Color color;
     int size;
 
-    Point(Vec3 point, Color color = RGB::white, int size = 2)
+    Point(Vec3 position, Color color = RGB::white, int size = 2)
     {
-        this->point = point;
+        this->position = position;
         this->color = color;
         this->size = size;
     }
@@ -262,7 +262,7 @@ struct Point
     {
         DrawAPI::SetPointSize(size);
         DrawAPI::SetDrawColor(color.x, color.y, color.z);
-        DrawAPI::DrawPoint(point);
+        DrawAPI::DrawPoint(position);
     }
 };
 

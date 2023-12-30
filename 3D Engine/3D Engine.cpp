@@ -46,7 +46,15 @@ CubeMesh* obj1;
 CubeMesh* obj2;
 CubeMesh* obj3;
 CubeMesh* obj4;
-PhysicsObject* physicsBox;
+PhysicsObject* physicsBox;    
+
+static CubeMesh cube2 = CubeMesh(1, Vec3(-5, 5, -20));
+static CubeMesh cube3 = CubeMesh(1, Vec3(5, 5, -30));
+static CubeMesh cube5 = CubeMesh(1, Vec3(-5, -5, 10));
+static CubeMesh cube6 = CubeMesh(1, Vec3(-5, 5, 20));
+static CubeMesh cube7 = CubeMesh(1, Vec3(5, 5, 30));
+static CubeMesh cube8 = CubeMesh(10, Vec3(5, -5, 40));
+
 void Init(GLFWwindow* window)
 {
     glfwSetCursorPosCallback(window, OnMouseMoveEvent);
@@ -62,14 +70,6 @@ void Init(GLFWwindow* window)
 
     GraphicSettings::matrixMode = true;
     //GraphicSettings::debugAxes = true;
-
-    Mesh* cube1 = new CubeMesh(1, Vec3(-5, -5, -10));
-    CubeMesh* cube2 = new CubeMesh(1, Vec3(-5, 5, -20));
-    CubeMesh* cube3 = new CubeMesh(1, Vec3(5, 5, -30));
-    CubeMesh* cube5 = new CubeMesh(1, Vec3(-5, -5, 10));
-    CubeMesh* cube6 = new CubeMesh(1, Vec3(-5, 5, 20));
-    CubeMesh* cube7 = new CubeMesh(1, Vec3(5, 5, 30));
-    CubeMesh* cube8 = new CubeMesh(10, Vec3(5, -5, 40));
 
     planet = LoadMeshFromOBJFile("Sphere.obj");
     planet->scale = Vec3(500, 500, 500);
@@ -90,6 +90,7 @@ void Init(GLFWwindow* window)
 
     spaceShip3 = LoadMeshFromOBJFile("SpaceShip_5.obj");
     spaceShip3->position = Direction::right * 20 + Direction::up * 10;
+
 
     Mesh* parent = new CubeMesh();
     Mesh* child = new CubeMesh();
@@ -121,7 +122,7 @@ void Init(GLFWwindow* window)
     }*/
 
     physicsBox = new PhysicsObject();
-   physicsBox->isStatic = true;
+  // physicsBox->isStatic = true;
 
     for (int i = -10; i < 10; i++)
     {
