@@ -83,12 +83,16 @@ public:
     PhysicsObject():ManagedObjectPool<PhysicsObject>(this) {}
 };
 
-// Oriented Bounding Box (OBB) with Separating Axis Theorem (SAT) algorithm
-bool Collision(PhysicsObject& physObj1, PhysicsObject& physObj2, bool resolve = true)
+struct CollisionInfo
 {
     bool gap = false;
     float minOverlap = 0;
-    Vec3 minOverlapAxis;
+    Vec3 minOverlapAxis = Vec3::zero;
+};
+// Oriented Bounding Box (OBB) with Separating Axis Theorem (SAT) algorithm
+bool Collision(PhysicsObject& physObj1, PhysicsObject& physObj2, CollisionInfo& collisionInfo, bool resolve = true)
+{
+    collisionInfo = CollisionInfo();
 
     if (!physObj1.vertices || !physObj2.vertices) {
         return false;
@@ -110,46 +114,40 @@ bool Collision(PhysicsObject& physObj1, PhysicsObject& physObj2, bool resolve = 
     for (size_t i = 0; i < 2; i++)
     {
         auto normals = i == 0 ? &physObj1Normals : &physObj2Normals;
-        for (size_t j = 0; j < normals->size(); j++)
+        for (size_t ii = 0; ii < normals->size(); ii++)
         {
-            Vec3 axis = (*normals)[j];
+            Vec3 axis = (*normals)[ii];
             Range rangeA = ProjectVertsOntoAxis(physObj1Verts.data(), physObj1Verts.size(), axis);
             Range rangeB = ProjectVertsOntoAxis(physObj2Verts.data(), physObj2Verts.size(), axis);
-            gap = !((rangeA.max >= rangeB.min && rangeB.max >= rangeA.min));// || (mesh1Range.max < mesh2Range.min && mesh2Range.max < mesh1Range.min));
-            if (gap) {
-                break;
+            collisionInfo.gap = !((rangeA.max >= rangeB.min && rangeB.max >= rangeA.min));// || (mesh1Range.max < mesh2Range.min && mesh2Range.max < mesh1Range.min));
+            if (collisionInfo.gap) {
+                return false;
             }
 
             //Compare and cache minimum projection distance and axis for later use if needed for collision resolution.
             float potentialMinOverlap = 0;
-            if (rangeA.max > rangeB.max) 
-            {
+            if (rangeA.max > rangeB.max) {
                 potentialMinOverlap = rangeB.max - rangeA.min;
                 axis *= -1.0;// Reverse push direction since object B is behind object A and we will always push A backwards and B forwards.
-            } 
-            else {
+            } else {
                 potentialMinOverlap = rangeA.max - rangeB.min;
             }
 
             if (i == 0)
             {
-                minOverlap = potentialMinOverlap;
-                minOverlapAxis = axis;
+                collisionInfo.minOverlap = potentialMinOverlap;
+                collisionInfo.minOverlapAxis = axis;
             }
-            else if (potentialMinOverlap < minOverlap)
+            else if (potentialMinOverlap < collisionInfo.minOverlap)
             {
-                minOverlap = potentialMinOverlap;
-                minOverlapAxis = axis;
+                collisionInfo.minOverlap = potentialMinOverlap;
+                collisionInfo.minOverlapAxis = axis;
             }
-        }
-
-        if (gap) {
-            break;
         }
     }
 
     // Step 3: Must continue searching for possible 3D Edge-Edge collision
-    if (!gap) 
+    if (!collisionInfo.gap)
     {
         for (size_t i = 0; i < physObj1Normals.size(); i++)
         {
@@ -157,8 +155,11 @@ bool Collision(PhysicsObject& physObj1, PhysicsObject& physObj2, bool resolve = 
             for (size_t j = 0; j < physObj2Normals.size(); j++)
             {
                 Vec3 nB = physObj2Normals[j];
+                
                 //Make sure normals are not the same before using them to calculate the cross product (otherwise the axis would be <0, 0, 0>).
-                if (DotProduct(nA, nB) == 1.0)
+                float dot = DotProduct(nA, nB);
+                bool sameAxis = dot >= 1.0 || dot <= -1.0;
+                if (sameAxis)
                 {
                     if ((j + 1) >= physObj2Normals.size()) {
                         nB = physObj2Normals[j - 1];
@@ -167,24 +168,38 @@ bool Collision(PhysicsObject& physObj1, PhysicsObject& physObj2, bool resolve = 
                         nB = physObj2Normals[j + 1];
                     }
                 }
+                
                 // Search for possible 3D Edge-Edge collision
                 Vec3 axis = CrossProduct(nA, nB);
                 Range rangeA = ProjectVertsOntoAxis(physObj1Verts.data(), physObj1Verts.size(), axis);
                 Range rangeB = ProjectVertsOntoAxis(physObj2Verts.data(), physObj2Verts.size(), axis);
-                gap = !((rangeA.max >= rangeB.min && rangeB.max >= rangeA.min));// || (mesh1Range.max < mesh2Range.min && mesh2Range.max < mesh1Range.min));
-                if (gap) {
-                    break;
+                collisionInfo.gap = !((rangeA.max >= rangeB.min && rangeB.max >= rangeA.min));// || (mesh1Range.max < mesh2Range.min && mesh2Range.max < mesh1Range.min));
+                if (collisionInfo.gap) {
+                    return false;
                 }
-            }
-            if (gap) {
-                break;
+               /* To-Do...
+                //Compare and cache minimum projection distance and axis for later use if needed for collision resolution.
+                float potentialMinOverlap = 0;
+                if (rangeA.max > rangeB.max) {
+                    potentialMinOverlap = rangeB.max - rangeA.min;
+                    axis *= -1.0;// Reverse push direction since object B is behind object A and we will always push A backwards and B forwards.
+                } 
+                else {
+                    potentialMinOverlap = rangeA.max - rangeB.min;
+                }
+
+                if (potentialMinOverlap < collisionInfo.minOverlap)
+                {
+                    collisionInfo.minOverlap = potentialMinOverlap;
+                    collisionInfo.minOverlapAxis = axis;
+                }*/
             }
         }
     }
 
-    if (!gap && resolve)
+    if (!collisionInfo.gap && resolve)
     {
-        Vec3 offset = minOverlapAxis * minOverlap;
+        Vec3 offset = collisionInfo.minOverlapAxis * collisionInfo.minOverlap;
 
         bool neitherStatic = !physObj1.isStatic && !physObj2.isStatic;
         if (neitherStatic)
@@ -193,7 +208,7 @@ bool Collision(PhysicsObject& physObj1, PhysicsObject& physObj2, bool resolve = 
             physObj1.root->position -= (offset*1.01);
             physObj2.root->position += (offset*1.01);
 
-            return !gap;
+            return !collisionInfo.gap;
         }
 
         //Only one is movable at this stage
@@ -207,12 +222,12 @@ bool Collision(PhysicsObject& physObj1, PhysicsObject& physObj2, bool resolve = 
         }
     }
 
-    if (gap)
+    if (collisionInfo.gap)
     {
         return false;
     }
 
-    return !gap;//No gap = collision
+    return !collisionInfo.gap;//No gap = collision
 }
 
 void DetectCollisions()
@@ -237,8 +252,8 @@ void DetectCollisions()
         { 
             // Next Collider
             PhysicsObject* physObj2 = ManagedObjectPool<PhysicsObject>::objects[j];
-
-            if (Collision(*physObj1, *physObj2))
+            CollisionInfo info;
+            if (Collision(*physObj1, *physObj2, info))
             {   
                 /*  
                 Although static objects themselves are not effected by momentum 
@@ -257,6 +272,7 @@ void DetectCollisions()
                 Vec3 momentumObj1 = physObj1->velocity * physObj1->mass;
                 physObj1->velocity = (physObj2->velocity * physObj2->mass);
                 physObj2->velocity = momentumObj1;
+
             }
         }
     }

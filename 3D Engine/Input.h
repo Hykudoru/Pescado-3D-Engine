@@ -38,29 +38,38 @@ void OnMouseMoveEvent(GLFWwindow* window, double mouseX, double mouseY)
         //Camera::main->rotation = Matrix3x3::RotX(rotateSpeed * -deltaMouseY) * Camera::main->rotation * Matrix3x3::RotY((0.00001 + rotateSpeed) * -deltaMouseX);
     }
 }
-
+float massFactor = 1;
+extern bool temp;
 void OnMouseButtonEvent(GLFWwindow* window, int button, int action, int mods)
 {
     std::cout << "Mouse button:" << button << std::endl;
 
     if (action == GLFW_PRESS)
     {
-        // Spawn Mesh
+        // Spawn/Throw Mesh
         if (button == 0) {
             PhysicsObject* obj = new PhysicsObject();//LoadMeshFromOBJFile("Objects/Sphere.obj");
             obj->position = Camera::main->position + (Camera::main->Forward() * 10);
             obj->rotation = Camera::main->rotation;
-            obj->velocity = obj->Forward() * 5;
-            obj->mass = 5;
-            obj->color = &RGB::turquoise;
+            obj->velocity = velocity + obj->Forward() * 25;
+            obj->mass = massFactor;
+            obj->color = &RGB::orange;
         }
-        else if (button == 1) {
+        // Spawn Mesh
+        if (button == 1) {
+            PhysicsObject* obj = new PhysicsObject();//LoadMeshFromOBJFile("Objects/Sphere.obj");
+            obj->position = Camera::main->position + (Camera::main->Forward() * 10);
+            obj->rotation = Camera::main->rotation;
+            obj->mass = massFactor;
+            obj->color = &RGB::orange;
+        }
+        else if (button == 2) {
             Physics::raycasting = true;
         }
     }
     if (action == GLFW_RELEASE)
     {
-        if (button == 1) {
+        if (button == 2) {
             Physics::raycasting = false;
         }
     }
@@ -69,8 +78,8 @@ void OnMouseButtonEvent(GLFWwindow* window, int button, int action, int mods)
 void OnScrollEvent(GLFWwindow* window, double xOffset, double yOffset)
 {
     FOV(fieldOfViewDeg - yOffset);
-
     std::cout << "FOV:" << ToDeg(fov) << "°" << std::endl;
+    massFactor += yOffset;
 }
 
 void OnKeyPressEvent(GLFWwindow* window, int key, int scancode, int action, int mods)
@@ -95,19 +104,18 @@ void OnKeyPressEvent(GLFWwindow* window, int key, int scancode, int action, int 
             Camera::projector->position = Vec3();
         }
         // Spawn
-        else if (glfwGetKey(window, GLFW_KEY_4) == GLFW_PRESS) {
+        else if (glfwGetKey(window, GLFW_KEY_9) == GLFW_PRESS) {
             Mesh* mesh = (Mesh*)new PhysicsObject();//LoadMeshFromOBJFile("Objects/Sphere.obj");
             mesh->position = Camera::main->position + (Camera::main->Forward() * 10);
             mesh->rotation = Camera::main->rotation;
             mesh->color = &RGB::orange;
         }
-        else if (glfwGetKey(window, GLFW_KEY_5) == GLFW_PRESS) {
+        else if (glfwGetKey(window, GLFW_KEY_ENTER) == GLFW_PRESS) {
             PhysicsObject* obj = new PhysicsObject();//LoadMeshFromOBJFile("Objects/Sphere.obj");
-            obj->isStatic = true;
-            Transform* objTransform = ((Transform*)obj);
-            objTransform->position = Camera::main->position + (Camera::main->Forward() * 10);
-            objTransform->rotation = Camera::main->rotation;
-            obj->color = &RGB::white;
+            obj->position = Camera::main->position + (Camera::main->Forward() * 10);
+            obj->rotation = Camera::main->rotation;
+            obj->velocity = obj->Forward() * 10;
+            obj->color = &RGB::orange;
         }
         else if (glfwGetKey(window, GLFW_KEY_6) == GLFW_PRESS) {
             Mesh* mesh = LoadMeshFromOBJFile("Sphere.obj");
@@ -192,6 +200,10 @@ void OnKeyPressEvent(GLFWwindow* window, int key, int scancode, int action, int 
         // Toggle Transform Hierarchy
         else if (glfwGetKey(window, GLFW_KEY_CAPS_LOCK) == GLFW_PRESS) {
             Transform::parentHierarchyDefault = !Transform::parentHierarchyDefault;
+        }
+        else if (key == GLFW_KEY_F3)
+        {
+            temp = !temp;
         }
     }
 }
