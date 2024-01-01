@@ -261,6 +261,10 @@ void DetectCollisions()
                 Consequently, objects touching a static collider would be effected, so the 
                 velocity is zeroed out to prevent this.
                 */
+                if (physObj1->isStatic && physObj2->isStatic) {
+                    return;
+                }
+
                 if (physObj1->isStatic) {
                     physObj1->velocity = Vec3::zero; 
                 }
@@ -269,9 +273,16 @@ void DetectCollisions()
                 }
                 
                 // Momentum transfer
-                Vec3 momentumObj1 = physObj1->velocity * physObj1->mass;
-                physObj1->velocity = (physObj2->velocity * physObj2->mass);
-                physObj2->velocity = momentumObj1;
+                float m1 = physObj1->mass;
+                float m2 = physObj2->mass;
+                Vec3 v1 = physObj1->velocity;
+                Vec3 v2 = physObj2->velocity;
+                //Elastic collision
+                Vec3 v1Final = v1 * m1 + v2 * m2 * 2.0 - v1 * m2;
+                Vec3 v2Final = v1 + v1Final - v2;
+
+                physObj1->velocity = v1Final;
+                physObj2->velocity = v2Final;
 
             }
         }
