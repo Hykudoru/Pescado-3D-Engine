@@ -272,18 +272,20 @@ void DetectCollisions()
                     physObj2->velocity = Vec3::zero;
                 }
                 
-                // Momentum transfer
                 float m1 = physObj1->mass;
                 float m2 = physObj2->mass;
                 Vec3 v1 = physObj1->velocity;
                 Vec3 v2 = physObj2->velocity;
-                //Elastic collision
-                Vec3 v1Final = v1 * m1 + v2 * m2 * 2.0 - v1 * m2;
+
+                /* Elastic collision (conserves both momentum and kinetic energy)
+                Conservation Momentum: m1*v1 + m2*v2 = m1*v1' + m2*v2'
+                Conservation Kinetic Energy: v1 + v1' = v2 + v2' 
+                The eq below were solved from the system of eq above.*/
+                Vec3 v1Final = (v1*m1 + v2*m2*2.0 - v1*m2) * (1.0/(m1+m2));
                 Vec3 v2Final = v1 + v1Final - v2;
 
                 physObj1->velocity = v1Final;
                 physObj2->velocity = v2Final;
-
             }
         }
     }
