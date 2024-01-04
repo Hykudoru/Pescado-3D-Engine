@@ -128,11 +128,11 @@ void Init(GLFWwindow* window)
     {
         for (int j = -10; j < 10; j++)
         {
-            PhysicsObject* ground = new PhysicsObject();
-            ground->isStatic = true;
-            ground->position = Direction::down*10 + Direction::left*i+Direction::back * j;
+            PhysicsObject* block = new PhysicsObject();
+            block->scale *= 2;
+            block->isStatic = true;
+            block->position = Direction::down*15 + Direction::left*i*10 + Direction::back * j*10;
         }
-        
     }
     
 }

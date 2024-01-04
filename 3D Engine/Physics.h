@@ -363,7 +363,7 @@ static void Physics()
         for (size_t i = 0; i < ManagedObjectPool<PhysicsObject>::count; i++)
         {
             PhysicsObject* obj = ManagedObjectPool<PhysicsObject>::objects[i];
-            if (!obj->isStatic)
+            if (!obj->isStatic && !obj->isKinematic)
             {
                 if (Physics::gravity) {
                     obj->velocity += gravity * deltaTime;
