@@ -64,7 +64,12 @@ void OnMouseButtonEvent(GLFWwindow* window, int button, int action, int mods)
             obj->color = &RGB::orange;
         }
         else if (button == 2) {
-            Physics::raycasting = true;
+            //Physics::raycasting = true;
+            PhysicsObject* obj = new PhysicsObject();//LoadMeshFromOBJFile("Objects/Sphere.obj");
+            obj->position = Camera::main->position + (Camera::main->Forward() * 10);
+            obj->rotation = Camera::main->rotation;
+            obj->isKinematic = true;
+            obj->color = &RGB::blue;
         }
     }
     if (action == GLFW_RELEASE)
@@ -114,8 +119,8 @@ void OnKeyPressEvent(GLFWwindow* window, int key, int scancode, int action, int 
             PhysicsObject* obj = new PhysicsObject();//LoadMeshFromOBJFile("Objects/Sphere.obj");
             obj->position = Camera::main->position + (Camera::main->Forward() * 10);
             obj->rotation = Camera::main->rotation;
-            obj->velocity = obj->Forward() * 10;
-            obj->color = &RGB::orange;
+            obj->isStatic = true;
+            obj->color = &RGB::purple;
         }
         else if (glfwGetKey(window, GLFW_KEY_6) == GLFW_PRESS) {
             Mesh* mesh = LoadMeshFromOBJFile("Sphere.obj");
