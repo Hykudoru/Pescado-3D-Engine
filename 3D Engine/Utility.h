@@ -18,7 +18,8 @@ public:
     {
         //objects.emplace(objects.begin() + count++, obj);
         ManagedObjectPool::objects.emplace_back(obj);
-        count++;
+        //count++;
+        count = ManagedObjectPool::objects.size();
     }
 
     ~ManagedObjectPool()
@@ -30,7 +31,8 @@ public:
                 break;
             }
         }
-        count--;
+        //count--;
+        count = ManagedObjectPool::objects.size();
     }
 };
 template <typename T>
@@ -213,5 +215,11 @@ void PlanesIntersecting(Vec3& normal1, Vec3& p1, Vec3& normal2, Vec3& p2)
 
     float t = 0;
     Vec3 line = Vec3(x, y, 0) + v * t;
+}
+
+Vec3 ClosestPointOnSphere(Vec3 center, float radius, Vec3 somePoint)
+{
+    Vec3 dir = (somePoint - center).Normalized();
+    return dir * radius;
 }
 #endif

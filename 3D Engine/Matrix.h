@@ -42,8 +42,8 @@ public:
         {0, 0, 1}
     };
 
-    static float Identity[3][3];
-    static float Zero[3][3];
+    static float identity[3][3];
+    static float zero[3][3];
 
     void Set(float matrix3x3[3][3])
     {
@@ -166,12 +166,12 @@ public:
         return matrix;
     }
 };
-float Matrix3x3::Identity[3][3] = {
+float Matrix3x3::identity[3][3] = {
     {1, 0, 0},
     {0, 1, 0},
     {0, 0, 1}
 };
-float Matrix3x3::Zero[3][3] = {
+float Matrix3x3::zero[3][3] = {
     {0, 0, 0},
     {0, 0, 0},
     {0, 0, 0}
@@ -225,8 +225,8 @@ public:
         {0, 0, 0, 1}
     };
 
-    static float Identity[4][4];
-    static float Zero[4][4];
+    static float identity[4][4];
+    static float zero[4][4];
 
     Matrix4x4() {}
     Matrix4x4(float matrix[][4]) { Set(matrix); }
@@ -283,13 +283,13 @@ public:
         return *this;
     }
 };
-float Matrix4x4::Identity[4][4] = {
+float Matrix4x4::identity[4][4] = {
     {1, 0, 0, 0},
     {0, 1, 0, 0},
     {0, 0, 1, 0},
     {0, 0, 0, 1}
 };
-float Matrix4x4::Zero[4][4] = {
+float Matrix4x4::zero[4][4] = {
     {0, 0, 0, 0},
     {0, 0, 0, 0},
     {0, 0, 0, 0},
