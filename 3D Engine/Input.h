@@ -93,7 +93,7 @@ void OnKeyPressEvent(GLFWwindow* window, int key, int scancode, int action, int 
     {
         // Reset Camera
         if (glfwGetKey(window, GLFW_KEY_0) == GLFW_PRESS || key == GLFW_KEY_BACKSPACE) {
-            Camera::main->rotation = Identity3x3;
+            Camera::main->rotation = Matrix3x3::identity;
             Camera::main->position = Vec3();
         }
         // Switch between Cameras
@@ -105,7 +105,7 @@ void OnKeyPressEvent(GLFWwindow* window, int key, int scancode, int action, int 
         }
         else if (glfwGetKey(window, GLFW_KEY_F3) == GLFW_PRESS) {
             CameraSettings::outsiderViewPerspective = !CameraSettings::outsiderViewPerspective;
-            Camera::projector->rotation = Identity3x3;
+            Camera::projector->rotation = Matrix3x3::identity;
             Camera::projector->position = Vec3();
         }
         // Spawn

@@ -48,12 +48,7 @@ CubeMesh* obj3;
 CubeMesh* obj4;
 PhysicsObject* physicsBox;    
 
-static CubeMesh cube2 = CubeMesh(1, Vec3(-5, 5, -20));
-static CubeMesh cube3 = CubeMesh(1, Vec3(5, 5, -30));
-static CubeMesh cube5 = CubeMesh(1, Vec3(-5, -5, 10));
-static CubeMesh cube6 = CubeMesh(1, Vec3(-5, 5, 20));
-static CubeMesh cube7 = CubeMesh(1, Vec3(5, 5, 30));
-static CubeMesh cube8 = CubeMesh(10, Vec3(5, -5, 40));
+
 
 void Init(GLFWwindow* window)
 {
