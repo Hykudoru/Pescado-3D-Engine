@@ -1007,6 +1007,83 @@ void Draw()
         {
             return triA.centroid.w > triB.centroid.w;
         });
+    /*
+    Matrix4x4 matrix = ProjectionMatrix() * Camera::main->TRInverse();
+
+    Vec3 corner1 = ((Direction::left + Direction::down) * 0.2);
+    Vec3 corner2 = ((Direction::down) * 0.5);
+    Vec3 corner3 = ((Direction::right + Direction::down) * 0.2);
+    Vec3 corner4 = ((Direction::right) * 0.2);
+    Vec3 corner5 = ((Direction::right + Direction::up) * 0.2);
+    Vec3 corner6 = ((Direction::up) * 0.5);
+    Vec3 corner7 = ((Direction::left + Direction::up) * 0.2);
+    Vec3 corner8 = ((Direction::left) * 0.2);
+
+    lineBuffer->emplace_back(Line(corner1, corner2, RGB::green, 4));
+    lineBuffer->emplace_back(Line(corner2, corner3, RGB::green, 4));
+    lineBuffer->emplace_back(Line(corner3, corner4, RGB::green, 4));
+    lineBuffer->emplace_back(Line(corner4, corner5, RGB::green, 4));
+    lineBuffer->emplace_back(Line(corner5, corner6, RGB::green, 4));
+    lineBuffer->emplace_back(Line(corner6, corner7, RGB::green, 4));
+    lineBuffer->emplace_back(Line(corner7, corner8, RGB::green, 4));
+    lineBuffer->emplace_back(Line(corner8, corner1, RGB::green, 4));
+
+
+    for (int i = -50; i < 50; i++)
+    {
+        Vec3 from = Vec3(i, 0, -100);
+        Vec3 to = Vec3(i, 0, 100);
+
+        Vec3 from_p = matrix * from;
+        Vec3 to_p = matrix * to;
+
+        bool p1Outside = (from_p.x > 0.5 || from_p.x < -0.5) || (from_p.y > 0.5 || from_p.y < -0.5);
+        bool p2Outside = (to_p.x > 0.5 || to_p.x < -0.5) || (to_p.y > 0.5 || to_p.y < -0.5);
+
+        from_p.x = Clamp(from_p.x, -0.5, 0.5);
+        from_p.y = Clamp(from_p.y, -0.5, 0.5);
+        to_p.x = Clamp(to_p.x, -0.5, 0.5);
+        to_p.y = Clamp(to_p.y, -0.5, 0.5);
+
+        pointBuffer->emplace_back(Point(from_p, RGB::red, 4));
+        pointBuffer->emplace_back(Point(to_p, RGB::red, 4));
+        lineBuffer->emplace_back(Line(from_p, to_p, RGB::green, 4));
+    }*/
+    /*--------------------------------------------------------------------------------
+    Matrix4x4 matrix = ProjectionMatrix() * Camera::main->TRInverse();
+
+    Vec3 corner1 = ((Direction::left + Direction::down) * 0.5);
+    Vec3 corner2 = ((Direction::right + Direction::down) * 0.5);
+    Vec3 corner3 = ((Direction::right + Direction::up) * 0.5);
+    Vec3 corner4 = ((Direction::left + Direction::up) * 0.5);
+
+    lineBuffer->emplace_back(Line(corner1, corner2, RGB::green, 4));
+    lineBuffer->emplace_back(Line(corner2, corner3, RGB::green, 4));
+    lineBuffer->emplace_back(Line(corner3, corner4, RGB::green, 4));
+    lineBuffer->emplace_back(Line(corner4, corner1, RGB::green, 4));
+
+
+    for (int i = -50; i < 50; i++)
+    {
+        Vec3 from = Vec3(i, 0, -100);
+        Vec3 to = Vec3(i, 0, 100);
+
+            Vec3 from_p = matrix * from;
+            Vec3 to_p = matrix * to;
+
+            bool p1Outside = (from_p.x > 0.5 || from_p.x < -0.5) || (from_p.y > 0.5 || from_p.y < -0.5);
+            bool p2Outside = (to_p.x > 0.5 || to_p.x < -0.5) || (to_p.y > 0.5 || to_p.y < -0.5);
+
+            from_p.x = Clamp(from_p.x, -0.5, 0.5);
+            from_p.y = Clamp(from_p.y, -0.5, 0.5);
+            to_p.x = Clamp(to_p.x, -0.5, 0.5);
+            to_p.y = Clamp(to_p.y, -0.5, 0.5);
+
+            pointBuffer->emplace_back(Point(from_p, RGB::red, 4));
+            pointBuffer->emplace_back(Point(to_p, RGB::red, 4));
+            lineBuffer->emplace_back(Line(from_p, to_p, RGB::green, 4));
+    }---------------------------------------------------------------------------------------------------*/
+
 
     // ---------- Draw -----------
     for (int i = 0; i < triBuffer->size(); i++)
