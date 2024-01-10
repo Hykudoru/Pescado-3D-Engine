@@ -33,12 +33,6 @@
     --------------------------------------------------------------------------------------------------
 */
 
-float Identity3x3[3][3] = {
-    {1, 0, 0},
-    {0, 1, 0},
-    {0, 0, 1}
-};
-
 class Matrix3x3
 {
 public:
@@ -47,6 +41,9 @@ public:
         {0, 1, 0},
         {0, 0, 1}
     };
+
+    static float Identity[3][3];
+    static float Zero[3][3];
 
     void Set(float matrix3x3[3][3])
     {
@@ -59,15 +56,15 @@ public:
         }
     }
 
-    Matrix3x3(){}
-    Matrix3x3(float matrix3x3[3][3]) {Set(matrix3x3);}
+    Matrix3x3() {}
+    Matrix3x3(float matrix3x3[3][3]) { Set(matrix3x3); }
 
     static Matrix3x3 Transpose(const float matrix[][3])
     {
         Matrix3x3 result;
-        for (int r = 0; r < 3; r++) 
+        for (int r = 0; r < 3; r++)
         {
-            for (int c = 0; c < 3; c++) 
+            for (int c = 0; c < 3; c++)
             {
                 result.m[c][r] = matrix[r][c];
             }
@@ -169,6 +166,16 @@ public:
         return matrix;
     }
 };
+float Matrix3x3::Identity[3][3] = {
+    {1, 0, 0},
+    {0, 1, 0},
+    {0, 0, 1}
+};
+float Matrix3x3::Zero[3][3] = {
+    {0, 0, 0},
+    {0, 0, 0},
+    {0, 0, 0}
+};
 // A * B
 Matrix3x3 operator*(const Matrix3x3& matrixA, const Matrix3x3& matrixB)
 {
@@ -208,13 +215,6 @@ Matrix3x3 YPR(float roll, float pitch, float yaw)
 
 //-------------------4x4---------------------
 
-float Identity4x4[4][4] = {
-    {1, 0, 0, 0},
-    {0, 1, 0, 0},
-    {0, 0, 1, 0},
-    {0, 0, 0, 1}
-};
-
 class Matrix4x4
 {
 public:
@@ -225,8 +225,11 @@ public:
         {0, 0, 0, 1}
     };
 
+    static float Identity[4][4];
+    static float Zero[4][4];
+
     Matrix4x4() {}
-    Matrix4x4(float matrix[][4]){ Set(matrix); }
+    Matrix4x4(float matrix[][4]) { Set(matrix); }
 
     void Set(float matrix[][4])
     {
@@ -238,7 +241,7 @@ public:
             }
         }
     }
-    
+
     static Matrix4x4 Transpose(const Matrix4x4& matrix)
     {
         Matrix4x4 result;
@@ -280,7 +283,18 @@ public:
         return *this;
     }
 };
-
+float Matrix4x4::Identity[4][4] = {
+    {1, 0, 0, 0},
+    {0, 1, 0, 0},
+    {0, 0, 1, 0},
+    {0, 0, 0, 1}
+};
+float Matrix4x4::Zero[4][4] = {
+    {0, 0, 0, 0},
+    {0, 0, 0, 0},
+    {0, 0, 0, 0},
+    {0, 0, 0, 0}
+};
 // A * B
 Matrix4x4 operator*(const Matrix4x4& matrixA, const Matrix4x4& matrixB)
 {
@@ -311,4 +325,3 @@ Vector4<float> operator*(const Matrix4x4& matrix, const Vector4<float>& colVec)
     return result;
 }
 #endif
-
