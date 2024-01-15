@@ -88,10 +88,33 @@ public:
 class BoxCollider: public Collider, public ManagedObjectPool<BoxCollider>
 {
 public:
-    CubeMesh* bounds = new CubeMesh();
-    BoxCollider() : ManagedObjectPool<BoxCollider>(this)
+    // Local Space (Object Space)
+    List<Vec3> bounds = List<Vec3>({
+        //south
+        Vec3(-1, -1, 1),
+        Vec3(-1, 1, 1),
+        Vec3(1, 1, 1),
+        Vec3(1, -1, 1),
+        //north
+        Vec3(-1, -1, -1),
+        Vec3(-1, 1, -1),
+        Vec3(1, 1, -1),
+        Vec3(1, -1, -1)
+     });
+
+    BoxCollider() : ManagedObjectPool<BoxCollider>(this){}
+
+    //Convert to world coordinates
+    List<Vec3> WorldBounds()
     {
-        bounds->SetParent(this);
+        List<Vec3> verts = bounds;
+        Matrix4x4 matrix = TRS();
+        for (size_t i = 0; i < verts.size(); i++)
+        {
+            verts[i] = (Vec3)(matrix * ((Vec4)verts[i]));
+        }
+
+        return verts;
     }
 };
 
@@ -154,16 +177,13 @@ bool OBBSATCollision(BoxCollider& physObj1, BoxCollider& physObj2, CollisionInfo
 {
     collisionInfo = CollisionInfo();
 
-    if (!physObj1.bounds->vertices || !physObj2.bounds->vertices) {
-        return false;
-    }
     if (physObj1.isStatic && physObj2.isStatic)
     {
         return false;
     }
 
-    List<Vec3> physObj1Verts = physObj1.bounds->WorldVertices();
-    List<Vec3> physObj2Verts = physObj2.bounds->WorldVertices();
+    List<Vec3> physObj1Verts = physObj1.WorldBounds();
+    List<Vec3> physObj2Verts = physObj2.WorldBounds();
     List<Vec3> physObj1Normals = List<Vec3>{ physObj1.Right(), physObj1.Up(), physObj1.Forward() };// mesh1.WorldXYZNormals();
     List<Vec3> physObj2Normals = List<Vec3>{ physObj2.Right(), physObj2.Up(), physObj2.Forward() }; //mesh2.WorldXYZNormals();
 

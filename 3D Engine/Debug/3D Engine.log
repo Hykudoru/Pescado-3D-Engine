@@ -302,4 +302,5 @@ Z:\3D Engine\3D Engine\3D Engine.cpp(129,93): warning C4244:         with
 Z:\3D Engine\3D Engine\3D Engine.cpp(129,93): warning C4244:         [
 Z:\3D Engine\3D Engine\3D Engine.cpp(129,93): warning C4244:             T=float
 Z:\3D Engine\3D Engine\3D Engine.cpp(129,93): warning C4244:         ]
+LINK : warning LNK4098: defaultlib 'MSVCRT' conflicts with use of other libs; use /NODEFAULTLIB:library
   3D Engine.vcxproj -> Z:\3D Engine\Debug\3D Engine.exe

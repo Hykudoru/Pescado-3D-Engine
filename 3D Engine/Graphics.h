@@ -539,7 +539,7 @@ public:
     Color* color;
 
     Mesh(float scale = 1, Vec3 position = Vec3(0, 0, 0), Vec3 rotationEuler = Vec3(0, 0, 0))
-    : Transform(scale, position, rotationEuler), ManagedObjectPool(this)
+    : Transform(scale, position, rotationEuler), ManagedObjectPool<Mesh>(this)
     {
         MapVertsToTriangles();
     }
