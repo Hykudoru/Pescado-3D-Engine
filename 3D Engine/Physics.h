@@ -61,7 +61,15 @@ void Time()
     }
 }
 
-class RigidBody
+class PhysicsObject;
+
+class Component
+{
+public:
+    PhysicsObject* object;
+};
+
+class RigidBody : public Component
 {
 public:
     float mass = 1;
@@ -70,17 +78,46 @@ public:
     Vec3 angularVelocity = Vec3::zero;
 };
 
-
-class BoxCollider: public CubeMesh
+class Collider: public Transform, public Component
 {
 public:
     bool isStatic = false;
+    Collider(){}
 };
 
-class PhysicsObject: public RigidBody, public BoxCollider, public ManagedObjectPool<PhysicsObject>
+class BoxCollider: public Collider, public ManagedObjectPool<BoxCollider>
 {
 public:
-    PhysicsObject():ManagedObjectPool<PhysicsObject>(this) {}
+    CubeMesh* bounds = new CubeMesh();
+    BoxCollider() : ManagedObjectPool<BoxCollider>(this)
+    {
+        bounds->SetParent(this);
+    }
+};
+
+class SphereCollider: public Collider, public ManagedObjectPool<SphereCollider>
+{
+public:
+    float radius;
+    SphereCollider() : ManagedObjectPool<SphereCollider>(this) {}
+};
+
+class PhysicsObject: public Transform, public ManagedObjectPool<PhysicsObject>
+{ 
+public:
+    RigidBody body;
+    Collider* collider;
+    Mesh* mesh;
+    PhysicsObject(Mesh* mesh, Collider* collider): ManagedObjectPool<PhysicsObject>(this)
+    {
+        this->mesh = mesh;
+        this->collider = collider;
+        this->collider->object = this;
+        this->body.object = this;
+
+        mesh->SetParent(this);
+        collider->SetParent(this);
+    }
 };
 
 struct CollisionInfo
@@ -89,20 +126,44 @@ struct CollisionInfo
     float minOverlap = 0;
     Vec3 minOverlapAxis = Vec3::zero;
 };
+/*
+bool SpheresColliding(PhysicsSphere& sphere1, PhysicsSphere& sphere2, CollisionInfo& collisionInfo, bool resolve = true)
+{
+    Vec3 pointOnSphere1 = ClosestPointOnSphere(sphere1.collider.position, sphere1.radius, (sphere2.collider.position - sphere1.collider.position));
+    Vec3 pointOnSphere2 = ClosestPointOnSphere(sphere1.collider.position, sphere1.radius, (sphere1.collider.position - sphere2.collider.position));
+
+    float squareMagToPointOnSphere2 = (pointOnSphere2 - sphere1.collider.position).SqrMagnitude();
+    if (squareMagToPointOnSphere2 < pointOnSphere1.SqrMagnitude())
+    {
+        Vec3 offset = (pointOnSphere2 - pointOnSphere1);
+        collisionInfo.minOverlapAxis = offset;
+        collisionInfo.minOverlap = offset.Magnitude();
+        if (resolve) {
+            offset *= 0.5;
+            sphere1.collider.position -= offset;
+            sphere2.collider.position += offset;
+        }
+        return true;
+    }
+
+    return false;
+}*/
+
 // Oriented Bounding Box (OBB) with Separating Axis Theorem (SAT) algorithm
-bool OBBSATCollision(PhysicsObject& physObj1, PhysicsObject& physObj2, CollisionInfo& collisionInfo, bool resolve = true)
+bool OBBSATCollision(BoxCollider& physObj1, BoxCollider& physObj2, CollisionInfo& collisionInfo, bool resolve = true)
 {
     collisionInfo = CollisionInfo();
 
-    if (!physObj1.vertices || !physObj2.vertices) {
+    if (!physObj1.bounds->vertices || !physObj2.bounds->vertices) {
         return false;
     }
     if (physObj1.isStatic && physObj2.isStatic)
     {
         return false;
     }
-    List<Vec3> physObj1Verts = physObj1.WorldVertices();
-    List<Vec3> physObj2Verts = physObj2.WorldVertices();
+
+    List<Vec3> physObj1Verts = physObj1.bounds->WorldVertices();
+    List<Vec3> physObj2Verts = physObj2.bounds->WorldVertices();
     List<Vec3> physObj1Normals = List<Vec3>{ physObj1.Right(), physObj1.Up(), physObj1.Forward() };// mesh1.WorldXYZNormals();
     List<Vec3> physObj2Normals = List<Vec3>{ physObj2.Right(), physObj2.Up(), physObj2.Forward() }; //mesh2.WorldXYZNormals();
 
@@ -205,8 +266,8 @@ bool OBBSATCollision(PhysicsObject& physObj1, PhysicsObject& physObj2, Collision
         if (neitherStatic)
         {
             offset *= 0.5;
-            physObj1.root->position -= (offset*1.01);
-            physObj2.root->position += (offset*1.01);
+            physObj1.object->root->position -= (offset*1.01);
+            physObj2.object->root->position += (offset*1.01);
 
             return !collisionInfo.gap;
         }
@@ -214,11 +275,11 @@ bool OBBSATCollision(PhysicsObject& physObj1, PhysicsObject& physObj2, Collision
         //Only one is movable at this stage
 
         if (physObj1.isStatic) {
-            physObj2.root->position += offset;
+            physObj2.object->root->position += offset;
         }
         else
         {
-            physObj1.root->position -= offset;
+            physObj1.object->root->position -= offset;
         }
         
     }
@@ -239,20 +300,20 @@ void DetectCollisions()
     // Compare B:C, B:D, B:E
     // Compare C:D, C:E
     // Compare D:E
-    for (size_t i = 0; i < ManagedObjectPool<PhysicsObject>::count; i++)
+    for (size_t i = 0; i < ManagedObjectPool<BoxCollider>::count; i++)
     {
         // exit if this is the last Collider
-        if ((i + 1) >= ManagedObjectPool<PhysicsObject>::count) {
+        if ((i + 1) >= ManagedObjectPool<BoxCollider>::count) {
             break;
         }
         
         // Current Collider
-        PhysicsObject* physObj1 = ManagedObjectPool<PhysicsObject>::objects[i];
+        BoxCollider* physObj1 = ManagedObjectPool<BoxCollider>::objects[i];
 
-        for (size_t j = i + 1; j < ManagedObjectPool<PhysicsObject>::count; j++)
+        for (size_t j = i + 1; j < ManagedObjectPool<BoxCollider>::count; j++)
         { 
             // Next Collider
-            PhysicsObject* physObj2 = ManagedObjectPool<PhysicsObject>::objects[j];
+            BoxCollider* physObj2 = ManagedObjectPool<BoxCollider>::objects[j];
             
             if (physObj1->isStatic && physObj2->isStatic) {
                 continue;
@@ -264,7 +325,7 @@ void DetectCollisions()
                 if (Physics::dynamics)
                 {
                     
-                    if (physObj1->isKinematic || physObj2->isKinematic) {
+                    if (physObj1->object->body.isKinematic || physObj2->object->body.isKinematic) {
                         continue;
                     }
                     /*
@@ -275,17 +336,17 @@ void DetectCollisions()
                     */
                     if (physObj1->isStatic) 
                     {
-                        physObj1->velocity = Vec3::zero;
+                        physObj1->object->body.velocity = Vec3::zero;
                     }
                     else if (physObj2->isStatic) 
                     {
-                        physObj2->velocity = Vec3::zero;
+                        physObj2->object->body.velocity = Vec3::zero;
                     }
 
-                    float m1 = physObj1->mass;
-                    float m2 = physObj2->mass;
-                    Vec3 v1 = physObj1->velocity;
-                    Vec3 v2 = physObj2->velocity;
+                    float m1 = physObj1->object->body.mass;
+                    float m2 = physObj2->object->body.mass;
+                    Vec3 v1 = physObj1->object->body.velocity;
+                    Vec3 v2 = physObj2->object->body.velocity;
 
                     /* Elastic collision (conserves both momentum and kinetic energy)
                     Conservation Momentum: m1*v1 + m2*v2 = m1*v1' + m2*v2'
@@ -294,8 +355,8 @@ void DetectCollisions()
                     Vec3 v1Final = (v1 * m1 + v2 * m2 * 2.0 - v1 * m2) * (1.0 / (m1 + m2));
                     Vec3 v2Final = v1 + v1Final - v2;
 
-                    physObj1->velocity = v1Final;
-                    physObj2->velocity = v2Final;
+                    physObj1->object->body.velocity = v1Final;
+                    physObj2->object->body.velocity = v2Final;
                 }
             }
         }
@@ -363,12 +424,12 @@ static void Physics()
         for (size_t i = 0; i < ManagedObjectPool<PhysicsObject>::count; i++)
         {
             PhysicsObject* obj = ManagedObjectPool<PhysicsObject>::objects[i];
-            if (!obj->isStatic && !obj->isKinematic)
+            if (!obj->collider->isStatic && !obj->body.isKinematic)
             {
                 if (Physics::gravity) {
-                    obj->velocity += gravity * deltaTime;
+                    obj->body.velocity += gravity * deltaTime;
                 }
-                obj->position += obj->velocity * deltaTime;
+                obj->position += obj->body.velocity * deltaTime;
             }
         }
     }

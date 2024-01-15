@@ -116,16 +116,16 @@ void Init(GLFWwindow* window)
        cameraMesh->SetParent(Camera::cameras[i]);
     }*/
 
-    physicsBox = new PhysicsObject();
+    physicsBox = new PhysicsObject(new CubeMesh(), new BoxCollider());
   // physicsBox->isStatic = true;
 
     for (int i = -10; i < 10; i++)
     {
         for (int j = -10; j < 10; j++)
         {
-            PhysicsObject* block = new PhysicsObject();
+            PhysicsObject* block = new PhysicsObject(new CubeMesh(), new BoxCollider());
             block->scale *= 2;
-            block->isStatic = true;
+            block->collider->isStatic = true;
             block->position = Direction::down*15 + Direction::left*i*10 + Direction::back * j*10;
         }
     }
