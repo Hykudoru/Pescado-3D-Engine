@@ -4,7 +4,10 @@
 #include <GLFW/glfw3.h>
 #include <Graphics.h>
 #include <Physics.h>
-
+extern CubeMesh* obj1;
+extern CubeMesh* obj2;
+extern CubeMesh* obj3;
+extern CubeMesh* obj4;
 //-----------------Input----------------------
 static double deltaMouseX;
 static double deltaMouseY;
@@ -202,6 +205,22 @@ void OnKeyPressEvent(GLFWwindow* window, int key, int scancode, int action, int 
         else if (key == GLFW_KEY_F5)
         {
             GraphicSettings::matrixMode = !GraphicSettings::matrixMode;
+        }
+        else if (key == GLFW_KEY_F6)
+        {
+            obj1->rotation *= Matrix3x3::RotY(rotateSpeed * deltaTime);
+        }
+        else if (key == GLFW_KEY_F7)
+        {
+            obj2->rotation *= Matrix3x3::RotY(rotateSpeed * deltaTime);
+        }
+        else if (key == GLFW_KEY_F8)
+        {
+            obj3->rotation *= Matrix3x3::RotY(rotateSpeed * deltaTime);
+        }
+        else if (key == GLFW_KEY_F9)
+        {
+            obj4->rotation *= Matrix3x3::RotY(rotateSpeed * deltaTime);
         }
         // Toggle Transform Hierarchy
         else if (glfwGetKey(window, GLFW_KEY_CAPS_LOCK) == GLFW_PRESS) {

@@ -80,35 +80,35 @@ Z:\3D Engine\3D Engine\Graphics.h(314,52): warning C4244:         ]
 Z:\3D Engine\3D Engine\Graphics.h(350,37): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
   (compiling source file '3D%20Engine.cpp')
   
-Z:\3D Engine\3D Engine\Graphics.h(600,27): warning C4018: '<': signed/unsigned mismatch
+Z:\3D Engine\3D Engine\Graphics.h(607,27): warning C4018: '<': signed/unsigned mismatch
   (compiling source file '3D%20Engine.cpp')
   
-Z:\3D Engine\3D Engine\Graphics.h(686,89): warning C4305: 'argument': truncation from 'double' to 'const T'
-Z:\3D Engine\3D Engine\Graphics.h(686,89): warning C4305:         with
-Z:\3D Engine\3D Engine\Graphics.h(686,89): warning C4305:         [
-Z:\3D Engine\3D Engine\Graphics.h(686,89): warning C4305:             T=float
-Z:\3D Engine\3D Engine\Graphics.h(686,89): warning C4305:         ]
+Z:\3D Engine\3D Engine\Graphics.h(693,89): warning C4305: 'argument': truncation from 'double' to 'const T'
+Z:\3D Engine\3D Engine\Graphics.h(693,89): warning C4305:         with
+Z:\3D Engine\3D Engine\Graphics.h(693,89): warning C4305:         [
+Z:\3D Engine\3D Engine\Graphics.h(693,89): warning C4305:             T=float
+Z:\3D Engine\3D Engine\Graphics.h(693,89): warning C4305:         ]
   (compiling source file '3D%20Engine.cpp')
   
-Z:\3D Engine\3D Engine\Graphics.h(688,80): warning C4305: 'argument': truncation from 'double' to 'float'
+Z:\3D Engine\3D Engine\Graphics.h(695,80): warning C4305: 'argument': truncation from 'double' to 'float'
   (compiling source file '3D%20Engine.cpp')
   
-Z:\3D Engine\3D Engine\Graphics.h(744,15): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+Z:\3D Engine\3D Engine\Graphics.h(751,15): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
   (compiling source file '3D%20Engine.cpp')
   
-Z:\3D Engine\3D Engine\Graphics.h(790,15): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+Z:\3D Engine\3D Engine\Graphics.h(797,15): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
   (compiling source file '3D%20Engine.cpp')
   
-Z:\3D Engine\3D Engine\Graphics.h(915,25): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
+Z:\3D Engine\3D Engine\Graphics.h(922,25): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
   (compiling source file '3D%20Engine.cpp')
   
-Z:\3D Engine\3D Engine\Graphics.h(916,25): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
+Z:\3D Engine\3D Engine\Graphics.h(923,25): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
   (compiling source file '3D%20Engine.cpp')
   
-Z:\3D Engine\3D Engine\Graphics.h(917,25): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
+Z:\3D Engine\3D Engine\Graphics.h(924,25): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
   (compiling source file '3D%20Engine.cpp')
   
-Z:\3D Engine\3D Engine\Graphics.h(1089,23): warning C4018: '<': signed/unsigned mismatch
+Z:\3D Engine\3D Engine\Graphics.h(1096,23): warning C4018: '<': signed/unsigned mismatch
   (compiling source file '3D%20Engine.cpp')
   
 Z:\3D Engine\3D Engine\Physics.h(13,25): warning C4305: 'argument': truncation from 'double' to 'T'
@@ -121,175 +121,187 @@ Z:\3D Engine\3D Engine\Physics.h(13,25): warning C4305:         ]
 Z:\3D Engine\3D Engine\Physics.h(56,28): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
   (compiling source file '3D%20Engine.cpp')
   
-Z:\3D Engine\3D Engine\Physics.h(269,56): warning C4305: 'argument': truncation from 'double' to 'const T'
-Z:\3D Engine\3D Engine\Physics.h(269,56): warning C4305:         with
-Z:\3D Engine\3D Engine\Physics.h(269,56): warning C4305:         [
-Z:\3D Engine\3D Engine\Physics.h(269,56): warning C4305:             T=float
-Z:\3D Engine\3D Engine\Physics.h(269,56): warning C4305:         ]
+Z:\3D Engine\3D Engine\Physics.h(288,48): warning C4305: 'argument': truncation from 'double' to 'const T'
+Z:\3D Engine\3D Engine\Physics.h(288,48): warning C4305:         with
+Z:\3D Engine\3D Engine\Physics.h(288,48): warning C4305:         [
+Z:\3D Engine\3D Engine\Physics.h(288,48): warning C4305:             T=float
+Z:\3D Engine\3D Engine\Physics.h(288,48): warning C4305:         ]
   (compiling source file '3D%20Engine.cpp')
   
-Z:\3D Engine\3D Engine\Physics.h(270,56): warning C4305: 'argument': truncation from 'double' to 'const T'
-Z:\3D Engine\3D Engine\Physics.h(270,56): warning C4305:         with
-Z:\3D Engine\3D Engine\Physics.h(270,56): warning C4305:         [
-Z:\3D Engine\3D Engine\Physics.h(270,56): warning C4305:             T=float
-Z:\3D Engine\3D Engine\Physics.h(270,56): warning C4305:         ]
+Z:\3D Engine\3D Engine\Physics.h(289,50): warning C4305: 'argument': truncation from 'double' to 'const T'
+Z:\3D Engine\3D Engine\Physics.h(289,50): warning C4305:         with
+Z:\3D Engine\3D Engine\Physics.h(289,50): warning C4305:         [
+Z:\3D Engine\3D Engine\Physics.h(289,50): warning C4305:             T=float
+Z:\3D Engine\3D Engine\Physics.h(289,50): warning C4305:         ]
   (compiling source file '3D%20Engine.cpp')
   
-Z:\3D Engine\3D Engine\Physics.h(303,26): warning C4018: '<': signed/unsigned mismatch
+Z:\3D Engine\3D Engine\Physics.h(322,26): warning C4018: '<': signed/unsigned mismatch
   (compiling source file '3D%20Engine.cpp')
   
-Z:\3D Engine\3D Engine\Physics.h(306,21): warning C4018: '>=': signed/unsigned mismatch
+Z:\3D Engine\3D Engine\Physics.h(325,21): warning C4018: '>=': signed/unsigned mismatch
   (compiling source file '3D%20Engine.cpp')
   
-Z:\3D Engine\3D Engine\Physics.h(313,34): warning C4018: '<': signed/unsigned mismatch
+Z:\3D Engine\3D Engine\Physics.h(332,34): warning C4018: '<': signed/unsigned mismatch
   (compiling source file '3D%20Engine.cpp')
   
-Z:\3D Engine\3D Engine\Physics.h(355,79): warning C4244: 'argument': conversion from 'double' to 'const T', possible loss of data
-Z:\3D Engine\3D Engine\Physics.h(355,79): warning C4244:         with
-Z:\3D Engine\3D Engine\Physics.h(355,79): warning C4244:         [
-Z:\3D Engine\3D Engine\Physics.h(355,79): warning C4244:             T=float
-Z:\3D Engine\3D Engine\Physics.h(355,79): warning C4244:         ]
+Z:\3D Engine\3D Engine\Physics.h(374,79): warning C4244: 'argument': conversion from 'double' to 'const T', possible loss of data
+Z:\3D Engine\3D Engine\Physics.h(374,79): warning C4244:         with
+Z:\3D Engine\3D Engine\Physics.h(374,79): warning C4244:         [
+Z:\3D Engine\3D Engine\Physics.h(374,79): warning C4244:             T=float
+Z:\3D Engine\3D Engine\Physics.h(374,79): warning C4244:         ]
   (compiling source file '3D%20Engine.cpp')
   
-Z:\3D Engine\3D Engine\Physics.h(380,44): warning C4244: 'argument': conversion from 'double' to 'const T', possible loss of data
-Z:\3D Engine\3D Engine\Physics.h(380,44): warning C4244:         with
-Z:\3D Engine\3D Engine\Physics.h(380,44): warning C4244:         [
-Z:\3D Engine\3D Engine\Physics.h(380,44): warning C4244:             T=float
-Z:\3D Engine\3D Engine\Physics.h(380,44): warning C4244:         ]
+Z:\3D Engine\3D Engine\Physics.h(399,44): warning C4244: 'argument': conversion from 'double' to 'const T', possible loss of data
+Z:\3D Engine\3D Engine\Physics.h(399,44): warning C4244:         with
+Z:\3D Engine\3D Engine\Physics.h(399,44): warning C4244:         [
+Z:\3D Engine\3D Engine\Physics.h(399,44): warning C4244:             T=float
+Z:\3D Engine\3D Engine\Physics.h(399,44): warning C4244:         ]
   (compiling source file '3D%20Engine.cpp')
   
-Z:\3D Engine\3D Engine\Physics.h(384,39): warning C4244: 'argument': conversion from 'double' to 'const T', possible loss of data
-Z:\3D Engine\3D Engine\Physics.h(384,39): warning C4244:         with
-Z:\3D Engine\3D Engine\Physics.h(384,39): warning C4244:         [
-Z:\3D Engine\3D Engine\Physics.h(384,39): warning C4244:             T=float
-Z:\3D Engine\3D Engine\Physics.h(384,39): warning C4244:         ]
+Z:\3D Engine\3D Engine\Physics.h(403,39): warning C4244: 'argument': conversion from 'double' to 'const T', possible loss of data
+Z:\3D Engine\3D Engine\Physics.h(403,39): warning C4244:         with
+Z:\3D Engine\3D Engine\Physics.h(403,39): warning C4244:         [
+Z:\3D Engine\3D Engine\Physics.h(403,39): warning C4244:             T=float
+Z:\3D Engine\3D Engine\Physics.h(403,39): warning C4244:         ]
   (compiling source file '3D%20Engine.cpp')
   
-Z:\3D Engine\3D Engine\Physics.h(386,35): warning C4244: 'argument': conversion from 'double' to 'const T', possible loss of data
-Z:\3D Engine\3D Engine\Physics.h(386,35): warning C4244:         with
-Z:\3D Engine\3D Engine\Physics.h(386,35): warning C4244:         [
-Z:\3D Engine\3D Engine\Physics.h(386,35): warning C4244:             T=float
-Z:\3D Engine\3D Engine\Physics.h(386,35): warning C4244:         ]
+Z:\3D Engine\3D Engine\Physics.h(405,35): warning C4244: 'argument': conversion from 'double' to 'const T', possible loss of data
+Z:\3D Engine\3D Engine\Physics.h(405,35): warning C4244:         with
+Z:\3D Engine\3D Engine\Physics.h(405,35): warning C4244:         [
+Z:\3D Engine\3D Engine\Physics.h(405,35): warning C4244:             T=float
+Z:\3D Engine\3D Engine\Physics.h(405,35): warning C4244:         ]
   (compiling source file '3D%20Engine.cpp')
   
-Z:\3D Engine\3D Engine\Physics.h(389,44): warning C4244: 'argument': conversion from 'double' to 'const T', possible loss of data
-Z:\3D Engine\3D Engine\Physics.h(389,44): warning C4244:         with
-Z:\3D Engine\3D Engine\Physics.h(389,44): warning C4244:         [
-Z:\3D Engine\3D Engine\Physics.h(389,44): warning C4244:             T=float
-Z:\3D Engine\3D Engine\Physics.h(389,44): warning C4244:         ]
+Z:\3D Engine\3D Engine\Physics.h(408,44): warning C4244: 'argument': conversion from 'double' to 'const T', possible loss of data
+Z:\3D Engine\3D Engine\Physics.h(408,44): warning C4244:         with
+Z:\3D Engine\3D Engine\Physics.h(408,44): warning C4244:         [
+Z:\3D Engine\3D Engine\Physics.h(408,44): warning C4244:             T=float
+Z:\3D Engine\3D Engine\Physics.h(408,44): warning C4244:         ]
   (compiling source file '3D%20Engine.cpp')
   
-Z:\3D Engine\3D Engine\Physics.h(394,37): warning C4244: 'argument': conversion from 'double' to 'const T', possible loss of data
-Z:\3D Engine\3D Engine\Physics.h(394,37): warning C4244:         with
-Z:\3D Engine\3D Engine\Physics.h(394,37): warning C4244:         [
-Z:\3D Engine\3D Engine\Physics.h(394,37): warning C4244:             T=float
-Z:\3D Engine\3D Engine\Physics.h(394,37): warning C4244:         ]
+Z:\3D Engine\3D Engine\Physics.h(413,37): warning C4244: 'argument': conversion from 'double' to 'const T', possible loss of data
+Z:\3D Engine\3D Engine\Physics.h(413,37): warning C4244:         with
+Z:\3D Engine\3D Engine\Physics.h(413,37): warning C4244:         [
+Z:\3D Engine\3D Engine\Physics.h(413,37): warning C4244:             T=float
+Z:\3D Engine\3D Engine\Physics.h(413,37): warning C4244:         ]
   (compiling source file '3D%20Engine.cpp')
   
-Z:\3D Engine\3D Engine\Physics.h(398,35): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+Z:\3D Engine\3D Engine\Physics.h(417,35): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
   (compiling source file '3D%20Engine.cpp')
   
-Z:\3D Engine\3D Engine\Physics.h(399,104): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+Z:\3D Engine\3D Engine\Physics.h(418,104): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
   (compiling source file '3D%20Engine.cpp')
   
-Z:\3D Engine\3D Engine\Physics.h(404,33): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+Z:\3D Engine\3D Engine\Physics.h(423,33): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
   (compiling source file '3D%20Engine.cpp')
   
-Z:\3D Engine\3D Engine\Physics.h(406,60): warning C4244: 'argument': conversion from 'double' to 'const T', possible loss of data
-Z:\3D Engine\3D Engine\Physics.h(406,60): warning C4244:         with
-Z:\3D Engine\3D Engine\Physics.h(406,60): warning C4244:         [
-Z:\3D Engine\3D Engine\Physics.h(406,60): warning C4244:             T=float
-Z:\3D Engine\3D Engine\Physics.h(406,60): warning C4244:         ]
+Z:\3D Engine\3D Engine\Physics.h(425,60): warning C4244: 'argument': conversion from 'double' to 'const T', possible loss of data
+Z:\3D Engine\3D Engine\Physics.h(425,60): warning C4244:         with
+Z:\3D Engine\3D Engine\Physics.h(425,60): warning C4244:         [
+Z:\3D Engine\3D Engine\Physics.h(425,60): warning C4244:             T=float
+Z:\3D Engine\3D Engine\Physics.h(425,60): warning C4244:         ]
   (compiling source file '3D%20Engine.cpp')
   
-Z:\3D Engine\3D Engine\Physics.h(410,33): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+Z:\3D Engine\3D Engine\Physics.h(429,33): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
   (compiling source file '3D%20Engine.cpp')
   
-Z:\3D Engine\3D Engine\Physics.h(412,62): warning C4244: 'argument': conversion from 'double' to 'const T', possible loss of data
-Z:\3D Engine\3D Engine\Physics.h(412,62): warning C4244:         with
-Z:\3D Engine\3D Engine\Physics.h(412,62): warning C4244:         [
-Z:\3D Engine\3D Engine\Physics.h(412,62): warning C4244:             T=float
-Z:\3D Engine\3D Engine\Physics.h(412,62): warning C4244:         ]
+Z:\3D Engine\3D Engine\Physics.h(431,62): warning C4244: 'argument': conversion from 'double' to 'const T', possible loss of data
+Z:\3D Engine\3D Engine\Physics.h(431,62): warning C4244:         with
+Z:\3D Engine\3D Engine\Physics.h(431,62): warning C4244:         [
+Z:\3D Engine\3D Engine\Physics.h(431,62): warning C4244:             T=float
+Z:\3D Engine\3D Engine\Physics.h(431,62): warning C4244:         ]
   (compiling source file '3D%20Engine.cpp')
   
-Z:\3D Engine\3D Engine\Physics.h(416,33): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+Z:\3D Engine\3D Engine\Physics.h(435,33): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
   (compiling source file '3D%20Engine.cpp')
   
-Z:\3D Engine\3D Engine\Physics.h(418,62): warning C4244: 'argument': conversion from 'double' to 'const T', possible loss of data
-Z:\3D Engine\3D Engine\Physics.h(418,62): warning C4244:         with
-Z:\3D Engine\3D Engine\Physics.h(418,62): warning C4244:         [
-Z:\3D Engine\3D Engine\Physics.h(418,62): warning C4244:             T=float
-Z:\3D Engine\3D Engine\Physics.h(418,62): warning C4244:         ]
+Z:\3D Engine\3D Engine\Physics.h(437,62): warning C4244: 'argument': conversion from 'double' to 'const T', possible loss of data
+Z:\3D Engine\3D Engine\Physics.h(437,62): warning C4244:         with
+Z:\3D Engine\3D Engine\Physics.h(437,62): warning C4244:         [
+Z:\3D Engine\3D Engine\Physics.h(437,62): warning C4244:             T=float
+Z:\3D Engine\3D Engine\Physics.h(437,62): warning C4244:         ]
   (compiling source file '3D%20Engine.cpp')
   
-Z:\3D Engine\3D Engine\Physics.h(424,30): warning C4018: '<': signed/unsigned mismatch
+Z:\3D Engine\3D Engine\Physics.h(443,30): warning C4018: '<': signed/unsigned mismatch
   (compiling source file '3D%20Engine.cpp')
   
-Z:\3D Engine\3D Engine\Physics.h(430,53): warning C4244: 'argument': conversion from 'double' to 'const T', possible loss of data
-Z:\3D Engine\3D Engine\Physics.h(430,53): warning C4244:         with
-Z:\3D Engine\3D Engine\Physics.h(430,53): warning C4244:         [
-Z:\3D Engine\3D Engine\Physics.h(430,53): warning C4244:             T=float
-Z:\3D Engine\3D Engine\Physics.h(430,53): warning C4244:         ]
+Z:\3D Engine\3D Engine\Physics.h(449,53): warning C4244: 'argument': conversion from 'double' to 'const T', possible loss of data
+Z:\3D Engine\3D Engine\Physics.h(449,53): warning C4244:         with
+Z:\3D Engine\3D Engine\Physics.h(449,53): warning C4244:         [
+Z:\3D Engine\3D Engine\Physics.h(449,53): warning C4244:             T=float
+Z:\3D Engine\3D Engine\Physics.h(449,53): warning C4244:         ]
   (compiling source file '3D%20Engine.cpp')
   
-Z:\3D Engine\3D Engine\Physics.h(432,55): warning C4244: 'argument': conversion from 'double' to 'const T', possible loss of data
-Z:\3D Engine\3D Engine\Physics.h(432,55): warning C4244:         with
-Z:\3D Engine\3D Engine\Physics.h(432,55): warning C4244:         [
-Z:\3D Engine\3D Engine\Physics.h(432,55): warning C4244:             T=float
-Z:\3D Engine\3D Engine\Physics.h(432,55): warning C4244:         ]
+Z:\3D Engine\3D Engine\Physics.h(451,55): warning C4244: 'argument': conversion from 'double' to 'const T', possible loss of data
+Z:\3D Engine\3D Engine\Physics.h(451,55): warning C4244:         with
+Z:\3D Engine\3D Engine\Physics.h(451,55): warning C4244:         [
+Z:\3D Engine\3D Engine\Physics.h(451,55): warning C4244:             T=float
+Z:\3D Engine\3D Engine\Physics.h(451,55): warning C4244:         ]
   (compiling source file '3D%20Engine.cpp')
   
-Z:\3D Engine\3D Engine\Input.h(11,24): warning C4305: 'initializing': truncation from 'double' to 'float'
+Z:\3D Engine\3D Engine\Input.h(14,24): warning C4305: 'initializing': truncation from 'double' to 'float'
   (compiling source file '3D%20Engine.cpp')
   
-Z:\3D Engine\3D Engine\Input.h(34,56): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+Z:\3D Engine\3D Engine\Input.h(37,56): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
   (compiling source file '3D%20Engine.cpp')
   
-Z:\3D Engine\3D Engine\Input.h(34,48): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+Z:\3D Engine\3D Engine\Input.h(37,48): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
   (compiling source file '3D%20Engine.cpp')
   
-Z:\3D Engine\3D Engine\Input.h(36,51): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+Z:\3D Engine\3D Engine\Input.h(39,51): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
   (compiling source file '3D%20Engine.cpp')
   
-Z:\3D Engine\3D Engine\Input.h(36,43): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+Z:\3D Engine\3D Engine\Input.h(39,43): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
   (compiling source file '3D%20Engine.cpp')
   
-Z:\3D Engine\3D Engine\Input.h(85,24): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
+Z:\3D Engine\3D Engine\Input.h(88,24): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
   (compiling source file '3D%20Engine.cpp')
   
-Z:\3D Engine\3D Engine\Input.h(87,19): warning C4244: '+=': conversion from 'double' to 'float', possible loss of data
+Z:\3D Engine\3D Engine\Input.h(90,19): warning C4244: '+=': conversion from 'double' to 'float', possible loss of data
   (compiling source file '3D%20Engine.cpp')
   
-Z:\3D Engine\3D Engine\Input.h(135,28): warning C4305: 'argument': truncation from 'double' to 'const T'
-Z:\3D Engine\3D Engine\Input.h(135,28): warning C4305:         with
-Z:\3D Engine\3D Engine\Input.h(135,28): warning C4305:         [
-Z:\3D Engine\3D Engine\Input.h(135,28): warning C4305:             T=float
-Z:\3D Engine\3D Engine\Input.h(135,28): warning C4305:         ]
+Z:\3D Engine\3D Engine\Input.h(138,28): warning C4305: 'argument': truncation from 'double' to 'const T'
+Z:\3D Engine\3D Engine\Input.h(138,28): warning C4305:         with
+Z:\3D Engine\3D Engine\Input.h(138,28): warning C4305:         [
+Z:\3D Engine\3D Engine\Input.h(138,28): warning C4305:             T=float
+Z:\3D Engine\3D Engine\Input.h(138,28): warning C4305:         ]
   (compiling source file '3D%20Engine.cpp')
   
-Z:\3D Engine\3D Engine\Input.h(142,28): warning C4305: 'argument': truncation from 'double' to 'const T'
-Z:\3D Engine\3D Engine\Input.h(142,28): warning C4305:         with
-Z:\3D Engine\3D Engine\Input.h(142,28): warning C4305:         [
-Z:\3D Engine\3D Engine\Input.h(142,28): warning C4305:             T=float
-Z:\3D Engine\3D Engine\Input.h(142,28): warning C4305:         ]
+Z:\3D Engine\3D Engine\Input.h(145,28): warning C4305: 'argument': truncation from 'double' to 'const T'
+Z:\3D Engine\3D Engine\Input.h(145,28): warning C4305:         with
+Z:\3D Engine\3D Engine\Input.h(145,28): warning C4305:         [
+Z:\3D Engine\3D Engine\Input.h(145,28): warning C4305:             T=float
+Z:\3D Engine\3D Engine\Input.h(145,28): warning C4305:         ]
   (compiling source file '3D%20Engine.cpp')
   
-Z:\3D Engine\3D Engine\Input.h(251,54): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+Z:\3D Engine\3D Engine\Input.h(211,59): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
   (compiling source file '3D%20Engine.cpp')
   
-Z:\3D Engine\3D Engine\Input.h(255,55): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+Z:\3D Engine\3D Engine\Input.h(215,59): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
   (compiling source file '3D%20Engine.cpp')
   
-Z:\3D Engine\3D Engine\Input.h(259,54): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+Z:\3D Engine\3D Engine\Input.h(219,59): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
   (compiling source file '3D%20Engine.cpp')
   
-Z:\3D Engine\3D Engine\Input.h(263,55): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+Z:\3D Engine\3D Engine\Input.h(223,59): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
   (compiling source file '3D%20Engine.cpp')
   
-Z:\3D Engine\3D Engine\Input.h(267,54): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+Z:\3D Engine\3D Engine\Input.h(270,54): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
   (compiling source file '3D%20Engine.cpp')
   
-Z:\3D Engine\3D Engine\Input.h(271,55): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+Z:\3D Engine\3D Engine\Input.h(274,55): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+  (compiling source file '3D%20Engine.cpp')
+  
+Z:\3D Engine\3D Engine\Input.h(278,54): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+  (compiling source file '3D%20Engine.cpp')
+  
+Z:\3D Engine\3D Engine\Input.h(282,55): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+  (compiling source file '3D%20Engine.cpp')
+  
+Z:\3D Engine\3D Engine\Input.h(286,54): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+  (compiling source file '3D%20Engine.cpp')
+  
+Z:\3D Engine\3D Engine\Input.h(290,55): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
   (compiling source file '3D%20Engine.cpp')
   
 Z:\3D Engine\3D Engine\3D Engine.cpp(129,68): warning C4244: 'argument': conversion from 'int' to 'const T', possible loss of data

@@ -111,7 +111,7 @@ public:
         Matrix4x4 matrix = TRS();
         for (size_t i = 0; i < verts.size(); i++)
         {
-            verts[i] = (Vec3)(matrix * ((Vec4)verts[i]));
+            verts[i] = (Vec3)(matrix * (Vec4)(verts[i]));
         }
 
         return verts;
@@ -137,9 +137,8 @@ public:
         this->collider = collider;
         this->collider->object = this;
         this->body.object = this;
-
-        mesh->SetParent(this);
-        collider->SetParent(this);
+        this->collider->SetParent(this);
+        this->mesh->SetParent(this);
     }
 };
 
@@ -286,8 +285,8 @@ bool OBBSATCollision(BoxCollider& physObj1, BoxCollider& physObj2, CollisionInfo
         if (neitherStatic)
         {
             offset *= 0.5;
-            physObj1.object->root->position -= (offset*1.01);
-            physObj2.object->root->position += (offset*1.01);
+            physObj1.root->position -= (offset*1.01);
+            physObj2.root->position += (offset * 1.01);
 
             return !collisionInfo.gap;
         }
@@ -295,11 +294,11 @@ bool OBBSATCollision(BoxCollider& physObj1, BoxCollider& physObj2, CollisionInfo
         //Only one is movable at this stage
 
         if (physObj1.isStatic) {
-            physObj2.object->root->position += offset;
+            physObj2.root->position += offset;
         }
         else
         {
-            physObj1.object->root->position -= offset;
+            physObj1.root->position -= offset;
         }
         
     }

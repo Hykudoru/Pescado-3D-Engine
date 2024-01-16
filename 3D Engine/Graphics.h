@@ -370,12 +370,12 @@ public:
     Transform* parent = nullptr;
     static bool parentHierarchyDefault;
 
-    Vec3 Forward() { return this->rotation * Direction::forward; }
-    Vec3 Back() { return this->rotation * Direction::back; }
-    Vec3 Right() { return this->rotation * Direction::right; }
-    Vec3 Left() { return this->rotation * Direction::left; }
-    Vec3 Up() { return this->rotation * Direction::up; }
-    Vec3 Down() { return this->rotation * Direction::down; }
+    Vec3 Forward() { return parent != nullptr ? parent->rotation * this->rotation * Direction::forward : this->rotation * Direction::forward; }
+    Vec3 Back() { return parent != nullptr ? parent->rotation * this->rotation * Direction::back : this->rotation * Direction::back; }
+    Vec3 Right() { return parent != nullptr ? parent->rotation * this->rotation * Direction::right : this->rotation * Direction::right; }
+    Vec3 Left() { return parent != nullptr ? parent->rotation * this->rotation * Direction::left : this->rotation * Direction::left; }
+    Vec3 Up() { return parent != nullptr ? parent->rotation * this->rotation * Direction::up : this->rotation * Direction::up; }
+    Vec3 Down() { return parent != nullptr ? parent->rotation * this->rotation * Direction::down : this->rotation * Direction::down; }
 
     Transform(float scale = 1, Vec3 position = Vec3(0, 0, 0), Vec3 rotationEuler = Vec3(0, 0, 0), Transform* parent = nullptr)
     {

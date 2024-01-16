@@ -93,10 +93,10 @@ void Init(GLFWwindow* window)
     child->parent = parent;
     grandchild->parent = child;
 
-    obj1 = new CubeMesh(1, Vec3(0, 10, 50), Vec3(0, 90, 0));
-    obj2 = new CubeMesh(2, Vec3(0, 0, -2), Vec3(0, 90, 0));
-    obj3 = new CubeMesh(2, Vec3(0, 0, -2), Vec3(0, 90, 0));
-    obj4 = new CubeMesh(2, Vec3(0, 0, -2), Vec3(0, 90, 0));
+    obj1 = new CubeMesh(1, Vec3(0, 10, 2), Vec3(0, 45, 0));
+    obj2 = new CubeMesh(1, Vec3(0, 0, 2), Vec3(0, 45, 0));
+    obj3 = new CubeMesh(2, Vec3(0, 0, 2), Vec3(0, 45, 0));
+    obj4 = new CubeMesh(1, Vec3(0, 0, 2), Vec3(0, 45, 0));
     obj2->SetParent(obj1);
     obj3->SetParent(obj2);
     obj4->SetParent(obj3);
