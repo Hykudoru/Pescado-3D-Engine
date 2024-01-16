@@ -20,6 +20,7 @@ struct Point;
 struct Line;
 struct  Triangle;
 struct RGB;
+class Camera;
 
 List<Point>* pointBuffer = new List<Point>();
 List<Line>* lineBuffer = new List<Line>();
@@ -46,15 +47,15 @@ static struct DrawAPI
     {
         glPointSize(size);
     }
-
-    static void DrawPoint(Vec3 point)
+    
+    static void DrawPoint(Vec2 point)
     {
         glBegin(GL_POINTS);
         glVertex2f(point.x, point.y);
         glEnd();
     }
 
-    static void DrawLine(Vec3 from, Vec3 to)
+    static void DrawLine(Vec2 from, Vec2 to)
     {
         glBegin(GL_LINES);
         glVertex2f(from.x, from.y);
@@ -62,7 +63,7 @@ static struct DrawAPI
         glEnd();
     }
 
-    static void DrawTriangle(Vec3 p1, Vec3 p2, Vec3 p3)
+    static void DrawTriangle(Vec2 p1, Vec2 p2, Vec2 p3)
     {
         glBegin(GL_LINES);
         glVertex2f(p1.x, p1.y);
@@ -76,7 +77,7 @@ static struct DrawAPI
         glEnd();
     }
 
-    static void DrawTriangleFilled(Vec3 p1, Vec3 p2, Vec3 p3)
+    static void DrawTriangleFilled(Vec2 p1, Vec2 p2, Vec2 p3)
     {
         glBegin(GL_TRIANGLES);
         glVertex2f(p1.x, p1.y);
@@ -245,6 +246,9 @@ Matrix4x4 ProjectionMatrix()
     }
 }
 
+Matrix4x4 worldToViewMatrix;
+Matrix4x4 projectionMatrix;
+
 struct Point
 {
     Vec3 position;
@@ -263,6 +267,18 @@ struct Point
         DrawAPI::SetPointSize(size);
         DrawAPI::SetDrawColor(color.x, color.y, color.z);
         DrawAPI::DrawPoint(position);
+    }
+    
+    static void AddPoint(Point point)
+    {
+        pointBuffer->emplace_back(point);
+    }
+
+    static void AddWorldPoint(Point point)
+    {
+        auto matrix = ProjectionMatrix() * worldToViewMatrix;
+        point.position = matrix * point.position;
+        pointBuffer->emplace_back(point);
     }
 };
 
@@ -286,6 +302,19 @@ struct Line
         DrawAPI::SetLineWidth(width);
         DrawAPI::SetDrawColor(color.x, color.y, color.z);
         DrawAPI::DrawLine(from, to);
+    }
+
+    static void AddLine(Line line)
+    {
+        lineBuffer->emplace_back(line);
+    }
+
+    static void AddWorldLine(Line line)
+    {
+        auto matrix = ProjectionMatrix() * worldToViewMatrix;
+        line.from = matrix * line.from;
+        line.to = matrix * line.to;
+        lineBuffer->emplace_back(line);
     }
 };
 
@@ -554,8 +583,8 @@ Camera* camera2 = new Camera(Vec3(0, 50, 0), Vec3(-90 * PI / 180, 0, 0));
 Camera* Camera::main = camera1;
 
 //---------------------------------MESH---------------------------------------------
-Matrix4x4 worldToViewMatrix;
-Matrix4x4 projectionMatrix;
+//Matrix4x4 worldToViewMatrix;
+//Matrix4x4 projectionMatrix;
 class Mesh : public Transform, public ManagedObjectPool<Mesh>
 {
 public:
@@ -737,8 +766,8 @@ public:
                 //---------Draw point at centroid and a line from centroid to normal (view space & projected space)-----------
                 Vec2 centroidToNormal_p = projectionMatrix * ((Vec3)camSpaceTri.centroid + camSpaceTri.normal);
                 Vec2 centroid_p = projectionMatrix * camSpaceTri.centroid;
-                pointBuffer->emplace_back(Point(centroid_p));
-                lineBuffer->emplace_back(Line(centroid_p, centroidToNormal_p));
+                Point::AddPoint(Point(centroid_p));
+                Line::AddLine(Line(centroid_p, centroidToNormal_p));
             }
 
             projectedTri.centroid = projectionMatrix * camSpaceTri.centroid;
@@ -1016,11 +1045,11 @@ void Draw()
                 Vec2 zAxis_p = mvp * Vec4(0, 0, 0.5, 1);
                 Vec2 forward_p = mvp * (Direction::forward);
 
-                pointBuffer->emplace_back(Point(center_p, RGB::red, 4));
-                lineBuffer->emplace_back(Line(center_p, xAxis_p, RGB::red));
-                lineBuffer->emplace_back(Line(center_p, yAxis_p, RGB::yellow));
-                lineBuffer->emplace_back(Line(center_p, zAxis_p, RGB::blue));
-                lineBuffer->emplace_back(Line(center_p, mvp * (Direction::forward), RGB::turquoise, 3));
+                Point::AddPoint(Point(center_p, RGB::red, 4));
+                Line::AddLine(Line(center_p, xAxis_p, RGB::red));
+                Line::AddLine(Line(center_p, yAxis_p, RGB::yellow));
+                Line::AddLine(Line(center_p, zAxis_p, RGB::blue));
+                Line::AddLine(Line(center_p, mvp * (Direction::forward), RGB::turquoise, 3));
             }
         }
 

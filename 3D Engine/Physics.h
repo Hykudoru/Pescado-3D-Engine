@@ -120,14 +120,9 @@ public:
 
 class SphereCollider: public Collider, public ManagedObjectPool<SphereCollider>
 {
-    Mesh* sphere;
 public:
-    float radius;
-    SphereCollider() : ManagedObjectPool<SphereCollider>(this) 
-    {
-        sphere = LoadMeshFromOBJFile("Sphere.obj");
-        sphere->SetParent(this);
-    }
+    float radius = 1;
+    SphereCollider() : ManagedObjectPool<SphereCollider>(this) {}
 };
 
 class PhysicsObject: public Transform, public ManagedObjectPool<PhysicsObject>
@@ -153,11 +148,14 @@ struct CollisionInfo
     float minOverlap = 0;
     Vec3 minOverlapAxis = Vec3::zero;
 };
-/*
+
 bool SpheresColliding(SphereCollider& sphere1, SphereCollider& sphere2, CollisionInfo& collisionInfo, bool resolve = true)
 {
-    Vec3 pointOnSphere1 = ClosestPointOnSphere(sphere1.Position(), sphere1.radius, (sphere2.Position() - sphere1.Position()));
-    Vec3 pointOnSphere2 = ClosestPointOnSphere(sphere1.Position(), sphere1.radius, (sphere1.Position() - sphere2.Position()));
+    Vec3 pointOnSphere1 = ClosestPointOnSphere(sphere1.Position(), sphere1.radius, sphere2.Position());
+    Vec3 pointOnSphere2 = ClosestPointOnSphere(sphere2.Position(), sphere2.radius, sphere1.Position());
+ 
+    Point::AddWorldPoint(Point(pointOnSphere1, RGB::red, 4));
+    Point::AddWorldPoint(Point(pointOnSphere2, RGB::red, 4));
 
     float squareMagToPointOnSphere2 = (pointOnSphere2 - sphere1.Position()).SqrMagnitude();
     if (squareMagToPointOnSphere2 < pointOnSphere1.SqrMagnitude())
@@ -167,15 +165,14 @@ bool SpheresColliding(SphereCollider& sphere1, SphereCollider& sphere2, Collisio
         collisionInfo.minOverlap = offset.Magnitude();
         if (resolve) {
             offset *= 0.5;
-            sphere1.root->position -= offset;
-            sphere2.root->position += offset;
+            //sphere1.root->position -= offset;
+            //sphere2.root->position += offset;
         }
         return true;
     }
 
     return false;
 }
-*/
 
 // Oriented Bounding Box (OBB) with Separating Axis Theorem (SAT) algorithm
 bool OBBSATCollision(BoxCollider& physObj1, BoxCollider& physObj2, CollisionInfo& collisionInfo, bool resolve = true)
@@ -333,24 +330,23 @@ void DetectCollisions()
         }
         
         // Current Collider
-        BoxCollider* physObj1 = ManagedObjectPool<BoxCollider>::objects[i];
+        BoxCollider* box1 = ManagedObjectPool<BoxCollider>::objects[i];
 
         for (size_t j = i + 1; j < ManagedObjectPool<BoxCollider>::count; j++)
         { 
             // Next Collider
-            BoxCollider* physObj2 = ManagedObjectPool<BoxCollider>::objects[j];
+            BoxCollider* box2 = ManagedObjectPool<BoxCollider>::objects[j];
             
-            if (physObj1->isStatic && physObj2->isStatic) {
+            if (box1->isStatic && box2->isStatic) {
                 continue;
             }
 
             CollisionInfo collisionInfo;
-            if (OBBSATCollision(*physObj1, *physObj2, collisionInfo))
+            if (OBBSATCollision(*box1, *box2, collisionInfo))
             {   
                 if (Physics::dynamics)
-                {
-                    
-                    if (physObj1->object->body.isKinematic || physObj2->object->body.isKinematic) {
+                {   
+                    if (box1->object->body.isKinematic || box2->object->body.isKinematic) {
                         continue;
                     }
                     /*
@@ -359,19 +355,19 @@ void DetectCollisions()
                     Consequently, objects touching a static collider would be effected, so the
                     velocity is zeroed out to prevent this.
                     */
-                    if (physObj1->isStatic) 
+                    if (box1->isStatic) 
                     {
-                        physObj1->object->body.velocity = Vec3::zero;
+                        box1->object->body.velocity = Vec3::zero;
                     }
-                    else if (physObj2->isStatic) 
+                    else if (box2->isStatic) 
                     {
-                        physObj2->object->body.velocity = Vec3::zero;
+                        box2->object->body.velocity = Vec3::zero;
                     }
 
-                    float m1 = physObj1->object->body.mass;
-                    float m2 = physObj2->object->body.mass;
-                    Vec3 v1 = physObj1->object->body.velocity;
-                    Vec3 v2 = physObj2->object->body.velocity;
+                    float m1 = box1->object->body.mass;
+                    float m2 = box2->object->body.mass;
+                    Vec3 v1 = box1->object->body.velocity;
+                    Vec3 v2 = box2->object->body.velocity;
 
                     /* Elastic collision (conserves both momentum and kinetic energy)
                     Conservation Momentum: m1*v1 + m2*v2 = m1*v1' + m2*v2'
@@ -380,8 +376,72 @@ void DetectCollisions()
                     Vec3 v1Final = (v1 * m1 + v2 * m2 * 2.0 - v1 * m2) * (1.0 / (m1 + m2));
                     Vec3 v2Final = v1 + v1Final - v2;
 
-                    physObj1->object->body.velocity = v1Final;
-                    physObj2->object->body.velocity = v2Final;
+                    box1->object->body.velocity = v1Final;
+                    box2->object->body.velocity = v2Final;
+                }
+            }
+        }
+    }
+
+
+    for (size_t i = 0; i < ManagedObjectPool<SphereCollider>::count; i++)
+    {
+        // exit if this is the last Collider
+        if ((i + 1) >= ManagedObjectPool<SphereCollider>::count) {
+            break;
+        }
+
+        // Current Collider
+        SphereCollider* sphere1 = ManagedObjectPool<SphereCollider>::objects[i];
+
+        for (size_t j = i + 1; j < ManagedObjectPool<SphereCollider>::count; j++)
+        {
+            // Next Collider
+            SphereCollider* sphere2 = ManagedObjectPool<SphereCollider>::objects[j];
+
+            if (sphere1->isStatic && sphere2->isStatic) {
+                continue;
+            }
+
+            CollisionInfo collisionInfo;
+            if (SpheresColliding(*sphere1, *sphere2, collisionInfo))
+            {
+                sphere1->object->mesh->color = &RGB::pink;
+                sphere2->object->mesh->color = &RGB::pink;
+                if (Physics::dynamics)
+                {
+                    if (sphere1->object->body.isKinematic || sphere2->object->body.isKinematic) {
+                        continue;
+                    }
+                    /*
+                    Although static objects themselves are not effected by momentum
+                    transfers, their velocity variable may still be updating from new collisions.
+                    Consequently, objects touching a static collider would be effected, so the
+                    velocity is zeroed out to prevent this.
+                    */
+                    if (sphere1->isStatic)
+                    {
+                        sphere1->object->body.velocity = Vec3::zero;
+                    }
+                    else if (sphere2->isStatic)
+                    {
+                        sphere2->object->body.velocity = Vec3::zero;
+                    }
+
+                    float m1 = sphere1->object->body.mass;
+                    float m2 = sphere2->object->body.mass;
+                    Vec3 v1 = sphere1->object->body.velocity;
+                    Vec3 v2 = sphere2->object->body.velocity;
+
+                    /* Elastic collision (conserves both momentum and kinetic energy)
+                    Conservation Momentum: m1*v1 + m2*v2 = m1*v1' + m2*v2'
+                    Conservation Kinetic Energy: v1 + v1' = v2 + v2'
+                    The eq below were solved from the system of eq above.*/
+                    Vec3 v1Final = (v1 * m1 + v2 * m2 * 2.0 - v1 * m2) * (1.0 / (m1 + m2));
+                    Vec3 v2Final = v1 + v1Final - v2;
+
+                  //  sphere1->object->body.velocity = v1Final;
+                  //  sphere2->object->body.velocity = v2Final;
                 }
             }
         }
@@ -493,18 +553,18 @@ static void Physics()
                         //Vec4 pointOfIntersectionProj = projectionMatrix * worldToViewMatrix * pointOfIntersection;
                         Vec4 from_p = matrix * lineStart;
                         Vec4 to_p = matrix * (pointOfIntersection);// +lineEnd);
-                        lineBuffer->emplace_back(Line(from_p, pointOfIntersection_p));
-                        pointBuffer->emplace_back(Point(pointOfIntersection_p, RGB::gray, 5));
+                        Line::AddLine(Line(from_p, pointOfIntersection_p));
+                        Point::AddPoint(Point(pointOfIntersection_p, RGB::gray, 5));
 
                         // Reflect
                         Vec3 n = worldSpaceTri.Normal();
                         Vec3 v = (pointOfIntersection - lineStart);
                         Vec3 reflection = Reflect(v, n);
-                        lineBuffer->emplace_back(Line(pointOfIntersection_p, (Vec3)(matrix * (pointOfIntersection + reflection)), RGB::red));
+                        Line::AddLine(Line(pointOfIntersection_p, (Vec3)(matrix * (pointOfIntersection + reflection)), RGB::red));
 
                         // Project
                         Vec3 vecPlane = ProjectOnPlane(v, n);
-                        lineBuffer->emplace_back(Line(pointOfIntersection_p, (Vec3)(matrix * (pointOfIntersection + vecPlane)), RGB::black));
+                        Line::AddLine(Line(pointOfIntersection_p, (Vec3)(matrix * (pointOfIntersection + vecPlane)), RGB::black));
 
                         projectedTri.color = RGB::white;
                         if (DEBUGGING) { std::cout << (projectedTri.mesh) << endl; }// delete projectedTri.mesh; }

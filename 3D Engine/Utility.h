@@ -220,6 +220,6 @@ void PlanesIntersecting(Vec3& normal1, Vec3& p1, Vec3& normal2, Vec3& p2)
 Vec3 ClosestPointOnSphere(Vec3 center, float radius, Vec3 somePoint)
 {
     Vec3 dir = (somePoint - center).Normalized();
-    return dir * radius;
+    return center + dir * radius;
 }
 #endif

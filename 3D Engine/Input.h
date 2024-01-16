@@ -127,9 +127,10 @@ void OnKeyPressEvent(GLFWwindow* window, int key, int scancode, int action, int 
             obj->mesh->color = &RGB::orange;
         }
         else if (glfwGetKey(window, GLFW_KEY_6) == GLFW_PRESS) {
-            Mesh* mesh = LoadMeshFromOBJFile("Sphere.obj");
-            mesh->position = Camera::main->position + (Camera::main->Forward() * 10);
-            mesh->rotation = Camera::main->rotation;
+            PhysicsObject* obj = new PhysicsObject(LoadMeshFromOBJFile("Sphere.obj"), new SphereCollider());
+            obj->position = Camera::main->position + (Camera::main->Forward() * 10);
+            obj->rotation = Camera::main->rotation;
+            obj->body.velocity = velocity + (Camera::main->Forward() * 10);
         }
         else if (glfwGetKey(window, GLFW_KEY_7) == GLFW_PRESS) {
             Mesh* mesh = LoadMeshFromOBJFile("Diamond.obj");
