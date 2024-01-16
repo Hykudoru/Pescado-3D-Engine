@@ -208,19 +208,19 @@ void OnKeyPressEvent(GLFWwindow* window, int key, int scancode, int action, int 
         }
         else if (key == GLFW_KEY_F6)
         {
-            obj1->rotation *= Matrix3x3::RotY(rotateSpeed * deltaTime);
+            obj1->rotation *= Matrix3x3::RotY(ToRad(10));
         }
         else if (key == GLFW_KEY_F7)
         {
-            obj2->rotation *= Matrix3x3::RotY(rotateSpeed * deltaTime);
+            obj2->rotation *= Matrix3x3::RotY(ToRad(10));
         }
         else if (key == GLFW_KEY_F8)
         {
-            obj3->rotation *= Matrix3x3::RotY(rotateSpeed * deltaTime);
+            obj3->rotation *= Matrix3x3::RotY(ToRad(10));
         }
         else if (key == GLFW_KEY_F9)
         {
-            obj4->rotation *= Matrix3x3::RotY(rotateSpeed * deltaTime);
+            obj4->rotation *= Matrix3x3::RotY(ToRad(10));
         }
         // Toggle Transform Hierarchy
         else if (glfwGetKey(window, GLFW_KEY_CAPS_LOCK) == GLFW_PRESS) {

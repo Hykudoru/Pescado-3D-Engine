@@ -370,12 +370,39 @@ public:
     Transform* parent = nullptr;
     static bool parentHierarchyDefault;
 
-    Vec3 Forward() { return parent != nullptr ? parent->rotation * this->rotation * Direction::forward : this->rotation * Direction::forward; }
-    Vec3 Back() { return parent != nullptr ? parent->rotation * this->rotation * Direction::back : this->rotation * Direction::back; }
-    Vec3 Right() { return parent != nullptr ? parent->rotation * this->rotation * Direction::right : this->rotation * Direction::right; }
-    Vec3 Left() { return parent != nullptr ? parent->rotation * this->rotation * Direction::left : this->rotation * Direction::left; }
-    Vec3 Up() { return parent != nullptr ? parent->rotation * this->rotation * Direction::up : this->rotation * Direction::up; }
-    Vec3 Down() { return parent != nullptr ? parent->rotation * this->rotation * Direction::down : this->rotation * Direction::down; }
+    Vec3 Forward() { return Rotation() * Direction::forward; }
+    Vec3 Back() { return Rotation() * Direction::back; }
+    Vec3 Right() { return Rotation() * Direction::right; }
+    Vec3 Left() { return Rotation() * Direction::left; }
+    Vec3 Up() { return Rotation() * Direction::up; }
+    Vec3 Down() { return Rotation() * Direction::down; }
+
+    Matrix3x3 Rotation()
+    {
+        if (parent) {
+            Matrix4x4 matrix = TR();
+            float globalRotation[3][3] =
+            {
+                {matrix.m[0][0], matrix.m[0][1], matrix.m[0][2]},
+                {matrix.m[1][0], matrix.m[1][1], matrix.m[1][2]},
+                {matrix.m[2][0], matrix.m[2][1], matrix.m[2][2]}
+            };
+
+            return globalRotation;
+        }
+
+        return rotation;
+    }
+
+    Vec3 Position()
+    {
+        if (parent) {//TR already checks for parent but checks again here because cheaper to return local position without matrix multiplication
+            Matrix4x4 matrix = TR();
+            return Vec3(matrix.m[0][3], matrix.m[1][3], matrix.m[2][3]);
+        }
+
+        return position;
+    }
 
     Transform(float scale = 1, Vec3 position = Vec3(0, 0, 0), Vec3 rotationEuler = Vec3(0, 0, 0), Transform* parent = nullptr)
     {

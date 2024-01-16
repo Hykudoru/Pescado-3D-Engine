@@ -120,9 +120,14 @@ public:
 
 class SphereCollider: public Collider, public ManagedObjectPool<SphereCollider>
 {
+    Mesh* sphere;
 public:
     float radius;
-    SphereCollider() : ManagedObjectPool<SphereCollider>(this) {}
+    SphereCollider() : ManagedObjectPool<SphereCollider>(this) 
+    {
+        sphere = LoadMeshFromOBJFile("Sphere.obj");
+        sphere->SetParent(this);
+    }
 };
 
 class PhysicsObject: public Transform, public ManagedObjectPool<PhysicsObject>
@@ -149,12 +154,12 @@ struct CollisionInfo
     Vec3 minOverlapAxis = Vec3::zero;
 };
 /*
-bool SpheresColliding(PhysicsSphere& sphere1, PhysicsSphere& sphere2, CollisionInfo& collisionInfo, bool resolve = true)
+bool SpheresColliding(SphereCollider& sphere1, SphereCollider& sphere2, CollisionInfo& collisionInfo, bool resolve = true)
 {
-    Vec3 pointOnSphere1 = ClosestPointOnSphere(sphere1.collider.position, sphere1.radius, (sphere2.collider.position - sphere1.collider.position));
-    Vec3 pointOnSphere2 = ClosestPointOnSphere(sphere1.collider.position, sphere1.radius, (sphere1.collider.position - sphere2.collider.position));
+    Vec3 pointOnSphere1 = ClosestPointOnSphere(sphere1.Position(), sphere1.radius, (sphere2.Position() - sphere1.Position()));
+    Vec3 pointOnSphere2 = ClosestPointOnSphere(sphere1.Position(), sphere1.radius, (sphere1.Position() - sphere2.Position()));
 
-    float squareMagToPointOnSphere2 = (pointOnSphere2 - sphere1.collider.position).SqrMagnitude();
+    float squareMagToPointOnSphere2 = (pointOnSphere2 - sphere1.Position()).SqrMagnitude();
     if (squareMagToPointOnSphere2 < pointOnSphere1.SqrMagnitude())
     {
         Vec3 offset = (pointOnSphere2 - pointOnSphere1);
@@ -162,14 +167,15 @@ bool SpheresColliding(PhysicsSphere& sphere1, PhysicsSphere& sphere2, CollisionI
         collisionInfo.minOverlap = offset.Magnitude();
         if (resolve) {
             offset *= 0.5;
-            sphere1.collider.position -= offset;
-            sphere2.collider.position += offset;
+            sphere1.root->position -= offset;
+            sphere2.root->position += offset;
         }
         return true;
     }
 
     return false;
-}*/
+}
+*/
 
 // Oriented Bounding Box (OBB) with Separating Axis Theorem (SAT) algorithm
 bool OBBSATCollision(BoxCollider& physObj1, BoxCollider& physObj2, CollisionInfo& collisionInfo, bool resolve = true)
