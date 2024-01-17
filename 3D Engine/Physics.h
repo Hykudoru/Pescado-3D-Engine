@@ -437,12 +437,24 @@ void DetectCollisions()
                     /* Elastic collision (conserves both momentum and kinetic energy)
                     Conservation Momentum: m1*v1 + m2*v2 = m1*v1' + m2*v2'
                     Conservation Kinetic Energy: v1 + v1' = v2 + v2'
-                    The eq below were solved from the system of eq above.*/
-                    Vec3 v1Final = (v1 * m1 + v2 * m2 * 2.0 - v1 * m2) * (1.0 / (m1 + m2));
-                    Vec3 v2Final = v1 + v1Final - v2;
+                    Coefficient of Restitution: e = v2'-v1' / v1-v2
+                        e = 1 Perfectly elastic
+                        0 < e < 1 inelastic
+                        e = 0 Perfectly inelastic
+                    */
+                    float e = 1.0;// e = v2'-v1' / v1-v2
+                    Vec3 lineOfImpact = collisionInfo.minOverlapAxis.Normalized();
+                    Vec3 v1LineOfImpact = lineOfImpact * DotProduct(v1, lineOfImpact);
+                    Vec3 v2LineOfImpact = lineOfImpact * DotProduct(v2, lineOfImpact);
+                    Vec3 v1LineOfImpactFinal = (v1LineOfImpact * m1 + v2LineOfImpact * m2 * 2.0 - v1LineOfImpact * m2) * (1.0 / (m1 + m2));
+                    Vec3 v2LineOfImpactFinal = ((v1LineOfImpact - v2LineOfImpact)*e) + v1LineOfImpactFinal;// e(v1-v2)+v1' = v2'
+                    Vec3 v1PerpendicularFinal = (v1 - v1LineOfImpact);//Perpendicular Velocity is the same before and after impact
+                    Vec3 v2PerpendicularFinal = (v2 - v2LineOfImpact);//Perpendicular Velocity is the same before and after impact
+                    Vec3 v1Final = v1LineOfImpactFinal + v1PerpendicularFinal;
+                    Vec3 v2Final = v2LineOfImpactFinal + v2PerpendicularFinal;
 
-                  //  sphere1->object->body.velocity = v1Final;
-                  //  sphere2->object->body.velocity = v2Final;
+                    sphere1->object->body.velocity = v1Final;
+                    sphere2->object->body.velocity = v2Final;
                 }
             }
         }
