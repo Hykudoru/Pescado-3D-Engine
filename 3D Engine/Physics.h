@@ -156,17 +156,18 @@ bool SpheresColliding(SphereCollider& sphere1, SphereCollider& sphere2, Collisio
  
     Point::AddWorldPoint(Point(pointOnSphere1, RGB::red, 4));
     Point::AddWorldPoint(Point(pointOnSphere2, RGB::red, 4));
+    Line::AddWorldLine(Line(pointOnSphere1, pointOnSphere2));
 
     float squareMagToPointOnSphere2 = (pointOnSphere2 - sphere1.Position()).SqrMagnitude();
-    if (squareMagToPointOnSphere2 < pointOnSphere1.SqrMagnitude())
+    if (squareMagToPointOnSphere2 < sphere1.radius*sphere1.radius)
     {
-        Vec3 offset = (pointOnSphere2 - pointOnSphere1);
+        Vec3 offset = (pointOnSphere1 - pointOnSphere2);
         collisionInfo.minOverlapAxis = offset;
         collisionInfo.minOverlap = offset.Magnitude();
         if (resolve) {
             offset *= 0.5;
-            //sphere1.root->position -= offset;
-            //sphere2.root->position += offset;
+            sphere1.root->position -= offset;
+            sphere2.root->position += offset;
         }
         return true;
     }
