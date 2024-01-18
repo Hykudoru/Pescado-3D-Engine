@@ -140,45 +140,64 @@ public:
         this->collider->SetParent(this);
         this->mesh->SetParent(this);
     }
+    ~PhysicsObject()
+    {
+        delete collider;
+        delete mesh;
+    }
 };
 
 struct CollisionInfo
 {
-    bool gap = false;
+    bool colliding = false;
+};
+
+struct BoxCollisionInfo: public CollisionInfo
+{
     float minOverlap = 0;
     Vec3 minOverlapAxis = Vec3::zero;
 };
 
-bool SpheresColliding(SphereCollider& sphere1, SphereCollider& sphere2, CollisionInfo& collisionInfo, bool resolve = true)
+struct SphereCollisionInfo: public CollisionInfo
+{
+    Vec3 pointOfContact = Vec3::zero;
+    Vec3 lineOfImpact = Vec3::zero;
+};
+
+bool SpheresColliding(SphereCollider& sphere1, SphereCollider& sphere2, SphereCollisionInfo& collisionInfo, bool resolve = true)
 {
     Vec3 pointOnSphere1 = ClosestPointOnSphere(sphere1.Position(), sphere1.radius, sphere2.Position());
     Vec3 pointOnSphere2 = ClosestPointOnSphere(sphere2.Position(), sphere2.radius, sphere1.Position());
- 
-    Point::AddWorldPoint(Point(pointOnSphere1, RGB::red, 4));
-    Point::AddWorldPoint(Point(pointOnSphere2, RGB::red, 4));
-    Line::AddWorldLine(Line(pointOnSphere1, pointOnSphere2));
-
     float squareMagToPointOnSphere2 = (pointOnSphere2 - sphere1.Position()).SqrMagnitude();
-    if (squareMagToPointOnSphere2 < sphere1.radius*sphere1.radius)
+    collisionInfo.colliding = squareMagToPointOnSphere2 < sphere1.radius * sphere1.radius;
+    if (collisionInfo.colliding)
     {
         Vec3 offset = (pointOnSphere1 - pointOnSphere2);
-        collisionInfo.minOverlapAxis = offset;
-        collisionInfo.minOverlap = offset.Magnitude();
+        collisionInfo.lineOfImpact = offset;
         if (resolve) {
             offset *= 0.5;
             sphere1.root->position -= offset;
             sphere2.root->position += offset;
+            collisionInfo.pointOfContact = (pointOnSphere1 + pointOnSphere2) * 0.5;
         }
-        return true;
     }
 
-    return false;
+    if (Graphics::debugSphereCollisions)
+    {
+        Point::AddWorldPoint(Point(pointOnSphere1, RGB::red, 4));
+        Point::AddWorldPoint(Point(pointOnSphere2, RGB::red, 4));
+        Line::AddWorldLine(Line(pointOnSphere1, pointOnSphere2));
+    }
+
+    return collisionInfo.colliding;
 }
 
 // Oriented Bounding Box (OBB) with Separating Axis Theorem (SAT) algorithm
-bool OBBSATCollision(BoxCollider& physObj1, BoxCollider& physObj2, CollisionInfo& collisionInfo, bool resolve = true)
+bool OBBSATCollision(BoxCollider& physObj1, BoxCollider& physObj2, BoxCollisionInfo& collisionInfo, bool resolve = true)
 {
-    collisionInfo = CollisionInfo();
+    bool gap = true;
+
+    collisionInfo = BoxCollisionInfo();
 
     if (physObj1.isStatic && physObj2.isStatic)
     {
@@ -203,8 +222,9 @@ bool OBBSATCollision(BoxCollider& physObj1, BoxCollider& physObj2, CollisionInfo
             Vec3 axis = (*normals)[ii];
             Range rangeA = ProjectVertsOntoAxis(physObj1Verts.data(), physObj1Verts.size(), axis);
             Range rangeB = ProjectVertsOntoAxis(physObj2Verts.data(), physObj2Verts.size(), axis);
-            collisionInfo.gap = !((rangeA.max >= rangeB.min && rangeB.max >= rangeA.min));// || (mesh1Range.max < mesh2Range.min && mesh2Range.max < mesh1Range.min));
-            if (collisionInfo.gap) {
+            gap = !((rangeA.max >= rangeB.min && rangeB.max >= rangeA.min));// || (mesh1Range.max < mesh2Range.min && mesh2Range.max < mesh1Range.min));
+            if (gap) {
+                collisionInfo.colliding = false;
                 return false;
             }
 
@@ -231,7 +251,7 @@ bool OBBSATCollision(BoxCollider& physObj1, BoxCollider& physObj2, CollisionInfo
     }
 
     // Step 3: Must continue searching for possible 3D Edge-Edge collision
-    if (!collisionInfo.gap)
+    if (!gap)
     {
         for (size_t i = 0; i < physObj1Normals.size(); i++)
         {
@@ -257,8 +277,9 @@ bool OBBSATCollision(BoxCollider& physObj1, BoxCollider& physObj2, CollisionInfo
                 Vec3 axis = CrossProduct(nA, nB);
                 Range rangeA = ProjectVertsOntoAxis(physObj1Verts.data(), physObj1Verts.size(), axis);
                 Range rangeB = ProjectVertsOntoAxis(physObj2Verts.data(), physObj2Verts.size(), axis);
-                collisionInfo.gap = !((rangeA.max >= rangeB.min && rangeB.max >= rangeA.min));// || (mesh1Range.max < mesh2Range.min && mesh2Range.max < mesh1Range.min));
-                if (collisionInfo.gap) {
+                gap = !((rangeA.max >= rangeB.min && rangeB.max >= rangeA.min));// || (mesh1Range.max < mesh2Range.min && mesh2Range.max < mesh1Range.min));
+                if (gap) {
+                    collisionInfo.colliding = false;
                     return false;
                 }
                /* To-Do...
@@ -281,7 +302,9 @@ bool OBBSATCollision(BoxCollider& physObj1, BoxCollider& physObj2, CollisionInfo
         }
     }
 
-    if (!collisionInfo.gap && resolve)
+    collisionInfo.colliding = !gap;
+
+    if (collisionInfo.colliding && resolve)
     {
         Vec3 offset = collisionInfo.minOverlapAxis * collisionInfo.minOverlap;
 
@@ -291,28 +314,17 @@ bool OBBSATCollision(BoxCollider& physObj1, BoxCollider& physObj2, CollisionInfo
             offset *= 0.5;
             physObj1.root->position -= (offset*1.01);
             physObj2.root->position += (offset * 1.01);
-
-            return !collisionInfo.gap;
         }
-
         //Only one is movable at this stage
-
-        if (physObj1.isStatic) {
+        else if (physObj1.isStatic) {
             physObj2.root->position += offset;
         }
-        else
-        {
+        else {
             physObj1.root->position -= offset;
         }
-        
     }
 
-    if (collisionInfo.gap)
-    {
-        return false;
-    }
-
-    return !collisionInfo.gap;//No gap = collision
+    return collisionInfo.colliding;
 }
 
 void DetectCollisions()
@@ -342,9 +354,13 @@ void DetectCollisions()
                 continue;
             }
 
-            CollisionInfo collisionInfo;
+            BoxCollisionInfo collisionInfo;
             if (OBBSATCollision(*box1, *box2, collisionInfo))
             {   
+                if (Graphics::debugBoxCollisions)
+                {
+
+                }
                 if (Physics::dynamics)
                 {   
                     if (box1->object->body.isKinematic || box2->object->body.isKinematic) {
@@ -404,7 +420,7 @@ void DetectCollisions()
                 continue;
             }
 
-            CollisionInfo collisionInfo;
+            SphereCollisionInfo collisionInfo;
             if (SpheresColliding(*sphere1, *sphere2, collisionInfo))
             {
                 sphere1->object->mesh->color = &RGB::pink;
@@ -443,7 +459,7 @@ void DetectCollisions()
                         e = 0 Perfectly inelastic
                     */
                     float e = 1.0;// e = v2'-v1' / v1-v2
-                    Vec3 lineOfImpact = collisionInfo.minOverlapAxis.Normalized();
+                    Vec3 lineOfImpact = collisionInfo.lineOfImpact.Normalized();
                     Vec3 v1LineOfImpact = lineOfImpact * DotProduct(v1, lineOfImpact);
                     Vec3 v2LineOfImpact = lineOfImpact * DotProduct(v2, lineOfImpact);
                     Vec3 v1LineOfImpactFinal = (v1LineOfImpact * m1 + v2LineOfImpact * m2 * 2.0 - v1LineOfImpact * m2) * (1.0 / (m1 + m2));

@@ -46,7 +46,7 @@ CubeMesh* obj1;
 CubeMesh* obj2;
 CubeMesh* obj3;
 CubeMesh* obj4;
-PhysicsObject* physicsBox;    
+PhysicsObject* physicsObj;    
 
 
 
@@ -63,7 +63,7 @@ void Init(GLFWwindow* window)
     glLineWidth(2);
     glPointSize(2);
 
-    GraphicSettings::matrixMode = true;
+    Graphics::matrixMode = true;
     //GraphicSettings::debugAxes = true;
 
     planet = LoadMeshFromOBJFile("Sphere.obj");
@@ -116,8 +116,8 @@ void Init(GLFWwindow* window)
        cameraMesh->SetParent(Camera::cameras[i]);
     }*/
 
-    physicsBox = new PhysicsObject(new CubeMesh(), new BoxCollider());
-  // physicsBox->isStatic = true;
+    physicsObj = new PhysicsObject(LoadMeshFromOBJFile("Sphere.obj"), new SphereCollider());
+    //physicsObj->collider->isStatic = true;
 
     for (int i = -10; i < 10; i++)
     {
@@ -135,8 +135,8 @@ bool temp = false;
 void Update()
 {
     if (temp) {
-        physicsBox->position = Camera::main->position + Camera::main->Forward() * 10;
-        physicsBox->rotation = Camera::main->rotation;
+        physicsObj->position = Camera::main->position + Camera::main->Forward() * 5;
+        physicsObj->rotation = Camera::main->rotation;
     }
     
 }

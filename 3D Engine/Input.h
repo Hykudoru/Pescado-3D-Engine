@@ -175,25 +175,29 @@ void OnKeyPressEvent(GLFWwindow* window, int key, int scancode, int action, int 
 
         //-------------------Debugging------------------------
         else if (key == GLFW_KEY_I) {
-            GraphicSettings::invertNormals = !GraphicSettings::invertNormals;
+            Graphics::invertNormals = !Graphics::invertNormals;
         }
         else if (key == GLFW_KEY_N) {
-            GraphicSettings::debugNormals = !GraphicSettings::debugNormals;
+            Graphics::debugNormals = !Graphics::debugNormals;
         }
         else if (key == GLFW_KEY_V) {
-            GraphicSettings::backFaceCulling = !GraphicSettings::backFaceCulling;
+            Graphics::backFaceCulling = !Graphics::backFaceCulling;
         }
         else if (key == GLFW_KEY_F) {
-            GraphicSettings::fillTriangles = !GraphicSettings::fillTriangles;
+            Graphics::fillTriangles = !Graphics::fillTriangles;
         }
         else if (key == GLFW_KEY_M) {
-            GraphicSettings::displayWireFrames = !GraphicSettings::displayWireFrames;
+            Graphics::displayWireFrames = !Graphics::displayWireFrames;
         }
         else if (key == GLFW_KEY_COMMA) {
-            GraphicSettings::debugAxes = !GraphicSettings::debugAxes;
+            Graphics::debugAxes = !Graphics::debugAxes;
+        }
+        else if (key == GLFW_KEY_PERIOD) {
+            Graphics::debugSphereCollisions = !Graphics::debugSphereCollisions;
+            Graphics::debugBoxCollisions = !Graphics::debugBoxCollisions;
         }
         else if (key == GLFW_KEY_L) {
-            GraphicSettings::lighting = !GraphicSettings::lighting;
+            Graphics::lighting = !Graphics::lighting;
         }
         else if (key == GLFW_KEY_ESCAPE)
         {
@@ -201,11 +205,11 @@ void OnKeyPressEvent(GLFWwindow* window, int key, int scancode, int action, int 
         }
         else if (key == GLFW_KEY_F4)
         {
-            GraphicSettings::vfx = !GraphicSettings::vfx;
+            Graphics::vfx = !Graphics::vfx;
         }
         else if (key == GLFW_KEY_F5)
         {
-            GraphicSettings::matrixMode = !GraphicSettings::matrixMode;
+            Graphics::matrixMode = !Graphics::matrixMode;
         }
         else if (key == GLFW_KEY_F6)
         {

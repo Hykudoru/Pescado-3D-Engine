@@ -88,7 +88,7 @@ static struct DrawAPI
 };
 
 //-----------GRAPHICS---------------
-struct GraphicSettings
+struct Graphics
 {
     static bool frustumCulling;
     static bool backFaceCulling;
@@ -96,6 +96,8 @@ struct GraphicSettings
     static bool debugNormals;
     static bool debugVertices;
     static bool debugAxes;
+    static bool debugBoxCollisions;
+    static bool debugSphereCollisions;
     static bool perspective;
     static bool fillTriangles;
     static bool displayWireFrames;
@@ -103,18 +105,20 @@ struct GraphicSettings
     static bool vfx;
     static bool matrixMode;
 };
-bool GraphicSettings::frustumCulling = true;
-bool GraphicSettings::backFaceCulling = true;
-bool GraphicSettings::invertNormals = false;
-bool GraphicSettings::debugNormals = false;
-bool GraphicSettings::debugVertices = false;
-bool GraphicSettings::debugAxes = false;
-bool GraphicSettings::perspective = true;
-bool GraphicSettings::fillTriangles = true;
-bool GraphicSettings::displayWireFrames = false;
-bool GraphicSettings::lighting = true;
-bool GraphicSettings::vfx = false;
-bool GraphicSettings::matrixMode = false;
+bool Graphics::frustumCulling = true;
+bool Graphics::backFaceCulling = true;
+bool Graphics::invertNormals = false;
+bool Graphics::debugNormals = false;
+bool Graphics::debugVertices = false;
+bool Graphics::debugAxes = false;
+bool Graphics::debugBoxCollisions = false;
+bool Graphics::debugSphereCollisions = false;
+bool Graphics::perspective = true;
+bool Graphics::fillTriangles = true;
+bool Graphics::displayWireFrames = false;
+bool Graphics::lighting = true;
+bool Graphics::vfx = false;
+bool Graphics::matrixMode = false;
 
 struct CameraSettings
 {
@@ -238,7 +242,7 @@ void FOV(int deg)
 
 Matrix4x4 ProjectionMatrix()
 {
-    if (GraphicSettings::perspective) {
+    if (Graphics::perspective) {
         return perspectiveProjectionMatrix;
     }
     else {
@@ -355,26 +359,26 @@ struct Triangle : Plane
         Vec4 p2 = verts[1];
         Vec4 p3 = verts[2];
 
-        if (GraphicSettings::fillTriangles == false) 
+        if (Graphics::fillTriangles == false) 
         {
-            GraphicSettings::displayWireFrames = true;
+            Graphics::displayWireFrames = true;
         }
 
         //glColor3ub(255, 255, 255);
-        if (GraphicSettings::matrixMode)
+        if (Graphics::matrixMode)
         {
             DrawAPI::SetDrawColor(0, 255, 0);
         }
 
-        if (GraphicSettings::fillTriangles)
+        if (Graphics::fillTriangles)
         {
             DrawAPI::SetDrawColor(color.x, color.y, color.z);
             DrawAPI::DrawTriangleFilled(p1, p2, p3);
         }
 
-        if (GraphicSettings::displayWireFrames)
+        if (Graphics::displayWireFrames)
         {
-            if (GraphicSettings::fillTriangles)
+            if (Graphics::fillTriangles)
             {
                 float c = Clamp(1.0 / (0.000001 + (color.x + color.y + color.z) / 3), 0, 255);
                 DrawAPI::SetDrawColor(c, c, c);
@@ -690,7 +694,7 @@ public:
             Vec3 p3_c = camSpaceTri.verts[2];
             camSpaceTri.Centroid();
 
-            if (GraphicSettings::frustumCulling)
+            if (Graphics::frustumCulling)
             {
                 bool tooCloseToCamera = (p1_c.z >= nearClippingPlane || p2_c.z >= nearClippingPlane || p3_c.z >= nearClippingPlane || camSpaceTri.centroid.z >= nearClippingPlane);
                 if (tooCloseToCamera) {
@@ -720,13 +724,13 @@ public:
             // Calculate triangle suface Normal
             camSpaceTri.Normal();//camSpaceTri.normal = worldToViewMatrix * modelToWorldMatrix * Vec4(camSpaceTri.normal, 0);
 
-            if (GraphicSettings::invertNormals) {
+            if (Graphics::invertNormals) {
                 camSpaceTri.normal = ((Vec3) camSpaceTri.normal) * -1.0;
             }
 
             // Back-face Culling - Checks if the triangles backside is facing the camera.
             // Condition makes this setting optional when drawing wireframes alone, but will force culling if triangles are filled.
-            if (GraphicSettings::backFaceCulling || GraphicSettings::fillTriangles)
+            if (Graphics::backFaceCulling || Graphics::fillTriangles)
             {
                 Vec3 posRelativeToCam = camSpaceTri.centroid;// Since camera is (0,0,0) in view space, the displacement vector from camera to centroid IS the centroid itself.
                 bool faceInvisibleToCamera = DotProduct(posRelativeToCam, (Vec3) camSpaceTri.normal) >= 0;
@@ -737,7 +741,7 @@ public:
 
             //------------------------ Lighting (world space)------------------------
             
-            if (GraphicSettings::lighting && GraphicSettings::fillTriangles)
+            if (Graphics::lighting && Graphics::fillTriangles)
             {
                 Vec3 lightSource = Direction::up + Direction::right + Direction::back * .3;
                 float amountFacingLight = DotProduct((Vec3)worldSpaceTri.Normal(), lightSource);
@@ -746,7 +750,7 @@ public:
                 projectedTri.color = colorLit;
             }
 
-            if (GraphicSettings::vfx)
+            if (Graphics::vfx)
             {
                 Vec3 screenLeftSide = Vec3(-1, 0, 0);
                 Vec3 screenRightSide = Vec3(1, 0, 0);
@@ -761,7 +765,7 @@ public:
                 }
             }
             // ---------- Debugging -----------
-            if (GraphicSettings::debugNormals)
+            if (Graphics::debugNormals)
             {
                 //---------Draw point at centroid and a line from centroid to normal (view space & projected space)-----------
                 Vec2 centroidToNormal_p = projectionMatrix * ((Vec3)camSpaceTri.centroid + camSpaceTri.normal);
@@ -1002,7 +1006,7 @@ void Draw()
     // ---------- Transform -----------
     for (int i = 0; i < Mesh::count; i++)
     {
-        if (GraphicSettings::frustumCulling)
+        if (Graphics::frustumCulling)
         {
             // Scale/Distance ratio culling
             /*bool tooSmallToSee = Mesh::objects[i]->scale.SqrMagnitude() / (Mesh::objects[i]->position - Camera::main->position).SqrMagnitude() < 0.000000125;
@@ -1035,7 +1039,7 @@ void Draw()
             }
 
             // ---------- Debug -----------
-            if (GraphicSettings::debugAxes)
+            if (Graphics::debugAxes)
             {
                 Matrix4x4 mvp = ProjectionMatrix() * Camera::main->TRInverse() * Mesh::objects[i]->TRS();
 
