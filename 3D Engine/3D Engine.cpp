@@ -37,7 +37,7 @@ void Debug()
     }
 }
 
-Mesh* textHelloWorld;
+Mesh* giantText;
 Mesh* planet;
 Mesh* spaceShip;
 Mesh* spaceShip2;
@@ -71,10 +71,10 @@ void Init(GLFWwindow* window)
     planet->position += Direction::forward * 1000;
     planet->color = &RGB::white;
     
-    textHelloWorld = LoadMeshFromOBJFile("Hello3DWorldText.obj");
-    textHelloWorld->scale = Vec3(2, 2, 2);
-    textHelloWorld->position = Vec3(0, 0, -490);
-    textHelloWorld->color = &RGB::green;
+    giantText = LoadMeshFromOBJFile("PescadoTextThickLime.obj");// "PescadoText.obj");//"Hello3DWorldText.obj");
+    giantText->scale = Vec3(2.5, 2.5, 2.5);
+    giantText->position = Vec3(50, 25, -490);
+   // textHelloWorld->color = &RGB::green;
     
     spaceShip = LoadMeshFromOBJFile("SpaceShip_2.2.obj");
     spaceShip->position = Direction::left * 30 + Direction::forward * 10;

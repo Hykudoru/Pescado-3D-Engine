@@ -743,7 +743,7 @@ public:
             
             if (Graphics::lighting && Graphics::fillTriangles)
             {
-                Vec3 lightSource = Direction::up + Direction::right + Direction::back * .3;
+                Vec3 lightSource = Direction::up + Direction::right + Direction::back * .5;
                 float amountFacingLight = DotProduct((Vec3)worldSpaceTri.Normal(), lightSource);
                 Color colorLit = (projectedTri.color* Clamp(amountFacingLight, 0.15, 1));
 
