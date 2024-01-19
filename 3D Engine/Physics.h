@@ -164,6 +164,51 @@ struct SphereCollisionInfo: public CollisionInfo
     Vec3 lineOfImpact = Vec3::zero;
 };
 
+void CalculateCollision(Vec3 lineOfImpact, float m1, float m2, Vec3& v1, Vec3& v2, float e = 1.0)
+{
+    /* Elastic collision (conserves both momentum and kinetic energy)
+    Conservation Momentum: m1*v1 + m2*v2 = m1*v1' + m2*v2'
+    Conservation Kinetic Energy: v1 + v1' = v2 + v2'
+    Coefficient of Restitution: e = v2'-v1' / v1-v2
+        e = 1 Perfectly elastic
+        0 < e < 1 inelastic
+        e = 0 Perfectly inelastic
+    */
+    lineOfImpact.Normalize();
+    Vec3 v1LineOfImpact = lineOfImpact * DotProduct(v1, lineOfImpact);
+    Vec3 v2LineOfImpact = lineOfImpact * DotProduct(v2, lineOfImpact);
+    Vec3 v1LineOfImpactFinal = (v1LineOfImpact * m1 + v2LineOfImpact * m2 * 2.0 - v1LineOfImpact * m2) * (1.0 / (m1 + m2));
+    Vec3 v2LineOfImpactFinal = ((v1LineOfImpact - v2LineOfImpact) * e) + v1LineOfImpactFinal;// e(v1-v2)+v1' = v2'
+    Vec3 v1PerpendicularFinal = (v1 - v1LineOfImpact);//Perpendicular Velocity is the same before and after impact
+    Vec3 v2PerpendicularFinal = (v2 - v2LineOfImpact);//Perpendicular Velocity is the same before and after impact
+    Vec3 v1Final = v1LineOfImpactFinal + v1PerpendicularFinal;
+    Vec3 v2Final = v2LineOfImpactFinal + v2PerpendicularFinal;
+
+    v1 = v1Final;
+    v2 = v2Final;
+}
+/* TO-DO
+bool SpherePlaneColliding(SphereCollider& sphere, Plane& plane, SphereCollisionInfo& collisionInfo, bool resolve = true)
+{
+    Vec3 sphereCenter = sphere.Position();
+    Vec3 v = sphereCenter - plane.verts[0];
+    Vec3 vProj = plane.normal * DotProduct(v, plane.normal);
+    Vec3 closestPointOnPlane = (sphereCenter - vProj) * -1.0;
+    if ((closestPointOnPlane- sphereCenter).SqrMagnitude() < sphere.radius * sphere.radius)
+    {
+        collisionInfo.colliding = true;
+        if (resolve) 
+        {
+            Vec3 pointOnSphere = ClosestPointOnSphere(sphereCenter, sphere.radius, closestPointOnPlane);
+            Vec3 offset = pointOnSphere - closestPointOnPlane;//overlapping
+            sphere.root->position -= offset;
+            collisionInfo.lineOfImpact = offset.Normalized();
+        }        
+    }
+
+    return collisionInfo.colliding;
+}*/
+
 bool SpheresColliding(SphereCollider& sphere1, SphereCollider& sphere2, SphereCollisionInfo& collisionInfo, bool resolve = true)
 {
     Vec3 pointOnSphere1 = ClosestPointOnSphere(sphere1.Position(), sphere1.radius, sphere2.Position());
@@ -193,7 +238,7 @@ bool SpheresColliding(SphereCollider& sphere1, SphereCollider& sphere2, SphereCo
 }
 
 // Oriented Bounding Box (OBB) with Separating Axis Theorem (SAT) algorithm
-bool OBBSATCollision(BoxCollider& physObj1, BoxCollider& physObj2, BoxCollisionInfo& collisionInfo, bool resolve = true)
+bool OBBSATColliding(BoxCollider& physObj1, BoxCollider& physObj2, BoxCollisionInfo& collisionInfo, bool resolve = true)
 {
     bool gap = true;
 
@@ -355,12 +400,8 @@ void DetectCollisions()
             }
 
             BoxCollisionInfo collisionInfo;
-            if (OBBSATCollision(*box1, *box2, collisionInfo))
+            if (OBBSATColliding(*box1, *box2, collisionInfo))
             {   
-                if (Graphics::debugBoxCollisions)
-                {
-
-                }
                 if (Physics::dynamics)
                 {   
                     if (box1->object->body.isKinematic || box2->object->body.isKinematic) {
@@ -381,20 +422,14 @@ void DetectCollisions()
                         box2->object->body.velocity = Vec3::zero;
                     }
 
-                    float m1 = box1->object->body.mass;
-                    float m2 = box2->object->body.mass;
-                    Vec3 v1 = box1->object->body.velocity;
-                    Vec3 v2 = box2->object->body.velocity;
-
-                    /* Elastic collision (conserves both momentum and kinetic energy)
-                    Conservation Momentum: m1*v1 + m2*v2 = m1*v1' + m2*v2'
-                    Conservation Kinetic Energy: v1 + v1' = v2 + v2'
-                    The eq below were solved from the system of eq above.*/
-                    Vec3 v1Final = (v1 * m1 + v2 * m2 * 2.0 - v1 * m2) * (1.0 / (m1 + m2));
-                    Vec3 v2Final = v1 + v1Final - v2;
-
-                    box1->object->body.velocity = v1Final;
-                    box2->object->body.velocity = v2Final;
+                    CalculateCollision(
+                        collisionInfo.minOverlapAxis, 
+                        box1->object->body.mass, 
+                        box2->object->body.mass, 
+                        box1->object->body.velocity, 
+                        box2->object->body.velocity, 
+                        1.0
+                    );
                 }
             }
         }
@@ -445,32 +480,14 @@ void DetectCollisions()
                         sphere2->object->body.velocity = Vec3::zero;
                     }
 
-                    float m1 = sphere1->object->body.mass;
-                    float m2 = sphere2->object->body.mass;
-                    Vec3 v1 = sphere1->object->body.velocity;
-                    Vec3 v2 = sphere2->object->body.velocity;
-
-                    /* Elastic collision (conserves both momentum and kinetic energy)
-                    Conservation Momentum: m1*v1 + m2*v2 = m1*v1' + m2*v2'
-                    Conservation Kinetic Energy: v1 + v1' = v2 + v2'
-                    Coefficient of Restitution: e = v2'-v1' / v1-v2
-                        e = 1 Perfectly elastic
-                        0 < e < 1 inelastic
-                        e = 0 Perfectly inelastic
-                    */
-                    float e = 1.0;// e = v2'-v1' / v1-v2
-                    Vec3 lineOfImpact = collisionInfo.lineOfImpact.Normalized();
-                    Vec3 v1LineOfImpact = lineOfImpact * DotProduct(v1, lineOfImpact);
-                    Vec3 v2LineOfImpact = lineOfImpact * DotProduct(v2, lineOfImpact);
-                    Vec3 v1LineOfImpactFinal = (v1LineOfImpact * m1 + v2LineOfImpact * m2 * 2.0 - v1LineOfImpact * m2) * (1.0 / (m1 + m2));
-                    Vec3 v2LineOfImpactFinal = ((v1LineOfImpact - v2LineOfImpact)*e) + v1LineOfImpactFinal;// e(v1-v2)+v1' = v2'
-                    Vec3 v1PerpendicularFinal = (v1 - v1LineOfImpact);//Perpendicular Velocity is the same before and after impact
-                    Vec3 v2PerpendicularFinal = (v2 - v2LineOfImpact);//Perpendicular Velocity is the same before and after impact
-                    Vec3 v1Final = v1LineOfImpactFinal + v1PerpendicularFinal;
-                    Vec3 v2Final = v2LineOfImpactFinal + v2PerpendicularFinal;
-
-                    sphere1->object->body.velocity = v1Final;
-                    sphere2->object->body.velocity = v2Final;
+                    CalculateCollision(
+                        collisionInfo.lineOfImpact,
+                        sphere1->object->body.mass,
+                        sphere2->object->body.mass,
+                        sphere1->object->body.velocity,
+                        sphere2->object->body.velocity,
+                        1.0
+                    );
                 }
             }
         }
@@ -612,7 +629,11 @@ static void Physics()
 
         onoff = Physics::gravity ? "On" : "Off";
         std::cout << "Gravity: " << onoff << " (press G)" << endl;
-
+        
+        std::cout << "Sphere Colliders: " << ManagedObjectPool<SphereCollider>::count << endl;
+        std::cout << "Box Colliders: " << ManagedObjectPool<BoxCollider>::count << endl;
+        std::cout << "Colliders: " << ManagedObjectPool<PhysicsObject>::count << endl;
+        
         std::cout << "--------PLAYER-------" << endl;
 
         onoff = isKinematic ? "On" : "Off";
