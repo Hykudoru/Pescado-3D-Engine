@@ -83,7 +83,10 @@ class Collider: public Transform, public Component
 public:
     bool isStatic = false;
     float coefficientRestitution = 1.0;
-    Collider(){}
+    Collider(bool isStatic)
+    {
+        this->isStatic = isStatic;
+    }
 };
 
 class BoxCollider: public Collider, public ManagedObjectPool<BoxCollider>
@@ -103,7 +106,7 @@ public:
         Vec3(1, -1, -1)
      });
 
-    BoxCollider() : ManagedObjectPool<BoxCollider>(this){}
+    BoxCollider(bool isStatic = false) : Collider(isStatic), ManagedObjectPool<BoxCollider>(this){}
 
     //Convert to world coordinates
     List<Vec3> WorldBounds()
@@ -123,14 +126,14 @@ class SphereCollider: public Collider, public ManagedObjectPool<SphereCollider>
 {
 public:
     float radius = 1;
-    SphereCollider() : ManagedObjectPool<SphereCollider>(this) {}
+    SphereCollider(bool isStatic = false) : Collider(isStatic), ManagedObjectPool<SphereCollider>(this) {}
 };
 
 class PlaneCollider: public Collider, public ManagedObjectPool<PlaneCollider>
 {
 public:
     Vec3 normal;
-    PlaneCollider(Vec3 normal) : ManagedObjectPool<PlaneCollider>(this) 
+    PlaneCollider(Vec3 normal, bool isStatic = false) : Collider(isStatic), ManagedObjectPool<PlaneCollider>(this) 
     {
         this->normal = normal;
     }
@@ -213,14 +216,7 @@ bool SpherePlaneColliding(SphereCollider& sphere, PlaneCollider& plane, SphereCo
     Vec3 normal = plane.Rotation() * plane.normal;
     Vec3 vPerp = normal * (DotProduct(v, normal));//ProjectOnPlane(v, plane.plane.normal);
     Vec3 closestPointOnPlane = sphereCenter - vPerp;
-    if (Graphics::debugPlaneCollisions)
-    {
-        Vec3 vProj = ProjectOnPlane(v, normal);
-        Line::AddWorldLine(Line(plane.Position(), plane.Position() + normal, RGB::gray));
-        Line::AddWorldLine(Line(sphereCenter, closestPointOnPlane, RGB::red));
-        Point::AddWorldPoint(Point(sphereCenter, RGB::gray, 10));
-        Point::AddWorldPoint(Point(closestPointOnPlane, RGB::red, 10));
-    }
+    
     if ((closestPointOnPlane - sphereCenter).SqrMagnitude() < sphere.radius * sphere.radius)
     {
         collisionInfo.colliding = true;
@@ -233,14 +229,25 @@ bool SpherePlaneColliding(SphereCollider& sphere, PlaneCollider& plane, SphereCo
         }        
     }
 
+    if (Graphics::debugPlaneCollisions)
+    {
+        Vec3 vProj = ProjectOnPlane(v, normal);
+        Line::AddWorldLine(Line(plane.Position(), plane.Position() + normal, RGB::gray));
+        Line::AddWorldLine(Line(sphereCenter, closestPointOnPlane, RGB::red));
+        Point::AddWorldPoint(Point(sphereCenter, RGB::gray, 10));
+        Point::AddWorldPoint(Point(closestPointOnPlane, RGB::red, 10));
+    }
+
     return collisionInfo.colliding;
 }
 
 bool SpheresColliding(SphereCollider& sphere1, SphereCollider& sphere2, SphereCollisionInfo& collisionInfo, bool resolve = true)
 {
-    Vec3 pointOnSphere1 = ClosestPointOnSphere(sphere1.Position(), sphere1.radius, sphere2.Position());
-    Vec3 pointOnSphere2 = ClosestPointOnSphere(sphere2.Position(), sphere2.radius, sphere1.Position());
-    float squareMagToPointOnSphere2 = (pointOnSphere2 - sphere1.Position()).SqrMagnitude();
+    Vec3 sphere1Pos = sphere1.Position();
+    Vec3 sphere2Pos = sphere2.Position();
+    Vec3 pointOnSphere1 = ClosestPointOnSphere(sphere1Pos, sphere1.radius, sphere2Pos);
+    Vec3 pointOnSphere2 = ClosestPointOnSphere(sphere2Pos, sphere2.radius, sphere1Pos);
+    float squareMagToPointOnSphere2 = (pointOnSphere2 - sphere1Pos).SqrMagnitude();
     collisionInfo.colliding = squareMagToPointOnSphere2 < sphere1.radius * sphere1.radius;
     if (collisionInfo.colliding)
     {
