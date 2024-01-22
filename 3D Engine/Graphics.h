@@ -843,7 +843,7 @@ public:
 };
 
 //---------------------------------PLANE---------------------------------------------
-class PlaneMesh : Mesh
+class PlaneMesh : public Mesh
 {
 public:
     PlaneMesh(int scale = 1, Vec3 position = Vec3(0, 0, 0), Vec3 rotationEuler = Vec3(0, 0, 0))

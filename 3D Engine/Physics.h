@@ -82,6 +82,7 @@ class Collider: public Transform, public Component
 {
 public:
     bool isStatic = false;
+    float coefficientRestitution = 1.0;
     Collider(){}
 };
 
@@ -123,6 +124,16 @@ class SphereCollider: public Collider, public ManagedObjectPool<SphereCollider>
 public:
     float radius = 1;
     SphereCollider() : ManagedObjectPool<SphereCollider>(this) {}
+};
+
+class PlaneCollider: public Collider, public ManagedObjectPool<PlaneCollider>
+{
+public:
+    Plane plane;
+    PlaneCollider(Plane plane) : ManagedObjectPool<PlaneCollider>(this) 
+    {
+        this->plane = plane;
+    }
 };
 
 class PhysicsObject: public Transform, public ManagedObjectPool<PhysicsObject>
@@ -187,14 +198,27 @@ void CalculateCollision(Vec3 lineOfImpact, float m1, float m2, Vec3& v1, Vec3& v
     v1 = v1Final;
     v2 = v2Final;
 }
-/* TO-DO
-bool SpherePlaneColliding(SphereCollider& sphere, Plane& plane, SphereCollisionInfo& collisionInfo, bool resolve = true)
+
+void CalculateStaticCollision(Vec3 lineOfImpact, Vec3& v1, float e = 1.0)
+{
+    Vec3 v1LineOfImpact = lineOfImpact * DotProduct(v1, lineOfImpact);
+    Vec3 v1PerpendicularFinal = (v1 - v1LineOfImpact);//Perpendicular Velocity is the same before and after impact
+    v1 = (v1LineOfImpact * -e) + v1PerpendicularFinal;
+}
+
+bool SpherePlaneColliding(SphereCollider& sphere, PlaneCollider& plane, SphereCollisionInfo& collisionInfo, bool resolve = true)
 {
     Vec3 sphereCenter = sphere.Position();
-    Vec3 v = sphereCenter - plane.verts[0];
-    Vec3 vProj = plane.normal * DotProduct(v, plane.normal);
-    Vec3 closestPointOnPlane = (sphereCenter - vProj) * -1.0;
-    if ((closestPointOnPlane- sphereCenter).SqrMagnitude() < sphere.radius * sphere.radius)
+    Vec3 v = sphereCenter - plane.Position();
+    Vec3 vPerp = plane.plane.normal * (DotProduct(v, plane.plane.normal));//ProjectOnPlane(v, plane.plane.normal);
+    Vec3 closestPointOnPlane = sphereCenter - vPerp;
+    
+    Line::AddWorldLine(Line(plane.Position(), plane.plane.normal, RGB::gray));
+    Line::AddWorldLine(Line(sphereCenter, closestPointOnPlane, RGB::red));
+    Line::AddWorldLine(Line(plane.Position(), closestPointOnPlane, RGB::red));
+    Point::AddWorldPoint(Point(closestPointOnPlane, RGB::red, 10));
+
+    if ((closestPointOnPlane - sphereCenter).SqrMagnitude() < sphere.radius * sphere.radius)
     {
         collisionInfo.colliding = true;
         if (resolve) 
@@ -202,12 +226,12 @@ bool SpherePlaneColliding(SphereCollider& sphere, Plane& plane, SphereCollisionI
             Vec3 pointOnSphere = ClosestPointOnSphere(sphereCenter, sphere.radius, closestPointOnPlane);
             Vec3 offset = pointOnSphere - closestPointOnPlane;//overlapping
             sphere.root->position -= offset;
-            collisionInfo.lineOfImpact = offset.Normalized();
+            collisionInfo.lineOfImpact = plane.plane.normal * -1.0;
         }        
     }
 
     return collisionInfo.colliding;
-}*/
+}
 
 bool SpheresColliding(SphereCollider& sphere1, SphereCollider& sphere2, SphereCollisionInfo& collisionInfo, bool resolve = true)
 {
@@ -375,25 +399,25 @@ bool OBBSATColliding(BoxCollider& physObj1, BoxCollider& physObj2, BoxCollisionI
 void DetectCollisions()
 {
     // How nested loop algorithm works: 
-    // Gets meshes A, B, C, D, E...
+    // Gets colliders A, B, C, D, E...
     // Compare A:B, A:C, A:D, A:E
     // Compare B:C, B:D, B:E
     // Compare C:D, C:E
     // Compare D:E
-    for (size_t i = 0; i < ManagedObjectPool<BoxCollider>::count; i++)
+    for (size_t i = 0; i < BoxCollider::count; i++)
     {
         // exit if this is the last Collider
-        if ((i + 1) >= ManagedObjectPool<BoxCollider>::count) {
+        if ((i + 1) >= BoxCollider::count) {
             break;
         }
         
         // Current Collider
-        BoxCollider* box1 = ManagedObjectPool<BoxCollider>::objects[i];
+        BoxCollider* box1 = BoxCollider::objects[i];
 
-        for (size_t j = i + 1; j < ManagedObjectPool<BoxCollider>::count; j++)
+        for (size_t j = i + 1; j < BoxCollider::count; j++)
         { 
             // Next Collider
-            BoxCollider* box2 = ManagedObjectPool<BoxCollider>::objects[j];
+            BoxCollider* box2 = BoxCollider::objects[j];
             
             if (box1->isStatic && box2->isStatic) {
                 continue;
@@ -435,21 +459,16 @@ void DetectCollisions()
         }
     }
 
-
-    for (size_t i = 0; i < ManagedObjectPool<SphereCollider>::count; i++)
+    for (size_t i = 0; i < SphereCollider::count; i++)
     {
-        // exit if this is the last Collider
-        if ((i + 1) >= ManagedObjectPool<SphereCollider>::count) {
-            break;
-        }
-
         // Current Collider
-        SphereCollider* sphere1 = ManagedObjectPool<SphereCollider>::objects[i];
+        SphereCollider* sphere1 = SphereCollider::objects[i];
 
-        for (size_t j = i + 1; j < ManagedObjectPool<SphereCollider>::count; j++)
+        // SPHERE-SPHERE COLLISIONS
+        for (size_t j = i + 1; j < SphereCollider::count; j++)
         {
             // Next Collider
-            SphereCollider* sphere2 = ManagedObjectPool<SphereCollider>::objects[j];
+            SphereCollider* sphere2 = SphereCollider::objects[j];
 
             if (sphere1->isStatic && sphere2->isStatic) {
                 continue;
@@ -458,8 +477,6 @@ void DetectCollisions()
             SphereCollisionInfo collisionInfo;
             if (SpheresColliding(*sphere1, *sphere2, collisionInfo))
             {
-                sphere1->object->mesh->color = &RGB::pink;
-                sphere2->object->mesh->color = &RGB::pink;
                 if (Physics::dynamics)
                 {
                     if (sphere1->object->body.isKinematic || sphere2->object->body.isKinematic) {
@@ -473,21 +490,64 @@ void DetectCollisions()
                     */
                     if (sphere1->isStatic)
                     {
-                        sphere1->object->body.velocity = Vec3::zero;
+                        CalculateStaticCollision(collisionInfo.lineOfImpact, sphere2->object->body.velocity, sphere2->coefficientRestitution);
                     }
                     else if (sphere2->isStatic)
                     {
-                        sphere2->object->body.velocity = Vec3::zero;
+                        CalculateStaticCollision(collisionInfo.lineOfImpact, sphere1->object->body.velocity, sphere1->coefficientRestitution);
                     }
+                    else
+                    {
+                        CalculateCollision(
+                            collisionInfo.lineOfImpact,
+                            sphere1->object->body.mass,
+                            sphere2->object->body.mass,
+                            sphere1->object->body.velocity,
+                            sphere2->object->body.velocity,
+                            1.0
+                        );
+                    }
+                }
+            }
+        }
 
-                    CalculateCollision(
-                        collisionInfo.lineOfImpact,
-                        sphere1->object->body.mass,
-                        sphere2->object->body.mass,
-                        sphere1->object->body.velocity,
-                        sphere2->object->body.velocity,
-                        1.0
-                    );
+        // SPHERE-PLANE COLLISIONS
+        for (size_t ii = 0; ii < PlaneCollider::count; ii++)
+        {
+            // Next Collider
+            PlaneCollider* plane = PlaneCollider::objects[ii];
+
+            if (sphere1->isStatic && plane->isStatic) {
+                continue;
+            }
+
+            SphereCollisionInfo collisionInfo;
+            if (SpherePlaneColliding(*sphere1, *plane, collisionInfo))
+            {
+                if (Physics::dynamics)
+                {
+                    if (sphere1->object->body.isKinematic || plane->object->body.isKinematic) {
+                        continue;
+                    }
+                    if (sphere1->isStatic)
+                    {
+                        //...
+                    }
+                    else if (plane->isStatic)
+                    {
+                        CalculateStaticCollision(collisionInfo.lineOfImpact, sphere1->object->body.velocity, sphere1->coefficientRestitution);                        
+                    }
+                    else 
+                    {
+                        CalculateCollision(
+                            collisionInfo.lineOfImpact,
+                            sphere1->object->body.mass,
+                            plane->object->body.mass,
+                            sphere1->object->body.velocity,
+                            plane->object->body.velocity,
+                            1.0
+                        );
+                    }
                 }
             }
         }

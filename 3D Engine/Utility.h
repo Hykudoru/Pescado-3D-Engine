@@ -59,13 +59,43 @@ struct Plane
     Plane(Vec3 pointOnPlane, Vec3 normal)
     {
         this->normal = normal;
+        verts[0] = pointOnPlane;
         float D = DotProduct(normal, pointOnPlane);
-        float xIntercept = D / normal.x;
-        float yIntercept = D / normal.y;
-        float zIntercept = D / normal.z;
-        verts[0] = Vec3(xIntercept, 0, 0);
-        verts[1] = Vec3(0, yIntercept, 0);
-        verts[2] = Vec3(0, 0, zIntercept);
+        float x = pointOnPlane.x;
+        float y = pointOnPlane.y;
+        float z = pointOnPlane.z;
+        
+        if (normal.x == 0.0 && normal.y == 0.0 && normal.z == 1.0)
+        {
+            verts[1] = pointOnPlane + Vec3(1, 1, 0);
+            verts[2] = pointOnPlane + Vec3(-1, 1, 0);
+            return;
+        }
+        else if (normal.x == 0.0 && normal.y == 1.0 && normal.z == 0.0)
+        {
+            verts[1] = pointOnPlane + Vec3(1, 0, 1);
+            verts[2] = pointOnPlane + Vec3(-1, 0, 1);
+            return;
+        }
+        else if (normal.x == 1.0 && normal.y == 0.0 && normal.z == 0.0)
+        {
+            verts[1] = pointOnPlane + Vec3(0, 1, 1);
+            verts[2] = pointOnPlane + Vec3(0, -1, 1);
+            return;
+        }
+
+        if (normal.x != 0.0) {
+            x = D / normal.x;
+            verts[0] = Vec3(x, 0, 0);
+        }
+        if (normal.y != 0.0) {
+            y = D / normal.y;
+            verts[0] = Vec3(0, y, 0);
+        }
+        if (normal.x != 0.0) {
+            z = D / normal.z;
+            verts[0] = Vec3(0, 0, z);
+        }
     }
 
     Vec3 Normal()
