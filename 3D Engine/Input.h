@@ -195,6 +195,12 @@ void OnKeyPressEvent(GLFWwindow* window, int key, int scancode, int action, int 
         else if (key == GLFW_KEY_PERIOD) {
             Graphics::debugSphereCollisions = !Graphics::debugSphereCollisions;
             Graphics::debugBoxCollisions = !Graphics::debugBoxCollisions;
+            Graphics::debugPlaneCollisions = false;
+        }
+        else if (key == GLFW_KEY_EQUAL) {
+            Graphics::debugPlaneCollisions = !Graphics::debugPlaneCollisions;
+            Graphics::debugSphereCollisions = false;
+            Graphics::debugBoxCollisions = false;
         }
         else if (key == GLFW_KEY_L) {
             Graphics::lighting = !Graphics::lighting;

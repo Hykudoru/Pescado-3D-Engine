@@ -217,9 +217,8 @@ bool SpherePlaneColliding(SphereCollider& sphere, PlaneCollider& plane, SphereCo
     {
         Vec3 vProj = ProjectOnPlane(v, normal);
         Line::AddWorldLine(Line(plane.Position(), plane.Position() + normal, RGB::gray));
-        Line::AddWorldLine(Line(plane.Position(), plane.Position() + vProj, RGB::gray));
         Line::AddWorldLine(Line(sphereCenter, closestPointOnPlane, RGB::red));
-        //Line::AddWorldLine(Line(plane.Position(), closestPointOnPlane, RGB::red));
+        Point::AddWorldPoint(Point(sphereCenter, RGB::gray, 10));
         Point::AddWorldPoint(Point(closestPointOnPlane, RGB::red, 10));
     }
     if ((closestPointOnPlane - sphereCenter).SqrMagnitude() < sphere.radius * sphere.radius)

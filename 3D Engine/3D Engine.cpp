@@ -128,6 +128,21 @@ void Init(GLFWwindow* window)
 
     physicsObj = ground;
 
+    PhysicsObject* leftWall = new PhysicsObject(new CubeMesh(0.1), new PlaneCollider(Direction::right));
+    leftWall->position = Direction::left * 200;
+    leftWall->collider->isStatic = true;
+
+    PhysicsObject* rightWall = new PhysicsObject(new CubeMesh(0.1), new PlaneCollider(Direction::left));
+    rightWall->position = Direction::right * 200;
+    rightWall->collider->isStatic = true;
+
+    PhysicsObject* backWall = new PhysicsObject(new CubeMesh(0.1), new PlaneCollider(Direction::back));
+    backWall->position = Direction::forward * 200;
+    backWall->collider->isStatic = true;
+
+    PhysicsObject* frontWall = new PhysicsObject(new CubeMesh(0.1), new PlaneCollider(Direction::forward));
+    frontWall->position = Direction::back * 200;
+    frontWall->collider->isStatic = true;
 
 }
 bool temp = false;
