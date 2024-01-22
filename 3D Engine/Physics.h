@@ -690,9 +690,10 @@ static void Physics()
         onoff = Physics::gravity ? "On" : "Off";
         std::cout << "Gravity: " << onoff << " (press G)" << endl;
         
-        std::cout << "Sphere Colliders: " << ManagedObjectPool<SphereCollider>::count << endl;
-        std::cout << "Box Colliders: " << ManagedObjectPool<BoxCollider>::count << endl;
-        std::cout << "Colliders: " << ManagedObjectPool<PhysicsObject>::count << endl;
+        std::cout << "Sphere Colliders: " << SphereCollider::count << endl;
+        std::cout << "Box Colliders: " << BoxCollider::count << endl;
+        std::cout << "Plane Colliders: " << PlaneCollider::count << endl;
+        std::cout << "Colliders: " << PhysicsObject::count << endl;
         
         std::cout << "--------PLAYER-------" << endl;
 

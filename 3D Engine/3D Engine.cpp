@@ -129,7 +129,11 @@ void Init(GLFWwindow* window)
             block->position = Direction::down*15 + Direction::left*i*10 + Direction::back * j*10;
         }
     }
-    
+
+    PhysicsObject* ground = new PhysicsObject(new PlaneMesh(), new PlaneCollider(Plane(Vec3::zero, Direction::up)));
+    ground->collider->isStatic = true;
+    ground->position = Direction::up * -10;
+    ground->rotation = Matrix3x3::RotX(ToRad(-90));
 }
 bool temp = false;
 void Update()
