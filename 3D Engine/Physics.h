@@ -210,10 +210,11 @@ bool SpherePlaneColliding(SphereCollider& sphere, PlaneCollider& plane, SphereCo
 {
     Vec3 sphereCenter = sphere.Position();
     Vec3 v = sphereCenter - plane.Position();
-    Vec3 vPerp = plane.plane.normal * (DotProduct(v, plane.plane.normal));//ProjectOnPlane(v, plane.plane.normal);
+    Vec3 normal = plane.Rotation() * plane.plane.normal;
+    Vec3 vPerp = normal * (DotProduct(v, normal));//ProjectOnPlane(v, plane.plane.normal);
     Vec3 closestPointOnPlane = sphereCenter - vPerp;
     
-    Line::AddWorldLine(Line(plane.Position(), plane.plane.normal, RGB::gray));
+    Line::AddWorldLine(Line(plane.Position(), plane.Position() + normal , RGB::gray));
     Line::AddWorldLine(Line(sphereCenter, closestPointOnPlane, RGB::red));
     Line::AddWorldLine(Line(plane.Position(), closestPointOnPlane, RGB::red));
     Point::AddWorldPoint(Point(closestPointOnPlane, RGB::red, 10));
@@ -226,7 +227,7 @@ bool SpherePlaneColliding(SphereCollider& sphere, PlaneCollider& plane, SphereCo
             Vec3 pointOnSphere = ClosestPointOnSphere(sphereCenter, sphere.radius, closestPointOnPlane);
             Vec3 offset = pointOnSphere - closestPointOnPlane;//overlapping
             sphere.root->position -= offset;
-            collisionInfo.lineOfImpact = plane.plane.normal * -1.0;
+            collisionInfo.lineOfImpact = normal *-1.0;
         }        
     }
 

@@ -855,10 +855,10 @@ public:
         if (calls < 1)
         {
             this->vertices = new List<Vec3> {
-                Vec3(-1, -1, 0),
-                Vec3(-1, 1, 0),
-                Vec3(1, 1, 0),
-                Vec3(1, -1, 0)
+                Vec3(-1, 0, 1),
+                Vec3(-1, 0, -1),
+                Vec3(1, 0, -1),
+                Vec3(1, 0, 1)
             };
 
             this->triangles = new List<Triangle>{

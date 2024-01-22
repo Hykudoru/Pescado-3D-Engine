@@ -86,7 +86,6 @@ void Init(GLFWwindow* window)
     spaceShip3 = LoadMeshFromOBJFile("SpaceShip_5.obj");
     spaceShip3->position = Direction::right * 20 + Direction::up * 10;
 
-
     Mesh* parent = new CubeMesh();
     Mesh* child = new CubeMesh();
     Mesh* grandchild = new CubeMesh();
@@ -133,7 +132,8 @@ void Init(GLFWwindow* window)
     PhysicsObject* ground = new PhysicsObject(new PlaneMesh(), new PlaneCollider(Plane(Vec3::zero, Direction::up)));
     ground->collider->isStatic = true;
     ground->position = Direction::up * -10;
-    ground->rotation = Matrix3x3::RotX(ToRad(-90));
+
+    physicsObj = ground;
 }
 bool temp = false;
 void Update()
@@ -142,7 +142,6 @@ void Update()
         physicsObj->position = Camera::main->position + Camera::main->Forward() * 5;
         physicsObj->rotation = Camera::main->rotation;
     }
-    
 }
 
 int main(void)
