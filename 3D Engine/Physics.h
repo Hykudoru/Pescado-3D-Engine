@@ -129,10 +129,10 @@ public:
 class PlaneCollider: public Collider, public ManagedObjectPool<PlaneCollider>
 {
 public:
-    Plane plane;
-    PlaneCollider(Plane plane) : ManagedObjectPool<PlaneCollider>(this) 
+    Vec3 normal;
+    PlaneCollider(Vec3 normal) : ManagedObjectPool<PlaneCollider>(this) 
     {
-        this->plane = plane;
+        this->normal = normal;
     }
 };
 
@@ -210,15 +210,18 @@ bool SpherePlaneColliding(SphereCollider& sphere, PlaneCollider& plane, SphereCo
 {
     Vec3 sphereCenter = sphere.Position();
     Vec3 v = sphereCenter - plane.Position();
-    Vec3 normal = plane.Rotation() * plane.plane.normal;
+    Vec3 normal = plane.Rotation() * plane.normal;
     Vec3 vPerp = normal * (DotProduct(v, normal));//ProjectOnPlane(v, plane.plane.normal);
     Vec3 closestPointOnPlane = sphereCenter - vPerp;
-    
-    Line::AddWorldLine(Line(plane.Position(), plane.Position() + normal , RGB::gray));
-    Line::AddWorldLine(Line(sphereCenter, closestPointOnPlane, RGB::red));
-    Line::AddWorldLine(Line(plane.Position(), closestPointOnPlane, RGB::red));
-    Point::AddWorldPoint(Point(closestPointOnPlane, RGB::red, 10));
-
+    if (Graphics::debugPlaneCollisions)
+    {
+        Vec3 vProj = ProjectOnPlane(v, normal);
+        Line::AddWorldLine(Line(plane.Position(), plane.Position() + normal, RGB::gray));
+        Line::AddWorldLine(Line(plane.Position(), plane.Position() + vProj, RGB::gray));
+        Line::AddWorldLine(Line(sphereCenter, closestPointOnPlane, RGB::red));
+        //Line::AddWorldLine(Line(plane.Position(), closestPointOnPlane, RGB::red));
+        Point::AddWorldPoint(Point(closestPointOnPlane, RGB::red, 10));
+    }
     if ((closestPointOnPlane - sphereCenter).SqrMagnitude() < sphere.radius * sphere.radius)
     {
         collisionInfo.colliding = true;

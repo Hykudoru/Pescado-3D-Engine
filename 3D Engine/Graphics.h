@@ -98,6 +98,7 @@ struct Graphics
     static bool debugAxes;
     static bool debugBoxCollisions;
     static bool debugSphereCollisions;
+    static bool debugPlaneCollisions;
     static bool perspective;
     static bool fillTriangles;
     static bool displayWireFrames;
@@ -113,6 +114,7 @@ bool Graphics::debugVertices = false;
 bool Graphics::debugAxes = false;
 bool Graphics::debugBoxCollisions = false;
 bool Graphics::debugSphereCollisions = false;
+bool Graphics::debugPlaneCollisions = false;
 bool Graphics::perspective = true;
 bool Graphics::fillTriangles = true;
 bool Graphics::displayWireFrames = false;

@@ -56,6 +56,7 @@ struct Plane
         Normal();
     }
 
+    //NEEDS TESTING
     Plane(Vec3 pointOnPlane, Vec3 normal)
     {
         this->normal = normal;

@@ -4,10 +4,10 @@
 #include <GLFW/glfw3.h>
 #include <Graphics.h>
 #include <Physics.h>
-extern CubeMesh* obj1;
-extern CubeMesh* obj2;
-extern CubeMesh* obj3;
-extern CubeMesh* obj4;
+extern CubeMesh* parent;
+extern CubeMesh* child;
+extern CubeMesh* grandchild;
+extern CubeMesh* greatGrandchild;
 //-----------------Input----------------------
 static double deltaMouseX;
 static double deltaMouseY;
@@ -51,7 +51,7 @@ void OnMouseButtonEvent(GLFWwindow* window, int button, int action, int mods)
     {
         // Spawn/Throw Mesh
         if (button == 0) {
-            PhysicsObject* obj = new PhysicsObject(new CubeMesh(), new BoxCollider());//LoadMeshFromOBJFile("Objects/Sphere.obj");
+            PhysicsObject* obj = new PhysicsObject(LoadMeshFromOBJFile("Sphere.obj"), new SphereCollider());//LoadMeshFromOBJFile("Objects/Sphere.obj");
             obj->position = Camera::main->position + (Camera::main->Forward() * 10);
             obj->rotation = Camera::main->rotation;
             obj->body.velocity = velocity + obj->Forward() * 25;
@@ -123,14 +123,14 @@ void OnKeyPressEvent(GLFWwindow* window, int key, int scancode, int action, int 
             obj->position = Camera::main->position + (Camera::main->Forward() * 10);
             obj->rotation = Camera::main->rotation;
             obj->scale *= 2;
-            obj->body.velocity = obj->Forward() * 10;
+            obj->body.velocity = obj->Forward() * 50;
             obj->mesh->color = &RGB::orange;
         }
         else if (glfwGetKey(window, GLFW_KEY_6) == GLFW_PRESS) {
             PhysicsObject* obj = new PhysicsObject(LoadMeshFromOBJFile("Sphere.obj"), new SphereCollider());
             obj->position = Camera::main->position + (Camera::main->Forward() * 10);
             obj->rotation = Camera::main->rotation;
-            obj->body.velocity = velocity + (Camera::main->Forward() * 10);
+            obj->body.velocity = velocity + (Camera::main->Forward() * 50);
         }
         else if (glfwGetKey(window, GLFW_KEY_7) == GLFW_PRESS) {
             Mesh* mesh = LoadMeshFromOBJFile("Diamond.obj");
@@ -213,19 +213,19 @@ void OnKeyPressEvent(GLFWwindow* window, int key, int scancode, int action, int 
         }
         else if (key == GLFW_KEY_F6)
         {
-            obj1->rotation *= Matrix3x3::RotY(ToRad(10));
+            parent->rotation *= Matrix3x3::RotY(ToRad(10));
         }
         else if (key == GLFW_KEY_F7)
         {
-            obj2->rotation *= Matrix3x3::RotY(ToRad(10));
+            child->rotation *= Matrix3x3::RotY(ToRad(10));
         }
         else if (key == GLFW_KEY_F8)
         {
-            obj3->rotation *= Matrix3x3::RotY(ToRad(10));
+            grandchild->rotation *= Matrix3x3::RotY(ToRad(10));
         }
         else if (key == GLFW_KEY_F9)
         {
-            obj4->rotation *= Matrix3x3::RotY(ToRad(10));
+            greatGrandchild->rotation *= Matrix3x3::RotY(ToRad(10));
         }
         // Toggle Transform Hierarchy
         else if (glfwGetKey(window, GLFW_KEY_CAPS_LOCK) == GLFW_PRESS) {

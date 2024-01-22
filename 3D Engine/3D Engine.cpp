@@ -42,13 +42,11 @@ Mesh* planet;
 Mesh* spaceShip;
 Mesh* spaceShip2;
 Mesh* spaceShip3;
-CubeMesh* obj1;
-CubeMesh* obj2;
-CubeMesh* obj3;
-CubeMesh* obj4;
+CubeMesh* parent;
+CubeMesh* child;
+CubeMesh* grandchild;
+CubeMesh* greatGrandchild;
 PhysicsObject* physicsObj;    
-
-
 
 void Init(GLFWwindow* window)
 {
@@ -86,23 +84,17 @@ void Init(GLFWwindow* window)
     spaceShip3 = LoadMeshFromOBJFile("SpaceShip_5.obj");
     spaceShip3->position = Direction::right * 20 + Direction::up * 10;
 
-    Mesh* parent = new CubeMesh();
-    Mesh* child = new CubeMesh();
-    Mesh* grandchild = new CubeMesh();
-    child->parent = parent;
-    grandchild->parent = child;
-
-    obj1 = new CubeMesh(1, Vec3(0, 10, 2), Vec3(0, 45, 0));
-    obj2 = new CubeMesh(1, Vec3(0, 0, 2), Vec3(0, 45, 0));
-    obj3 = new CubeMesh(2, Vec3(0, 0, 2), Vec3(0, 45, 0));
-    obj4 = new CubeMesh(1, Vec3(0, 0, 2), Vec3(0, 45, 0));
-    obj2->SetParent(obj1);
-    obj3->SetParent(obj2);
-    obj4->SetParent(obj3);
-    obj1->color = &RGB::red;
-    obj2->color = &RGB::orange;
-    obj3->color = &RGB::yellow;
-    obj4->color = &RGB::green;
+    parent = new CubeMesh(1, Vec3(0, 10, 2), Vec3(0, 45, 0));
+    child = new CubeMesh(1, Vec3(0, 0, 2), Vec3(0, 45, 0));
+    grandchild = new CubeMesh(2, Vec3(0, 0, 2), Vec3(0, 45, 0));
+    greatGrandchild = new CubeMesh(1, Vec3(0, 0, 2), Vec3(0, 45, 0));
+    child->SetParent(parent);
+    grandchild->SetParent(child);
+    greatGrandchild->SetParent(grandchild);
+    parent->color = &RGB::red;
+    child->color = &RGB::orange;
+    grandchild->color = &RGB::yellow;
+    greatGrandchild->color = &RGB::green;
     //Mesh* guitar = LoadMeshFromOBJFile("Objects/Guitar.obj");
     //guitar->position += (Camera::main->Forward() * 10) + Camera::main->Right();
     //Mesh* chair = LoadMeshFromOBJFile("Objects/Chair.obj");
@@ -129,11 +121,14 @@ void Init(GLFWwindow* window)
         }
     }
 
-    PhysicsObject* ground = new PhysicsObject(new PlaneMesh(), new PlaneCollider(Plane(Vec3::zero, Direction::up)));
+    Graphics::debugPlaneCollisions = true;
+    PhysicsObject* ground = new PhysicsObject(new CubeMesh(0.1), new PlaneCollider(Direction::up));
     ground->collider->isStatic = true;
-    ground->position = Direction::up * -10;
+    ground->position = Direction::down * 15;
 
     physicsObj = ground;
+
+
 }
 bool temp = false;
 void Update()
