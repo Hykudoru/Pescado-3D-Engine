@@ -88,7 +88,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>GLEW_STATIC;WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)3D Engine;Z:\3D Engine\Dependencies\glew-2.1.0-win32\glew-2.1.0\include;$(SolutionDir)Dependencies\glfw-3.3.8.bin.WIN32\glfw-3.3.8.bin.WIN32\include;$(SolutionDir)Dependencies</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)3D Engine;$(SolutionDir)Dependencies\glew-2.1.0-win32\glew-2.1.0\include;$(SolutionDir)Dependencies\glfw-3.3.8.bin.WIN32\glfw-3.3.8.bin.WIN32\include;$(SolutionDir)Dependencies</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -105,7 +105,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>GLEW_STATIC;WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)3D Engine;Z:\3D Engine\Dependencies\glew-2.1.0-win32\glew-2.1.0\include;$(SolutionDir)Dependencies\glfw-3.3.8.bin.WIN32\glfw-3.3.8.bin.WIN32\include;$(SolutionDir)Dependencies</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)3D Engine;$(SolutionDir)Dependencies\glew-2.1.0-win32\glew-2.1.0\include;$(SolutionDir)Dependencies\glfw-3.3.8.bin.WIN32\glfw-3.3.8.bin.WIN32\include;$(SolutionDir)Dependencies</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -123,7 +123,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile />
-      <AdditionalIncludeDirectories>$(SolutionDir)3D Engine;Z:\3D Engine\Dependencies\glew-2.1.0-win32\glew-2.1.0\include;$(SolutionDir)Dependencies\glfw-3.3.8.bin.WIN64\glfw-3.3.8.bin.WIN64\include;$(SolutionDir)Dependencies</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)3D Engine;$(SolutionDir)Dependencies\glew-2.1.0-win32\glew-2.1.0\include;$(SolutionDir)Dependencies\glfw-3.3.8.bin.WIN64\glfw-3.3.8.bin.WIN64\include;$(SolutionDir)Dependencies</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -140,7 +140,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)3D Engine;Z:\3D Engine\Dependencies\glew-2.1.0-win32\glew-2.1.0\include;$(SolutionDir)Dependencies\glfw-3.3.8.bin.WIN64\glfw-3.3.8.bin.WIN64\include;$(SolutionDir)Dependencies</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)3D Engine;$(SolutionDir)Dependencies\glew-2.1.0-win32\glew-2.1.0\include;$(SolutionDir)Dependencies\glfw-3.3.8.bin.WIN64\glfw-3.3.8.bin.WIN64\include;$(SolutionDir)Dependencies</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
