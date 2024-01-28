@@ -65,14 +65,14 @@ void Init(GLFWwindow* window)
     //GraphicSettings::debugAxes = true;
 
     planet = LoadMeshFromOBJFile("Sphere.obj");
-    planet->scale = Vec3(500, 500, 500);
+    planet->Scale(Vec3(500, 500, 500));
     planet->position += Direction::forward * 1000;
-    planet->color = &RGB::white;
+    planet->SetColor(&Color::white);
     
     giantText = LoadMeshFromOBJFile("PescadoTextThickLime.obj");// "PescadoText.obj");//"Hello3DWorldText.obj");
-    giantText->scale = Vec3(2.5, 2.5, 2.5);
+    giantText->Scale(Vec3(2.5, 2.5, 2.5));
     giantText->position = Vec3(50, 25, -490);
-   // textHelloWorld->color = &RGB::green;
+   // textHelloWorld->color = &Color::green;
     
     spaceShip = LoadMeshFromOBJFile("SpaceShip_2.2.obj");
     spaceShip->position = Direction::left * 30 + Direction::forward * 10;
@@ -91,10 +91,10 @@ void Init(GLFWwindow* window)
     child->SetParent(parent);
     grandchild->SetParent(child);
     greatGrandchild->SetParent(grandchild);
-    parent->color = &RGB::red;
-    child->color = &RGB::orange;
-    grandchild->color = &RGB::yellow;
-    greatGrandchild->color = &RGB::green;
+    parent->SetColor(&Color::red);
+    child->SetColor(&Color::orange);
+    grandchild->SetColor(&Color::yellow);
+    greatGrandchild->SetColor(&Color::green);
     //Mesh* guitar = LoadMeshFromOBJFile("Objects/Guitar.obj");
     //guitar->position += (Camera::main->Forward() * 10) + Camera::main->Right();
     //Mesh* chair = LoadMeshFromOBJFile("Objects/Chair.obj");
@@ -107,36 +107,30 @@ void Init(GLFWwindow* window)
        cameraMesh->SetParent(Camera::cameras[i]);
     }*/
 
-    physicsObj = new PhysicsObject(LoadMeshFromOBJFile("Sphere.obj"), new SphereCollider());
     //physicsObj->collider->isStatic = true;
-
+    
     for (int i = -10; i < 10; i++)
     {
         for (int j = -10; j < 10; j++)
         {
-            PhysicsObject* block = new PhysicsObject(new CubeMesh(), new BoxCollider());
-            block->scale *= 2;
-            block->collider->isStatic = true;
+            PhysicsObject* block = new PhysicsObject(new CubeMesh(), new BoxCollider(true));
+            block->Scale(2);
             block->position = Direction::down*15 + Direction::left*i*10 + Direction::back * j*10;
         }
     }
 
-    PhysicsObject* ground = new PhysicsObject(new CubeMesh(0.1), new PlaneCollider(Direction::up, true));
-    ground->position = Direction::down * 15;
+    PhysicsObject* ground = new PhysicsObject(500, Direction::down * 15, Matrix3x3::identity, new PlaneMesh(), new PlaneCollider(Direction::up, true));
+    PhysicsObject* leftWall = new PhysicsObject(500, Direction::left * 200, Matrix3x3::RotZ(ToRad(-90)), new PlaneMesh(), new PlaneCollider(Direction::up, true));
+    PhysicsObject* rightWall = new PhysicsObject(500, Direction::right * 200, Matrix3x3::RotZ(ToRad(90)), new PlaneMesh(), new PlaneCollider(Direction::up, true));
+    PhysicsObject* backWall = new PhysicsObject(100, Direction::forward * 200, Matrix3x3::RotX(ToRad(90)), new PlaneMesh(), new PlaneCollider(Direction::up, true));
+    PhysicsObject* frontWall = new PhysicsObject(new PlaneMesh(100, Direction::back * 200, Vec3(ToRad(-90), 0, 0)), new PlaneCollider(Direction::up, true));
 
     physicsObj = ground;
-
-    PhysicsObject* leftWall = new PhysicsObject(new CubeMesh(0.1), new PlaneCollider(Direction::right, true));
-    leftWall->position = Direction::left * 200;
-
-    PhysicsObject* rightWall = new PhysicsObject(new CubeMesh(0.1), new PlaneCollider(Direction::left, true));
-    rightWall->position = Direction::right * 200;
-
-    PhysicsObject* backWall = new PhysicsObject(new CubeMesh(0.1), new PlaneCollider(Direction::back, true));
-    backWall->position = Direction::forward * 200;
-
-    PhysicsObject* frontWall = new PhysicsObject(new CubeMesh(0.1), new PlaneCollider(Direction::forward, true));
-    frontWall->position = Direction::back * 200;
+    physicsObj = new PhysicsObject(LoadMeshFromOBJFile("Sphere.obj"), new SphereCollider());
+    physicsObj->Scale(2);
+    //physicsObj->mesh->SetVisibility(false);
+    physicsObj->collider->mesh->SetVisibility(true);
+    //physicsObj->collider->isTrigger = true;
 }
 bool temp = false;
 void Update()

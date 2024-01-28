@@ -16,24 +16,52 @@ public:
 
     ManagedObjectPool(T* obj)
     {
-        //objects.emplace(objects.begin() + count++, obj);
-        ManagedObjectPool::objects.emplace_back(obj);
-        //count++;
-        count = ManagedObjectPool::objects.size();
-    }
-
-    ~ManagedObjectPool()
-    {
-        for (size_t i = 0; i < ManagedObjectPool::objects.size(); i++)
+        if (obj)
         {
-            if (this == ManagedObjectPool::objects[i]) {
-                ManagedObjectPool::objects.erase(ManagedObjectPool::objects.begin() + i);
+            ManagedObjectPool::objects.emplace_back(obj);
+            count = ManagedObjectPool::objects.size();//count++;
+        }
+    }
+    
+    virtual ~ManagedObjectPool()
+    {
+        for (size_t i = 0; i < ManagedObjectPool<T>::objects.size(); i++)
+        {
+            if (this == ManagedObjectPool<T>::objects[i]) {
+                ManagedObjectPool<T>::objects.erase(ManagedObjectPool<T>::objects.begin() + i);
+                count = ManagedObjectPool<T>::objects.size();
                 break;
             }
         }
-        //count--;
-        count = ManagedObjectPool::objects.size();
     }
+    
+    static void AddToPool(T* obj)
+    {
+        for (size_t i = 0; i < ManagedObjectPool<T>::objects.size(); i++)
+        {
+            if (obj == ManagedObjectPool<T>::objects[i]) {
+                return;
+            }
+        }
+        
+        ManagedObjectPool<T>::objects.emplace_back(obj);
+        count = ManagedObjectPool<T>::objects.size();//count++;
+    }
+
+    static void RemoveFromPool(T* obj)
+    {
+        for (size_t i = 0; i < ManagedObjectPool<T>::objects.size(); i++)
+        {
+            if (obj == ManagedObjectPool<T>::objects[i]) {
+                ManagedObjectPool<T>::objects.erase(ManagedObjectPool<T>::objects.begin() + i);
+                count = ManagedObjectPool<T>::objects.size();
+                return;
+            }
+        }
+    }
+    
+
+   
 };
 template <typename T>
 List<T*> ManagedObjectPool<T>::objects = List<T*>();

@@ -49,22 +49,37 @@ void OnMouseButtonEvent(GLFWwindow* window, int button, int action, int mods)
 
     if (action == GLFW_PRESS)
     {
+        if (glfwGetKey(window, GLFW_KEY_LEFT_ALT) == GLFW_PRESS)
+        {
+            // Spawn/Throw Mesh
+            if (button == 0) {
+                PhysicsObject* obj = new PhysicsObject(LoadMeshFromOBJFile("Sphere.obj"), new SphereCollider());//LoadMeshFromOBJFile("Objects/Sphere.obj");
+                obj->position = Camera::main->position + (Camera::main->Forward() * 10);
+                obj->rotation = Camera::main->rotation;
+                obj->velocity = velocity + obj->Forward() * 25;
+                obj->mass = massFactor;
+                obj->mesh->SetColor(&Color::orange);
+                obj->Scale(1);
+            }
+
+            return;
+        }
         // Spawn/Throw Mesh
         if (button == 0) {
-            PhysicsObject* obj = new PhysicsObject(LoadMeshFromOBJFile("Sphere.obj"), new SphereCollider());//LoadMeshFromOBJFile("Objects/Sphere.obj");
+            PhysicsObject* obj = new PhysicsObject(new CubeMesh(), new BoxCollider());//LoadMeshFromOBJFile("Objects/Sphere.obj");
             obj->position = Camera::main->position + (Camera::main->Forward() * 10);
             obj->rotation = Camera::main->rotation;
-            obj->body.velocity = velocity + obj->Forward() * 25;
-            obj->body.mass = massFactor;
-            obj->mesh->color = &RGB::orange;
+            obj->velocity = velocity + obj->Forward() * 25;
+            obj->mass = massFactor;
+            obj->mesh->SetColor(&Color::orange);
         }
         // Spawn Mesh
         if (button == 1) {
             PhysicsObject* obj = new PhysicsObject(new CubeMesh(), new BoxCollider());//LoadMeshFromOBJFile("Objects/Sphere.obj");
             obj->position = Camera::main->position + (Camera::main->Forward() * 10);
             obj->rotation = Camera::main->rotation;
-            obj->body.isKinematic = true;
-            obj->mesh->color = &RGB::blue;
+            obj->isKinematic = true;
+            obj->mesh->SetColor(&Color::blue);
         }
         else if (button == 2) {
             //Physics::raycasting = true;
@@ -72,7 +87,7 @@ void OnMouseButtonEvent(GLFWwindow* window, int button, int action, int mods)
             obj->position = Camera::main->position + (Camera::main->Forward() * 10);
             obj->rotation = Camera::main->rotation;
             obj->collider->isStatic = true;
-            obj->mesh->color = &RGB::white;
+            obj->mesh->SetColor(&Color::white);
         }
     }
     if (action == GLFW_RELEASE)
@@ -116,35 +131,35 @@ void OnKeyPressEvent(GLFWwindow* window, int key, int scancode, int action, int 
             Mesh* mesh = (Mesh*)new PhysicsObject(new CubeMesh(), new BoxCollider());//LoadMeshFromOBJFile("Objects/Sphere.obj");
             mesh->position = Camera::main->position + (Camera::main->Forward() * 10);
             mesh->rotation = Camera::main->rotation;
-            mesh->color = &RGB::orange;
+            mesh->SetColor(&Color::orange);
         }
         else if (glfwGetKey(window, GLFW_KEY_ENTER) == GLFW_PRESS) {
             PhysicsObject* obj = new PhysicsObject(new CubeMesh(), new BoxCollider());//LoadMeshFromOBJFile("Objects/Sphere.obj");
             obj->position = Camera::main->position + (Camera::main->Forward() * 10);
             obj->rotation = Camera::main->rotation;
-            obj->scale *= 2;
-            obj->body.velocity = obj->Forward() * 50;
-            obj->mesh->color = &RGB::orange;
+            obj->Scale(2);
+            obj->velocity = obj->Forward() * 50;
+            obj->mesh->SetColor(&Color::orange);
         }
         else if (glfwGetKey(window, GLFW_KEY_6) == GLFW_PRESS) {
             PhysicsObject* obj = new PhysicsObject(LoadMeshFromOBJFile("Sphere.obj"), new SphereCollider());
             obj->position = Camera::main->position + (Camera::main->Forward() * 10);
             obj->rotation = Camera::main->rotation;
-            obj->body.velocity = velocity + (Camera::main->Forward() * 50);
+            obj->velocity = velocity + (Camera::main->Forward() * 50);
         }
         else if (glfwGetKey(window, GLFW_KEY_7) == GLFW_PRESS) {
             Mesh* mesh = LoadMeshFromOBJFile("Diamond.obj");
             mesh->position = Camera::main->position + (Camera::main->Forward() * 10);
             mesh->rotation = Camera::main->rotation;
-            mesh->scale *= 0.1;
-            mesh->color = &RGB::red;
+            mesh->Scale(0.1);
+            mesh->SetColor(&Color::red);
         }
         else if (glfwGetKey(window, GLFW_KEY_8) == GLFW_PRESS) {
             Mesh* mesh = LoadMeshFromOBJFile("Icosahedron.obj");
             mesh->position = Camera::main->position + (Camera::main->Forward() * 10);
             mesh->rotation = Camera::main->rotation;
-            mesh->scale *= 0.1;
-            mesh->color = &RGB::purple;
+            mesh->Scale(0.1);
+            mesh->SetColor(&Color::purple);
         }
 
         //------------------Physics-------------------

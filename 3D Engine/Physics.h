@@ -63,62 +63,62 @@ void Time()
 
 class PhysicsObject;
 
-class Component
+class Component : public Transform
 {
 public:
     PhysicsObject* object;
 };
 
-class RigidBody : public Component
+class RigidBody
 {
 public:
+    Vec3 centerOfMass = Vec3::zero;
     float mass = 1;
     bool isKinematic = false;
     Vec3 velocity = Vec3::zero;
     Vec3 angularVelocity = Vec3::zero;
 };
 
-class Collider: public Transform, public Component
+class Collider: public Component
 {
+   
 public:
+    Mesh* mesh;
     bool isStatic = false;
+    bool isTrigger = false;
     float coefficientRestitution = 1.0;
-    Collider(bool isStatic)
+    
+    Collider(bool isStatic = false, bool isTrigger = false)
     {
         this->isStatic = isStatic;
+        this->isTrigger = isTrigger;
+    }
+
+    virtual ~Collider()
+    {
+        delete mesh;
+    }
+
+    virtual void RecalculateBounds()
+    {
+
     }
 };
 
 class BoxCollider: public Collider, public ManagedObjectPool<BoxCollider>
 {
 public:
-    // Local Space (Object Space)
-    List<Vec3> bounds = List<Vec3>({
-        //south
-        Vec3(-1, -1, 1),
-        Vec3(-1, 1, 1),
-        Vec3(1, 1, 1),
-        Vec3(1, -1, 1),
-        //north
-        Vec3(-1, -1, -1),
-        Vec3(-1, 1, -1),
-        Vec3(1, 1, -1),
-        Vec3(1, -1, -1)
-     });
+    BoxCollider(bool isStatic = false, bool isTrigger = false) : Collider(isStatic, isTrigger), ManagedObjectPool<BoxCollider>(this) 
+    { 
+        mesh = new CubeMesh();
+        mesh->SetColor(&Color::red);
+        mesh->SetParent(this);
+        mesh->SetVisibility(false); 
+    }
 
-    BoxCollider(bool isStatic = false) : Collider(isStatic), ManagedObjectPool<BoxCollider>(this){}
-
-    //Convert to world coordinates
     List<Vec3> WorldBounds()
     {
-        List<Vec3> verts = bounds;
-        Matrix4x4 matrix = TRS();
-        for (size_t i = 0; i < verts.size(); i++)
-        {
-            verts[i] = (Vec3)(matrix * (Vec4)(verts[i]));
-        }
-
-        return verts;
+        return mesh->WorldVertices();
     }
 };
 
@@ -126,38 +126,110 @@ class SphereCollider: public Collider, public ManagedObjectPool<SphereCollider>
 {
 public:
     float radius = 1;
-    SphereCollider(bool isStatic = false) : Collider(isStatic), ManagedObjectPool<SphereCollider>(this) {}
+    SphereCollider(bool isStatic = false, bool isTrigger = false) : Collider(isStatic, isTrigger), ManagedObjectPool<SphereCollider>(this) 
+    {
+        mesh = LoadMeshFromOBJFile("Sphere.obj");
+        mesh->SetColor(&Color::red);
+        mesh->SetParent(this);
+        mesh->SetVisibility(false);
+    }
+
+    void RecalculateBounds() override
+    {
+        float r = root->Scale().x;
+        if (r < root->Scale().y) {
+            r = root->Scale().y;
+        }
+        if (r < root->Scale().z) {
+            r = root->Scale().z;
+        }
+
+        radius = r;
+    }
 };
 
 class PlaneCollider: public Collider, public ManagedObjectPool<PlaneCollider>
 {
 public:
     Vec3 normal;
-    PlaneCollider(Vec3 normal, bool isStatic = false) : Collider(isStatic), ManagedObjectPool<PlaneCollider>(this) 
+    PlaneCollider(Vec3 normal, bool isStatic = false, bool isTrigger = false) : Collider(isStatic, isTrigger), ManagedObjectPool<PlaneCollider>(this)
     {
         this->normal = normal;
+        mesh = new PlaneMesh();
+        mesh->SetColor(&Color::red);
+        mesh->SetParent(this);
+        mesh->SetVisibility(false);
     }
 };
 
-class PhysicsObject: public Transform, public ManagedObjectPool<PhysicsObject>
+class PhysicsObject: public Transform, public RigidBody, public ManagedObjectPool<PhysicsObject>
 { 
 public:
-    RigidBody body;
     Collider* collider;
     Mesh* mesh;
-    PhysicsObject(Mesh* mesh, Collider* collider): ManagedObjectPool<PhysicsObject>(this)
+
+    PhysicsObject(Mesh* mesh, Collider* collider) : ManagedObjectPool<PhysicsObject>(this)
     {
-        this->mesh = mesh;
-        this->collider = collider;
-        this->collider->object = this;
-        this->body.object = this;
-        this->collider->SetParent(this);
-        this->mesh->SetParent(this);
+        collider->Scale(mesh->Scale());
+        collider->position = mesh->position;
+        collider->rotation = mesh->rotation;
+        
+        SetCollider(collider);
+        SetMesh(mesh);
     }
-    ~PhysicsObject()
+
+    PhysicsObject(float scale, Vec3 position, Matrix3x3 rotation, Mesh* mesh, Collider* collider): ManagedObjectPool<PhysicsObject>(this)
+    {
+        collider->Scale(mesh->Scale());
+        collider->position = mesh->position;
+        collider->rotation = mesh->rotation;
+        SetCollider(collider);
+
+        SetMesh(mesh);
+
+        this->Scale(scale);
+        this->position = position;
+        this->rotation = rotation;
+    }
+
+    virtual ~PhysicsObject()
     {
         delete collider;
         delete mesh;
+    }
+    
+    void Scale(float scale) override
+    {
+        this->scale = Vec3(scale, scale, scale);
+        collider->RecalculateBounds();
+    }
+
+    void Scale(Vec3 scale) override
+    {
+        this->scale = scale;
+        collider->RecalculateBounds();
+    }
+
+    void SetCollider(Collider* collider)
+    {
+        if (collider)
+        {
+            delete this->collider;
+            this->collider = collider;
+            this->collider->object = this;
+            this->collider->SetParent(this);
+        }
+    }
+
+    void SetMesh(Mesh* mesh)
+    {
+        if (mesh)
+        {
+            delete this->mesh;
+            this->mesh = mesh;
+            //this->mesh->object = this;
+            this->mesh->SetParent(this);
+        }
     }
 };
 
@@ -232,10 +304,10 @@ bool SpherePlaneColliding(SphereCollider& sphere, PlaneCollider& plane, SphereCo
     if (Graphics::debugPlaneCollisions)
     {
         Vec3 vProj = ProjectOnPlane(v, normal);
-        Line::AddWorldLine(Line(plane.Position(), plane.Position() + normal, RGB::gray));
-        Line::AddWorldLine(Line(sphereCenter, closestPointOnPlane, RGB::red));
-        Point::AddWorldPoint(Point(sphereCenter, RGB::gray, 10));
-        Point::AddWorldPoint(Point(closestPointOnPlane, RGB::red, 10));
+        Line::AddWorldLine(Line(plane.Position(), plane.Position() + normal, Color::gray));
+        Line::AddWorldLine(Line(sphereCenter, closestPointOnPlane, Color::red));
+        Point::AddWorldPoint(Point(sphereCenter, Color::gray, 10));
+        Point::AddWorldPoint(Point(closestPointOnPlane, Color::red, 10));
     }
 
     return collisionInfo.colliding;
@@ -263,8 +335,8 @@ bool SpheresColliding(SphereCollider& sphere1, SphereCollider& sphere2, SphereCo
 
     if (Graphics::debugSphereCollisions)
     {
-        Point::AddWorldPoint(Point(pointOnSphere1, RGB::red, 4));
-        Point::AddWorldPoint(Point(pointOnSphere2, RGB::red, 4));
+        Point::AddWorldPoint(Point(pointOnSphere1, Color::red, 4));
+        Point::AddWorldPoint(Point(pointOnSphere2, Color::red, 4));
         Line::AddWorldLine(Line(pointOnSphere1, pointOnSphere2));
     }
 
@@ -434,11 +506,12 @@ void DetectCollisions()
             }
 
             BoxCollisionInfo collisionInfo;
-            if (OBBSATColliding(*box1, *box2, collisionInfo))
+            bool resolveIfNotTrigger = !(box1->isTrigger || box2->isTrigger);
+            if (OBBSATColliding(*box1, *box2, collisionInfo, resolveIfNotTrigger))
             {   
                 if (Physics::dynamics)
                 {   
-                    if (box1->object->body.isKinematic || box2->object->body.isKinematic) {
+                    if (box1->object->isKinematic || box2->object->isKinematic) {
                         continue;
                     }
                     /*
@@ -449,19 +522,19 @@ void DetectCollisions()
                     */
                     if (box1->isStatic) 
                     {
-                        box1->object->body.velocity = Vec3::zero;
+                        box1->object->velocity = Vec3::zero;
                     }
                     else if (box2->isStatic) 
                     {
-                        box2->object->body.velocity = Vec3::zero;
+                        box2->object->velocity = Vec3::zero;
                     }
 
                     CalculateCollision(
                         collisionInfo.minOverlapAxis, 
-                        box1->object->body.mass, 
-                        box2->object->body.mass, 
-                        box1->object->body.velocity, 
-                        box2->object->body.velocity, 
+                        box1->object->mass, 
+                        box2->object->mass, 
+                        box1->object->velocity, 
+                        box2->object->velocity, 
                         1.0
                     );
                 }
@@ -485,11 +558,12 @@ void DetectCollisions()
             }
 
             SphereCollisionInfo collisionInfo;
-            if (SpheresColliding(*sphere1, *sphere2, collisionInfo))
+            bool resolveIfNotTrigger = !(sphere1->isTrigger || sphere2->isTrigger);
+            if (SpheresColliding(*sphere1, *sphere2, collisionInfo, resolveIfNotTrigger))
             {
                 if (Physics::dynamics)
                 {
-                    if (sphere1->object->body.isKinematic || sphere2->object->body.isKinematic) {
+                    if (sphere1->object->isKinematic || sphere2->object->isKinematic) {
                         continue;
                     }
                     /*
@@ -500,20 +574,20 @@ void DetectCollisions()
                     */
                     if (sphere1->isStatic)
                     {
-                        CalculateStaticCollision(collisionInfo.lineOfImpact, sphere2->object->body.velocity, sphere2->coefficientRestitution);
+                        CalculateStaticCollision(collisionInfo.lineOfImpact, sphere2->object->velocity, sphere2->coefficientRestitution);
                     }
                     else if (sphere2->isStatic)
                     {
-                        CalculateStaticCollision(collisionInfo.lineOfImpact, sphere1->object->body.velocity, sphere1->coefficientRestitution);
+                        CalculateStaticCollision(collisionInfo.lineOfImpact, sphere1->object->velocity, sphere1->coefficientRestitution);
                     }
                     else
                     {
                         CalculateCollision(
                             collisionInfo.lineOfImpact,
-                            sphere1->object->body.mass,
-                            sphere2->object->body.mass,
-                            sphere1->object->body.velocity,
-                            sphere2->object->body.velocity,
+                            sphere1->object->mass,
+                            sphere2->object->mass,
+                            sphere1->object->velocity,
+                            sphere2->object->velocity,
                             1.0
                         );
                     }
@@ -532,11 +606,12 @@ void DetectCollisions()
             }
 
             SphereCollisionInfo collisionInfo;
-            if (SpherePlaneColliding(*sphere1, *plane, collisionInfo))
+            bool resolveIfNotTrigger = !(sphere1->isTrigger || plane->isTrigger);
+            if (SpherePlaneColliding(*sphere1, *plane, collisionInfo, resolveIfNotTrigger))
             {
                 if (Physics::dynamics)
                 {
-                    if (sphere1->object->body.isKinematic || plane->object->body.isKinematic) {
+                    if (sphere1->object->isKinematic || plane->object->isKinematic) {
                         continue;
                     }
                     if (sphere1->isStatic)
@@ -545,16 +620,16 @@ void DetectCollisions()
                     }
                     else if (plane->isStatic)
                     {
-                        CalculateStaticCollision(collisionInfo.lineOfImpact, sphere1->object->body.velocity, sphere1->coefficientRestitution);                        
+                        CalculateStaticCollision(collisionInfo.lineOfImpact, sphere1->object->velocity, sphere1->coefficientRestitution);                        
                     }
                     else 
                     {
                         CalculateCollision(
                             collisionInfo.lineOfImpact,
-                            sphere1->object->body.mass,
-                            plane->object->body.mass,
-                            sphere1->object->body.velocity,
-                            plane->object->body.velocity,
+                            sphere1->object->mass,
+                            plane->object->mass,
+                            sphere1->object->velocity,
+                            plane->object->velocity,
                             1.0
                         );
                     }
@@ -625,12 +700,12 @@ static void Physics()
         for (size_t i = 0; i < ManagedObjectPool<PhysicsObject>::count; i++)
         {
             PhysicsObject* obj = ManagedObjectPool<PhysicsObject>::objects[i];
-            if (!obj->collider->isStatic && !obj->body.isKinematic)
+            if (!obj->collider->isStatic && !obj->isKinematic)
             {
                 if (Physics::gravity) {
-                    obj->body.velocity += gravity * deltaTime;
+                    obj->velocity += gravity * deltaTime;
                 }
-                obj->position += obj->body.velocity * deltaTime;
+                obj->position += obj->velocity * deltaTime;
             }
         }
     }
@@ -670,19 +745,19 @@ static void Physics()
                         Vec4 from_p = matrix * lineStart;
                         Vec4 to_p = matrix * (pointOfIntersection);// +lineEnd);
                         Line::AddLine(Line(from_p, pointOfIntersection_p));
-                        Point::AddPoint(Point(pointOfIntersection_p, RGB::gray, 5));
+                        Point::AddPoint(Point(pointOfIntersection_p, Color::gray, 5));
 
                         // Reflect
                         Vec3 n = worldSpaceTri.Normal();
                         Vec3 v = (pointOfIntersection - lineStart);
                         Vec3 reflection = Reflect(v, n);
-                        Line::AddLine(Line(pointOfIntersection_p, (Vec3)(matrix * (pointOfIntersection + reflection)), RGB::red));
+                        Line::AddLine(Line(pointOfIntersection_p, (Vec3)(matrix * (pointOfIntersection + reflection)), Color::red));
 
                         // Project
                         Vec3 vecPlane = ProjectOnPlane(v, n);
-                        Line::AddLine(Line(pointOfIntersection_p, (Vec3)(matrix * (pointOfIntersection + vecPlane)), RGB::black));
+                        Line::AddLine(Line(pointOfIntersection_p, (Vec3)(matrix * (pointOfIntersection + vecPlane)), Color::black));
 
-                        projectedTri.color = RGB::white;
+                        projectedTri.color = Color::white;
                         if (DEBUGGING) { std::cout << (projectedTri.mesh) << endl; }// delete projectedTri.mesh; }
                     }
                 }

@@ -13,29 +13,119 @@ using namespace std;
 #ifndef GRAPHICS_H
 #define GRAPHICS_H
 
-#define Color Vector3<float>
 class Mesh;
 struct Plane;
 struct Point;
 struct Line;
 struct  Triangle;
-struct RGB;
 class Camera;
 
 List<Point>* pointBuffer = new List<Point>();
 List<Line>* lineBuffer = new List<Line>();
 List<Triangle>* triBuffer = new List<Triangle>();
 
-static struct DrawAPI
+struct Color
 {
-    static void SetDrawColor(Color color)
+    float r;
+    float g;
+    float b;
+    float a;
+
+    static Color black;
+    static Color white;
+    static Color gray;
+    static Color red;
+    static Color green;
+    static Color blue;
+    static Color pink;
+    static Color purple;
+    static Color yellow;
+    static Color turquoise;
+    static Color orange;
+
+    Color()
     {
-        glColor3ub(color.x, color.y, color.z);
+        this->r = 0.0;
+        this->g = 0.0;
+        this->b = 0.0;
+        this->a = 1;
     }
 
-    static void SetDrawColor(float r, float g, float b)
+    Color(float r, float g, float b, float a = 1.0)
     {
-        glColor3ub(r, g, b);
+        this->r = r;
+        this->g = g;
+        this->b = b;
+        this->a = a;
+    }
+
+    Color(Vec4 vec)
+    {
+        this->r = vec.x;
+        this->g = vec.y;
+        this->b = vec.z;
+        this->a = vec.w;
+    }
+
+    operator Vec3();
+};
+
+Color::operator Vec3()
+{
+    Vec3 vec(r, g, b);
+    return vec;
+}
+
+Color Color::black = Color(0, 0, 0);
+Color Color::white = Color(255, 255, 255);
+Color Color::gray = Color(128, 128, 128);
+Color Color::red = Color(255, 0, 0);
+Color Color::green = Color(0, 255, 0);
+Color Color::blue = Color(0, 0, 255);
+Color Color::pink = Color(255, 0, 255);
+Color Color::purple = Color(128, 0, 128);
+Color Color::yellow = Color(255, 255, 0);
+Color Color::turquoise = Color(0, 255, 255);
+Color Color::orange = Color(255, 158, 0);
+
+struct Material
+{
+    string name = "";
+    Color color = Color::white;
+
+    Material(string id = "", Color color = Color::white)
+    {
+        this->name = id;
+        this->color = color;
+    }
+};
+
+struct Graphics
+{
+    static bool frustumCulling;
+    static bool backFaceCulling;
+    static bool invertNormals;
+    static bool debugNormals;
+    static bool debugVertices;
+    static bool debugAxes;
+    static bool debugBoxCollisions;
+    static bool debugSphereCollisions;
+    static bool debugPlaneCollisions;
+    static bool perspective;
+    static bool fillTriangles;
+    static bool displayWireFrames;
+    static bool lighting;
+    static bool vfx;
+    static bool matrixMode;
+
+    static void SetDrawColor(Color color)
+    {
+        glColor4ub(color.r, color.g, color.b, color.a);
+    }
+
+    static void SetDrawColor(float r, float g, float b, float a = 1)
+    {
+        glColor4ub(r, g, b, a);
     }
 
     static void SetLineWidth(int width)
@@ -47,7 +137,7 @@ static struct DrawAPI
     {
         glPointSize(size);
     }
-    
+
     static void DrawPoint(Vec2 point)
     {
         glBegin(GL_POINTS);
@@ -86,26 +176,6 @@ static struct DrawAPI
         glEnd();
     }
 };
-
-//-----------GRAPHICS---------------
-struct Graphics
-{
-    static bool frustumCulling;
-    static bool backFaceCulling;
-    static bool invertNormals;
-    static bool debugNormals;
-    static bool debugVertices;
-    static bool debugAxes;
-    static bool debugBoxCollisions;
-    static bool debugSphereCollisions;
-    static bool debugPlaneCollisions;
-    static bool perspective;
-    static bool fillTriangles;
-    static bool displayWireFrames;
-    static bool lighting;
-    static bool vfx;
-    static bool matrixMode;
-};
 bool Graphics::frustumCulling = true;
 bool Graphics::backFaceCulling = true;
 bool Graphics::invertNormals = false;
@@ -121,51 +191,6 @@ bool Graphics::displayWireFrames = false;
 bool Graphics::lighting = true;
 bool Graphics::vfx = false;
 bool Graphics::matrixMode = false;
-
-struct CameraSettings
-{
-    static bool outsiderViewPerspective;
-};
-bool CameraSettings::outsiderViewPerspective = false;
-
-#define Color Vector3<float>
-struct RGB : Vector3<float>
-{
-    static Color black;
-    static Color white;
-    static Color gray;
-    static Color red;
-    static Color green;
-    static Color blue;
-    static Color pink;
-    static Color purple;
-    static Color yellow;
-    static Color turquoise;
-    static Color orange;
-};
-Color RGB::black = Color(0, 0, 0);
-Color RGB::white = Color(255, 255, 255);
-Color RGB::gray = Color(128, 128, 128);
-Color RGB::red = Color(255, 0, 0);
-Color RGB::green = Color(0, 255, 0);
-Color RGB::blue = Color(0, 0, 255);
-Color RGB::pink = Color(255, 0, 255);
-Color RGB::purple = Color(128, 0, 128);
-Color RGB::yellow = Color(255, 255, 0);
-Color RGB::turquoise = Color(0, 255, 255);
-Color RGB::orange = Color(255, 158, 0);
-
-struct Material
-{
-    string name = "";
-    Color color = RGB::white;
-
-    Material(string id = "", Color color = RGB::white)
-    {
-        this->name = id;
-        this->color = color;
-    }
-};
 
 struct Direction
 {
@@ -261,7 +286,7 @@ struct Point
     Color color;
     int size;
 
-    Point(Vec3 position, Color color = RGB::white, int size = 2)
+    Point(Vec3 position, Color color = Color::white, int size = 2)
     {
         this->position = position;
         this->color = color;
@@ -270,9 +295,9 @@ struct Point
 
     void Draw()
     {
-        DrawAPI::SetPointSize(size);
-        DrawAPI::SetDrawColor(color.x, color.y, color.z);
-        DrawAPI::DrawPoint(position);
+        Graphics::SetPointSize(size);
+        Graphics::SetDrawColor(color);
+        Graphics::DrawPoint(position);
     }
     
     static void AddPoint(Point point)
@@ -295,7 +320,7 @@ struct Line
     Color color;
     int width;
 
-    Line(Vec3 from, Vec3 to, Color color = RGB::white, int width = 2)
+    Line(Vec3 from, Vec3 to, Color color = Color::white, int width = 2)
     {
         this->from = from;
         this->to = to;
@@ -305,9 +330,9 @@ struct Line
 
     void Draw()
     {
-        DrawAPI::SetLineWidth(width);
-        DrawAPI::SetDrawColor(color.x, color.y, color.z);
-        DrawAPI::DrawLine(from, to);
+        Graphics::SetLineWidth(width);
+        Graphics::SetDrawColor(color.r, color.g, color.b);
+        Graphics::DrawLine(from, to);
     }
 
     static void AddLine(Line line)
@@ -327,18 +352,18 @@ struct Line
 struct Triangle : Plane
 {
     Vec4 centroid = Vec4();
-    Color color = RGB::white;
+    Color color = Color::white;
     Mesh* mesh = nullptr;
 
     Triangle() : Plane()
     {
         centroid = Vec4();
-        color = RGB::white;
+        color = Color::white;
         mesh = nullptr;
     }
     Triangle(Vec3 p1, Vec3 p2, Vec3 p3) : Plane(p1, p2, p3)
     {
-        color = RGB::white;
+        color = Color::white;
         centroid = Centroid();
         mesh = nullptr;
     }
@@ -369,36 +394,38 @@ struct Triangle : Plane
         //glColor3ub(255, 255, 255);
         if (Graphics::matrixMode)
         {
-            DrawAPI::SetDrawColor(0, 255, 0);
+            Graphics::SetDrawColor(0, 255, 0);
         }
 
         if (Graphics::fillTriangles)
         {
-            DrawAPI::SetDrawColor(color.x, color.y, color.z);
-            DrawAPI::DrawTriangleFilled(p1, p2, p3);
+            Graphics::SetDrawColor(color.r, color.g, color.b);
+            Graphics::DrawTriangleFilled(p1, p2, p3);
         }
 
         if (Graphics::displayWireFrames)
         {
             if (Graphics::fillTriangles)
             {
-                float c = Clamp(1.0 / (0.000001 + (color.x + color.y + color.z) / 3), 0, 255);
-                DrawAPI::SetDrawColor(c, c, c);
+                float c = Clamp(1.0 / (0.000001 + (color.r + color.g + color.b) / 3), 0, 255);
+                Graphics::SetDrawColor(c, c, c);
             }
-            DrawAPI::DrawLine(p1, p2);
-            DrawAPI::DrawLine(p2, p3);
-            DrawAPI::DrawLine(p3, p1);
+            Graphics::DrawLine(p1, p2);
+            Graphics::DrawLine(p2, p3);
+            Graphics::DrawLine(p3, p1);
         }
         
-        DrawAPI::SetDrawColor(255, 255, 255);
+        Graphics::SetDrawColor(255, 255, 255);
     }
 };
 
 //-------------------------------TRANSFORM---------------------------------------------
 class Transform
 {
-public:
+protected:
     Vec3 scale = Vec3(1, 1, 1);
+public:
+    
     Vec3 position = Vec3(0, 0, 0);
     Matrix3x3 rotation = Matrix3x3::identity;
     Transform* root = nullptr;
@@ -460,6 +487,21 @@ public:
         else {
             this->root = this;
         }
+    }
+
+    virtual void Scale(float scalar)
+    {
+        this->scale = Vec3(scalar, scalar, scalar);
+    }
+
+    virtual void Scale(Vec3 scale)
+    {
+        this->scale = scale;
+    }
+
+    Vec3 Scale()
+    {
+        return scale;
     }
 
     Matrix4x4 ScaleMatrix4x4()
@@ -564,6 +606,12 @@ public:
 bool Transform::parentHierarchyDefault = true;
 
 //-----------------------------CAMERA-------------------------------------------------
+struct CameraSettings
+{
+    static bool outsiderViewPerspective;
+};
+bool CameraSettings::outsiderViewPerspective = false;
+
 class Camera : public Transform
 {
 public:
@@ -598,21 +646,45 @@ public:
     List<Vec3>* vertices;
     List<int>* indices;
     List<Triangle>* triangles;
-    Color* color;
+    Color* color = &Color::white;
 
     Mesh(float scale = 1, Vec3 position = Vec3(0, 0, 0), Vec3 rotationEuler = Vec3(0, 0, 0))
     : Transform(scale, position, rotationEuler), ManagedObjectPool<Mesh>(this)
     {
         MapVertsToTriangles();
+        SetColor(color);
     }
 
-    ~Mesh()
+    virtual ~Mesh()
     {
         delete vertices;
         delete indices;
         delete triangles;
     }
-    
+ 
+    bool SetVisibility(bool visible)
+    {
+        if (visible) {
+            ManagedObjectPool<Mesh>::AddToPool(this);
+            return true;
+        }
+        else {
+            ManagedObjectPool<Mesh>::RemoveFromPool(this);
+            return false;
+        }
+    }
+
+    void SetColor(Color* c)
+    {
+        if (triangles)
+        {
+            for (int i = 0; i < triangles->size(); i++)
+            {
+                (*triangles)[i].color = *c;
+            }
+        }
+    }
+
     virtual List<Triangle>* MapVertsToTriangles() 
     { 
         if (vertices && indices)
@@ -650,10 +722,10 @@ public:
     void TransformTriangles() 
     {
         // Scale/Distance ratio culling
-        bool tooSmallToSee = scale.SqrMagnitude() / (position - Camera::main->position).SqrMagnitude() < 0.000000125;
+       /* bool tooSmallToSee = scale.SqrMagnitude() / (position - Camera::main->position).SqrMagnitude() < 0.000000125;
         if (tooSmallToSee) {
             return;
-        }
+        }*/
         
         Matrix4x4 modelToWorldMatrix = this->TRS();
 
@@ -663,9 +735,6 @@ public:
         {
             Triangle tri = (*tris)[i];
             tri.mesh = this;
-            if (color) {
-                tri.color = *color;
-            }
             Triangle worldSpaceTri = tri;
             Triangle camSpaceTri = tri;
             Triangle projectedTri = tri;
@@ -707,18 +776,15 @@ public:
                 if (tooFarFromCamera){
                     continue;
                 }
-
+                /*
                 bool behindCamera = DotProduct((Vec3)camSpaceTri.centroid, Direction::forward) <= 0.0;
                 if (behindCamera) {
                     continue; // Skip triangle if it's out of cam view.
-                }
-
-                Range range = ProjectVertsOntoAxis(projectedTri.verts, 3, Direction::left);
-                if ((range.min > 1 && range.max > 1) || (range.min < -2 && range.max < -2)) {
-                    continue;
-                }
-                range = ProjectVertsOntoAxis(projectedTri.verts, 3, Direction::down);
-                if ((range.min > 1 && range.max > 1) || (range.min < -2 && range.max < -2)) {
+                }*/
+                
+                Range xRange = ProjectVertsOntoAxis(projectedTri.verts, 3, Direction::right);
+                Range yRange = ProjectVertsOntoAxis(projectedTri.verts, 3, Direction::up);
+                if ((xRange.min > 1 || yRange.min > 1) || (xRange.max < -1 || yRange.max < -1)) {
                     continue;
                 }
             }
@@ -747,7 +813,7 @@ public:
             {
                 Vec3 lightSource = Direction::up + Direction::right + Direction::back * .5;
                 float amountFacingLight = DotProduct((Vec3)worldSpaceTri.Normal(), lightSource);
-                Color colorLit = (projectedTri.color* Clamp(amountFacingLight, 0.15, 1));
+                Color colorLit = Color(((Vec3)projectedTri.color) * Clamp(amountFacingLight, 0.15, 1));
 
                 projectedTri.color = colorLit;
             }
@@ -763,7 +829,7 @@ public:
                     projectedTri.color = Color(0, 0, 255);// std::cout << "Inside" << std::endl;
                 }
                 else {
-                    projectedTri.color = RGB::red;
+                    projectedTri.color = Color::red;
                 }
             }
             // ---------- Debugging -----------
@@ -808,15 +874,15 @@ public:
         // Local Space (Object Space)
         this->vertices = new List<Vec3>({//new Vec3[8] {
             //south
-            Vec3(-1, -1, 1),
-            Vec3(-1, 1, 1),
-            Vec3(1, 1, 1),
-            Vec3(1, -1, 1),
+            Vec3(-0.5, -0.5, 0.5),
+            Vec3(-0.5, 0.5, 0.5),
+            Vec3(0.5, 0.5, 0.5),
+            Vec3(0.5, -0.5, 0.5),
             //north
-            Vec3(-1, -1, -1),
-            Vec3(-1, 1, -1),
-            Vec3(1, 1, -1),
-            Vec3(1, -1, -1)
+            Vec3(-0.5, -0.5, -0.5),
+            Vec3(-0.5, 0.5, -0.5),
+            Vec3(0.5, 0.5, -0.5),
+            Vec3(0.5, -0.5, -0.5)
             });
 
         this->indices = new List<int>{
@@ -857,10 +923,10 @@ public:
         if (calls < 1)
         {
             this->vertices = new List<Vec3> {
-                Vec3(-1, 0, 1),
-                Vec3(-1, 0, -1),
-                Vec3(1, 0, -1),
-                Vec3(1, 0, 1)
+                Vec3(-0.5, 0, 0.5),
+                Vec3(-0.5, 0, -0.5),
+                Vec3(0.5, 0, -0.5),
+                Vec3(0.5, 0, 0.5)
             };
 
             this->triangles = new List<Triangle>{
@@ -1011,17 +1077,20 @@ void Draw()
         if (Graphics::frustumCulling)
         {
             // Scale/Distance ratio culling
-            /*bool tooSmallToSee = Mesh::objects[i]->scale.SqrMagnitude() / (Mesh::objects[i]->position - Camera::main->position).SqrMagnitude() < 0.000000125;
-            if (tooSmallToSee) {
-                return;
-            }*/
-            if (Camera::main != Mesh::objects[i]->root) {
-                bool behindCamera = DotProduct((Mesh::objects[i]->root->position - Camera::main->position), Camera::main->Forward()) <= 0.0;
-                if (behindCamera) {
+            float sqrDist = (Mesh::objects[i]->root->position - Camera::main->position).SqrMagnitude();
+            if (sqrDist != 0.0)
+            {
+                bool meshTooSmallToSee = Mesh::objects[i]->root->Scale().SqrMagnitude() / sqrDist < 0.0000000000001;
+                if (meshTooSmallToSee) {
                     continue;
                 }
             }
-
+            /*
+            bool meshBehindCamera = DotProduct((Mesh::objects[i]->Position() - Camera::main->position), Camera::main->Forward()) <= 0.0;
+            if (meshBehindCamera) {
+                continue;
+            }
+            
             if (Mesh::objects[i]->vertices)
             {
                 List<Vec3> verts = *(Mesh::objects[i]->vertices);
@@ -1029,7 +1098,7 @@ void Draw()
                 {
                     verts[j] = ProjectionMatrix() * Camera::main->TRInverse() * Mesh::objects[i]->TRS() * verts[j];
                 }
-
+                
                 Range range = ProjectVertsOntoAxis(verts.data(), verts.size(), Direction::left);
                 if ((range.min > 1 && range.max > 1) || (range.min < -2 && range.max < -2)) {
                     continue;
@@ -1038,7 +1107,7 @@ void Draw()
                 if ((range.min > 1 && range.max > 1) || (range.min < -2 && range.max < -2)) {
                     continue;
                 }
-            }
+            }*/
 
             // ---------- Debug -----------
             if (Graphics::debugAxes)
@@ -1051,11 +1120,11 @@ void Draw()
                 Vec2 zAxis_p = mvp * Vec4(0, 0, 0.5, 1);
                 Vec2 forward_p = mvp * (Direction::forward);
 
-                Point::AddPoint(Point(center_p, RGB::red, 4));
-                Line::AddLine(Line(center_p, xAxis_p, RGB::red));
-                Line::AddLine(Line(center_p, yAxis_p, RGB::yellow));
-                Line::AddLine(Line(center_p, zAxis_p, RGB::blue));
-                Line::AddLine(Line(center_p, mvp * (Direction::forward), RGB::turquoise, 3));
+                Point::AddPoint(Point(center_p, Color::red, 4));
+                Line::AddLine(Line(center_p, xAxis_p, Color::red));
+                Line::AddLine(Line(center_p, yAxis_p, Color::yellow));
+                Line::AddLine(Line(center_p, zAxis_p, Color::blue));
+                Line::AddLine(Line(center_p, mvp * (Direction::forward), Color::turquoise, 3));
             }
         }
 
@@ -1081,14 +1150,14 @@ void Draw()
     Vec3 corner7 = ((Direction::left + Direction::up) * 0.2);
     Vec3 corner8 = ((Direction::left) * 0.2);
 
-    lineBuffer->emplace_back(Line(corner1, corner2, RGB::green, 4));
-    lineBuffer->emplace_back(Line(corner2, corner3, RGB::green, 4));
-    lineBuffer->emplace_back(Line(corner3, corner4, RGB::green, 4));
-    lineBuffer->emplace_back(Line(corner4, corner5, RGB::green, 4));
-    lineBuffer->emplace_back(Line(corner5, corner6, RGB::green, 4));
-    lineBuffer->emplace_back(Line(corner6, corner7, RGB::green, 4));
-    lineBuffer->emplace_back(Line(corner7, corner8, RGB::green, 4));
-    lineBuffer->emplace_back(Line(corner8, corner1, RGB::green, 4));
+    lineBuffer->emplace_back(Line(corner1, corner2, Color::green, 4));
+    lineBuffer->emplace_back(Line(corner2, corner3, Color::green, 4));
+    lineBuffer->emplace_back(Line(corner3, corner4, Color::green, 4));
+    lineBuffer->emplace_back(Line(corner4, corner5, Color::green, 4));
+    lineBuffer->emplace_back(Line(corner5, corner6, Color::green, 4));
+    lineBuffer->emplace_back(Line(corner6, corner7, Color::green, 4));
+    lineBuffer->emplace_back(Line(corner7, corner8, Color::green, 4));
+    lineBuffer->emplace_back(Line(corner8, corner1, Color::green, 4));
 
 
     for (int i = -50; i < 50; i++)
@@ -1107,9 +1176,9 @@ void Draw()
         to_p.x = Clamp(to_p.x, -0.5, 0.5);
         to_p.y = Clamp(to_p.y, -0.5, 0.5);
 
-        pointBuffer->emplace_back(Point(from_p, RGB::red, 4));
-        pointBuffer->emplace_back(Point(to_p, RGB::red, 4));
-        lineBuffer->emplace_back(Line(from_p, to_p, RGB::green, 4));
+        pointBuffer->emplace_back(Point(from_p, Color::red, 4));
+        pointBuffer->emplace_back(Point(to_p, Color::red, 4));
+        lineBuffer->emplace_back(Line(from_p, to_p, Color::green, 4));
     }*/
     /*--------------------------------------------------------------------------------
     Matrix4x4 matrix = ProjectionMatrix() * Camera::main->TRInverse();
@@ -1119,10 +1188,10 @@ void Draw()
     Vec3 corner3 = ((Direction::right + Direction::up) * 0.5);
     Vec3 corner4 = ((Direction::left + Direction::up) * 0.5);
 
-    lineBuffer->emplace_back(Line(corner1, corner2, RGB::green, 4));
-    lineBuffer->emplace_back(Line(corner2, corner3, RGB::green, 4));
-    lineBuffer->emplace_back(Line(corner3, corner4, RGB::green, 4));
-    lineBuffer->emplace_back(Line(corner4, corner1, RGB::green, 4));
+    lineBuffer->emplace_back(Line(corner1, corner2, Color::green, 4));
+    lineBuffer->emplace_back(Line(corner2, corner3, Color::green, 4));
+    lineBuffer->emplace_back(Line(corner3, corner4, Color::green, 4));
+    lineBuffer->emplace_back(Line(corner4, corner1, Color::green, 4));
 
 
     for (int i = -50; i < 50; i++)
@@ -1141,9 +1210,9 @@ void Draw()
             to_p.x = Clamp(to_p.x, -0.5, 0.5);
             to_p.y = Clamp(to_p.y, -0.5, 0.5);
 
-            pointBuffer->emplace_back(Point(from_p, RGB::red, 4));
-            pointBuffer->emplace_back(Point(to_p, RGB::red, 4));
-            lineBuffer->emplace_back(Line(from_p, to_p, RGB::green, 4));
+            pointBuffer->emplace_back(Point(from_p, Color::red, 4));
+            pointBuffer->emplace_back(Point(to_p, Color::red, 4));
+            lineBuffer->emplace_back(Line(from_p, to_p, Color::green, 4));
     }---------------------------------------------------------------------------------------------------*/
 
 
