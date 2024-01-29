@@ -915,27 +915,19 @@ class PlaneMesh : public Mesh
 {
 public:
     PlaneMesh(int scale = 1, Vec3 position = Vec3(0, 0, 0), Vec3 rotationEuler = Vec3(0, 0, 0))
-        :Mesh(scale, position, rotationEuler) {}
-    
-    List<Triangle>* MapVertsToTriangles()
+        :Mesh(scale, position, rotationEuler) 
     {
-        static int calls = 0;
-        if (calls < 1)
-        {
-            this->vertices = new List<Vec3> {
+        this->vertices = new List<Vec3> {
                 Vec3(-0.5, 0, 0.5),
                 Vec3(-0.5, 0, -0.5),
                 Vec3(0.5, 0, -0.5),
                 Vec3(0.5, 0, 0.5)
-            };
+        };
 
-            this->triangles = new List<Triangle>{
-                Triangle((*vertices)[0], (*vertices)[1], (*vertices)[2]),
-                Triangle((*vertices)[0], (*vertices)[2], (*vertices)[3])
-            };
-        }
-
-        return triangles;
+        this->triangles = new List<Triangle>{
+            Triangle((*vertices)[0], (*vertices)[1], (*vertices)[2]),
+            Triangle((*vertices)[0], (*vertices)[2], (*vertices)[3])
+        };
     }
 };
 
