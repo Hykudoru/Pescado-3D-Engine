@@ -763,10 +763,11 @@ bool Raycast(Vec3 from, Vec3 to, RaycastInfo<T>& raycastInfo)
             {
                 Line::AddWorldLine(Line(from, to, Color::red));
                 
-                Vec4 pointOfIntersection_v = ray.TRInverse() * pointOfIntersection;
+                Matrix4x4 worldToRaySpaceMatrix = ray.TRInverse();
+                Vec4 pointOfIntersection_v = worldToRaySpaceMatrix * pointOfIntersection;
                 Triangle viewSpaceTri = (*triangles)[j];
                 for (size_t k = 0; k < 3; k++) {
-                    viewSpaceTri.verts[k] = ray.TRInverse() * worldSpaceTri.verts[k];
+                    viewSpaceTri.verts[k] = worldToRaySpaceMatrix * worldSpaceTri.verts[k];
                 }
 
                 if (PointInsideTriangle(pointOfIntersection_v, viewSpaceTri.verts))
