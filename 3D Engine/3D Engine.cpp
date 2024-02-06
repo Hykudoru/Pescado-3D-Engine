@@ -118,26 +118,33 @@ void Init(GLFWwindow* window)
             block->position = Direction::down*15 + Direction::left*i*10 + Direction::back * j*10;
         }
     }
-
-    PhysicsObject* ground = new PhysicsObject(500, Direction::down * 15, Matrix3x3::identity, new PlaneMesh(), new PlaneCollider(Direction::up, true));
-    PhysicsObject* leftWall = new PhysicsObject(500, Direction::left * 200, Matrix3x3::RotZ(ToRad(-90)), new PlaneMesh(), new PlaneCollider(Direction::up, true));
-    PhysicsObject* rightWall = new PhysicsObject(500, Direction::right * 200, Matrix3x3::RotZ(ToRad(90)), new PlaneMesh(), new PlaneCollider(Direction::up, true));
+    /*
+    PhysicsObject* ground = new PhysicsObject(100, Direction::down * 15, Matrix3x3::identity, new PlaneMesh(), new PlaneCollider(Direction::up, true));
+    PhysicsObject* leftWall = new PhysicsObject(100, Direction::left * 200, Matrix3x3::RotZ(ToRad(-90)), new PlaneMesh(), new PlaneCollider(Direction::up, true));
+    PhysicsObject* rightWall = new PhysicsObject(100, Direction::right * 200, Matrix3x3::RotZ(ToRad(90)), new PlaneMesh(), new PlaneCollider(Direction::up, true));
     PhysicsObject* backWall = new PhysicsObject(100, Direction::forward * 200, Matrix3x3::RotX(ToRad(90)), new PlaneMesh(), new PlaneCollider(Direction::up, true));
     PhysicsObject* frontWall = new PhysicsObject(new PlaneMesh(100, Direction::back * 200, Vec3(ToRad(-90), 0, 0)), new PlaneCollider(Direction::up, true));
-
-    physicsObj = ground;
+    */
+    
     physicsObj = new PhysicsObject(LoadMeshFromOBJFile("Sphere.obj"), new SphereCollider());
     physicsObj->Scale(2);
     //physicsObj->mesh->SetVisibility(false);
     physicsObj->collider->mesh->SetVisibility(true);
     //physicsObj->collider->isTrigger = true;
+
 }
 bool temp = false;
+extern Transform* grabbing;
+extern Vec3 grabOffset;
 void Update()
 {
     if (temp) {
         physicsObj->position = Camera::main->position + Camera::main->Forward() * 5;
         physicsObj->rotation = Camera::main->rotation;
+    }
+    if (grabbing) {
+        grabbing->root->position = Camera::main->position + Camera::main->Forward() * grabOffset.Magnitude();
+        grabbing->root->rotation = Camera::main->rotation;
     }
 }
 

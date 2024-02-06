@@ -67,6 +67,101 @@ struct Color
         this->a = vec.w;
     }
 
+    Color operator+(const Color& other)
+    {
+        Color color;
+        color.r = Clamp(this->r + other.r, 0, 255);
+        color.g = Clamp(this->g + other.g, 0, 255);
+        color.b = Clamp(this->b + other.b, 0, 255);
+        return color;
+    }
+
+    Color operator-(const Color& other)
+    {
+        Color color;
+        color.r = Clamp(this->r - other.r, 0, 255);
+        color.g = Clamp(this->g - other.g, 0, 255);
+        color.b = Clamp(this->b - other.b, 0, 255);
+        return color;
+    }
+
+    Color operator+(const Vec3& v3)
+    {
+        Color color;
+        color.r = Clamp(this->r + v3.x, 0, 255);
+        color.g = Clamp(this->g + v3.y, 0, 255);
+        color.b = Clamp(this->b + v3.z, 0, 255);
+        return color;
+    }
+
+    Color operator-(const Vec3& v3)
+    {
+        Color color;
+        color.r = Clamp(this->r - v3.x, 0, 255);
+        color.g = Clamp(this->g - v3.y, 0, 255);
+        color.b = Clamp(this->b - v3.z, 0, 255);
+        return color;
+    }
+
+    Color operator*(const float& scalar)
+    {
+        Color color;
+        color.r = Clamp(this->r * scalar, 0, 255);
+        color.g = Clamp(this->g * scalar, 0, 255);
+        color.b = Clamp(this->b * scalar, 0, 255);
+        return color;
+    }
+
+    Color& operator+=(const Color &other)
+    {
+        this->r = Clamp(this->r + other.r, 0, 255);
+        this->g = Clamp(this->g + other.g, 0, 255);
+        this->b = Clamp(this->b + other.b, 0, 255);
+        return *this;
+    }
+
+    Color& operator+=(const Vec3& v3)
+    {
+        this->r = Clamp(this->r + v3.x, 0, 255);
+        this->g = Clamp(this->g + v3.y, 0, 255);
+        this->b = Clamp(this->b + v3.z, 0, 255);
+        return *this;
+    }
+
+    Color& operator-=(const Color& other)
+    {
+        this->r = Clamp(this->r - other.r, 0, 255);
+        this->g = Clamp(this->g - other.g, 0, 255);
+        this->b = Clamp(this->b - other.b, 0, 255);
+        return *this;
+    }
+
+    Color& operator-=(const Vec3& v3)
+    {
+        this->r = Clamp(this->r - v3.x, 0, 255);
+        this->g = Clamp(this->g - v3.y, 0, 255);
+        this->b = Clamp(this->b - v3.z, 0, 255);
+        return *this;
+    }
+
+    Color& operator*=(const float scalar)
+    {
+        this->r = Clamp(this->r * scalar, 0, 255);
+        this->g = Clamp(this->g * scalar, 0, 255);
+        this->b = Clamp(this->b * scalar, 0, 255);
+        return *this;
+    }
+
+    Color& operator/=(const float divisor)
+    {
+        if (divisor != 0.0)
+        {
+            this->r = Clamp(this->r / divisor, 0, 255);
+            this->g = Clamp(this->g / divisor, 0, 255);
+            this->b = Clamp(this->b / divisor, 0, 255);
+            return *this;
+        }
+    }
     operator Vec3();
 };
 
@@ -120,10 +215,10 @@ struct Graphics
 
     static void SetDrawColor(Color color)
     {
-        glColor4ub(color.r, color.g, color.b, color.a);
+        glColor4ub(color.r, color.g, color.b, 0.1);// color.a);
     }
 
-    static void SetDrawColor(float r, float g, float b, float a = 1)
+    static void SetDrawColor(float r, float g, float b, float a = .1)
     {
         glColor4ub(r, g, b, a);
     }

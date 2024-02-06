@@ -61,6 +61,80 @@ void Time()
     }
 }
 
+struct BoundingBox : public Transform
+{
+public:
+    Vec3 vertices[8] = {
+        //south
+        Vec3(-0.5, -0.5, 0.5),
+        Vec3(-0.5, 0.5, 0.5),
+        Vec3(0.5, 0.5, 0.5),
+        Vec3(0.5, -0.5, 0.5),
+        //north
+        Vec3(-0.5, -0.5, -0.5),
+        Vec3(-0.5, 0.5, -0.5),
+        Vec3(0.5, 0.5, -0.5),
+        Vec3(0.5, -0.5, -0.5)
+    };
+};
+/*
+template <typename T>
+class Node : public Transform
+{
+public:
+    int level = 0;
+    Node<T> *root = nullptr;
+    Node<T> *parent = nullptr;
+    List<Node<T>> nodes;
+    Node<T>()
+    {
+        if (!root)
+        {
+            root = this;
+        }
+    }
+    Node<T>(int num) 
+    {
+        if (!root)
+        {
+            root = this;
+        }
+
+        nodes = List<Node<T>>(num);
+        for (int i = 0; i < num; i++)
+        {
+            nodes[i] = Node<T>();
+        }
+    }
+};
+template <typename T>
+
+class OctTree
+{
+public:
+    int depth = 4;
+    Node<BoundingBox> node = Node<BoundingBox>(8);
+    OctTree()
+    {
+        node.Scale(10);
+        for (size_t i = 0; i < 8; i++)
+        {
+            Node<BoundingBox>* n = &(node.nodes)[i];
+            n->SetParent(node);
+
+            for (int ii = -8; ii < 8; ii++)
+            {
+                PhysicsObject* block = new PhysicsObject(new CubeMesh(), new BoxCollider(true));
+                block->Scale(2);
+                block->position = Direction::down * 15 + Direction::left * i * 10 + Direction::back * j * 10;
+            }
+        }
+            //positioning
+            //test
+        }
+    }
+};*/
+
 class PhysicsObject;
 
 class Component : public Transform
@@ -639,7 +713,81 @@ void DetectCollisions()
     }
 }
 
+template <typename T>
+struct RaycastInfo
+{
+    T* objectHit = NULL;
+    Vec3 contactPoint = Vec3::zero;
 
+    RaycastInfo() {};
+    RaycastInfo(T* obj, Vec3 contactPoint)
+    {
+        objectHit = obj;
+        this->contactPoint = contactPoint;
+    }
+};
+
+template <typename T>
+bool Raycast(Vec3 from, Vec3 to, RaycastInfo<T>& raycastInfo)
+{
+    Vec3 rayDir = (to - from).Normalized();
+    float closestSqrDistHit = (to - from).SqrMagnitude();
+
+    
+    for (size_t i = 0; i < ManagedObjectPool<T>::objects.size(); i++)
+    {
+        auto triangles = ManagedObjectPool<T>::objects[i]->MapVertsToTriangles();
+        for (size_t j = 0; j < triangles->size(); j++)
+        {
+            Triangle worldSpaceTri = (*triangles)[j];
+            for (size_t k = 0; k < 3; k++) {
+                worldSpaceTri.verts[k] = ManagedObjectPool<T>::objects[i]->TRS() * worldSpaceTri.verts[k];
+            }
+            //------------------Ray casting (world & view space)--------------------------
+            Vec3 pointOfIntersection;
+            if (LinePlaneIntersecting(from, to, worldSpaceTri, &pointOfIntersection))
+            {
+                Line::AddWorldLine(Line(from, to, Color::red));
+                
+                Vec4 pointOfIntersection_v = Camera::cameras[2]->TRInverse() * pointOfIntersection;
+                Triangle viewSpaceTri = (*triangles)[j];
+                for (size_t k = 0; k < 3; k++) {
+                    viewSpaceTri.verts[k] = Camera::cameras[2]->TRInverse() * worldSpaceTri.verts[k];
+                }
+
+                if (PointInsideTriangle(pointOfIntersection_v, viewSpaceTri.verts))
+                {
+                    // ---------- Debugging -----------
+                    
+                    Point::AddWorldPoint(Point(pointOfIntersection, Color::red, 5));
+                    /*
+                    // Reflect
+                    Vec3 n = worldSpaceTri.Normal();
+                    Vec3 v = (pointOfIntersection - from);
+                    Vec3 reflection = Reflect(v, n);
+                    Line::AddLine(Line(pointOfIntersection_p, (Vec3)(worldToViewToProjectedMatrix * (pointOfIntersection + reflection)), Color::red));
+
+                    // Project
+                    Vec3 vecPlane = ProjectOnPlane(v, n);
+                    Line::AddLine(Line(pointOfIntersection_p, (Vec3)(worldToViewToProjectedMatrix * (pointOfIntersection + vecPlane)), Color::black));
+                    */
+               
+                    float sqrDist = (pointOfIntersection - from).SqrMagnitude();
+                    if (sqrDist <= closestSqrDistHit)
+                    {
+                        closestSqrDistHit = sqrDist;
+                        raycastInfo.objectHit = ManagedObjectPool<T>::objects[i];
+                        raycastInfo.contactPoint = pointOfIntersection;
+                    }
+                }
+            }
+        }
+    }
+
+    return raycastInfo.objectHit != NULL;
+}
+extern Transform* grabbing;
+extern Vec3 grabOffset;
 static void Physics()
 {
     Camera* cam;
@@ -717,51 +865,13 @@ static void Physics()
     
     if (Physics::raycasting)
     {
-        for (size_t i = 0; i < Mesh::objects.size(); i++)
+        RaycastInfo<Mesh> info;
+        if (Raycast<Mesh>(Camera::cameras[2]->position, Camera::cameras[2]->position + Camera::cameras[2]->Forward() * 50, info))
         {
-            auto triangles = Mesh::objects[i]->MapVertsToTriangles();
-            for (size_t j = 0; j < triangles->size(); j++)
-            {
-                Triangle worldSpaceTri = (*triangles)[j];
-                Triangle projectedTri = (*triangles)[j];
-                for (size_t k = 0; k < 3; k++)
-                {
-                    worldSpaceTri.verts[k] = Mesh::objects[i]->TRS() * worldSpaceTri.verts[k];
-                    projectedTri.verts[k] = ProjectionMatrix() * Camera::main->TRInverse() * worldSpaceTri.verts[k];
-                }
-                //------------------Ray casting (world & view space)--------------------------
-                Vec3 lineStart = Camera::cameras[2]->position;
-                Vec3 lineEnd = lineStart + Camera::cameras[2]->Forward();// *abs(farClippingPlane);
-                Vec3 pointOfIntersection;
-                if (LinePlaneIntersecting(lineStart, lineEnd, worldSpaceTri, &pointOfIntersection))
-                {
-                    Matrix4x4 matrix = ProjectionMatrix() * Camera::main->TRInverse();
-
-                    Vec4 pointOfIntersection_p = matrix * pointOfIntersection;
-                    if (PointInsideTriangle(pointOfIntersection_p, projectedTri.verts))
-                    {
-                        // ---------- Debugging -----------
-                        //Vec4 pointOfIntersectionProj = projectionMatrix * worldToViewMatrix * pointOfIntersection;
-                        Vec4 from_p = matrix * lineStart;
-                        Vec4 to_p = matrix * (pointOfIntersection);// +lineEnd);
-                        Line::AddLine(Line(from_p, pointOfIntersection_p));
-                        Point::AddPoint(Point(pointOfIntersection_p, Color::gray, 5));
-
-                        // Reflect
-                        Vec3 n = worldSpaceTri.Normal();
-                        Vec3 v = (pointOfIntersection - lineStart);
-                        Vec3 reflection = Reflect(v, n);
-                        Line::AddLine(Line(pointOfIntersection_p, (Vec3)(matrix * (pointOfIntersection + reflection)), Color::red));
-
-                        // Project
-                        Vec3 vecPlane = ProjectOnPlane(v, n);
-                        Line::AddLine(Line(pointOfIntersection_p, (Vec3)(matrix * (pointOfIntersection + vecPlane)), Color::black));
-
-                        projectedTri.color = Color::white;
-                        if (DEBUGGING) { std::cout << (projectedTri.mesh) << endl; }// delete projectedTri.mesh; }
-                    }
-                }
-            }
+            cout << "RAYCAST HIT" << '\n';
+            Line::AddWorldLine(Line(Camera::cameras[2]->position, Camera::cameras[2]->position + Camera::cameras[2]->Forward() * 50, Color::green, 3));
+            Point::AddWorldPoint(Point(info.contactPoint, Color::green, 10));
+            info.objectHit->SetColor(&Color::purple);
         }
     }
 

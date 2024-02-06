@@ -6,6 +6,7 @@
 extern bool DEBUGGING;
 const float PI = 3.14159265359f;
 const float TAO = 2.0 * PI;
+typedef void (*Callback)();
 
 template <typename T>
 class ManagedObjectPool
@@ -239,26 +240,32 @@ bool LinePlaneIntersecting(Vec3& lineStart, Vec3& lineEnd, Plane& plane, Vec3* p
     Vec3 n = plane.Normal();
     Vec3 pointPlane = plane.verts[0];
     Vec3 v = lineEnd - lineStart;
-
-    float t = DotProduct(n, pointPlane - lineStart) / DotProduct(n, v);
-    Vec3 pIntersect = lineStart + (v * t);
-
-    if (DotProduct(pIntersect - lineStart, v) > 0.0)
+    float divisor = DotProduct(n, v);
+    if (divisor != 0.0) 
     {
-        *pointIntersecting = pIntersect;
-        return true;
+        float t = DotProduct(n, pointPlane - lineStart) / divisor;    
+        if (t >= 0.0)
+        {
+            *pointIntersecting = lineStart + (v*t);
+            return true;
+        }
     }
-
     return false;
-}
+} 
 
 bool PointInsideTriangle(const Vec3& p, const Vec3 triPoints[3])
 {
     Vec3 A = triPoints[0];
     Vec3 B = triPoints[1];
     Vec3 C = triPoints[2];
-    float w1 = (((p.x - A.x) * (C.y - A.y)) - ((p.y - A.y) * (C.x - A.x))) / (((B.x - A.x) * (C.y - A.y)) - ((B.y - A.y) * (C.x - A.x)));
-    float w2 = ((p.y - A.y) - (w1 * (B.y - A.y))) / (C.y - A.y);
+    float divisor = (((B.x - A.x) * (C.y - A.y)) - ((B.y - A.y) * (C.x - A.x)));
+    float divisor2 = (C.y - A.y);
+    if (divisor == 0.0 || divisor2 == 0.0)
+    {
+        return false;
+    }
+    float w1 = (((p.x - A.x) * (C.y - A.y)) - ((p.y - A.y) * (C.x - A.x))) / divisor;
+    float w2 = ((p.y - A.y) - (w1 * (B.y - A.y))) / divisor2;
 
     return ((w1 >= 0.0 && w2 >= 0.0) && (w1 + w2) <= 1.0);
 }
