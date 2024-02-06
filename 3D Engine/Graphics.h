@@ -215,7 +215,7 @@ struct Graphics
 
     static void SetDrawColor(Color color)
     {
-        glColor4ub(color.r, color.g, color.b, 0.1);// color.a);
+        glColor4ub(color.r, color.g, color.b, color.a);
     }
 
     static void SetDrawColor(float r, float g, float b, float a = .1)

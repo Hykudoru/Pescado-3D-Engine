@@ -732,8 +732,22 @@ bool Raycast(Vec3 from, Vec3 to, RaycastInfo<T>& raycastInfo)
 {
     Vec3 rayDir = (to - from).Normalized();
     float closestSqrDistHit = (to - from).SqrMagnitude();
-
+    float random = Clamp(-1.0, 1.0, rand());
     
+    Vec3 rayZ = rayDir * -1.0;
+    Vec3 rayX = CrossProduct(rayZ, Vec3(random, random, random));
+    Vec3 rayY = CrossProduct(rayZ, rayX);
+    rayX.Normalize();
+    rayY.Normalize();
+    Transform ray = Transform();
+    float rotationMatrix[3][3] = {
+        { rayX.x, rayY.x, rayZ.x },
+        { rayX.y, rayY.y, rayZ.y },
+        { rayX.z, rayY.z, rayZ.z }
+    };
+    ray.rotation = rotationMatrix;
+    ray.position = from;
+
     for (size_t i = 0; i < ManagedObjectPool<T>::objects.size(); i++)
     {
         auto triangles = ManagedObjectPool<T>::objects[i]->MapVertsToTriangles();
@@ -749,10 +763,10 @@ bool Raycast(Vec3 from, Vec3 to, RaycastInfo<T>& raycastInfo)
             {
                 Line::AddWorldLine(Line(from, to, Color::red));
                 
-                Vec4 pointOfIntersection_v = Camera::cameras[2]->TRInverse() * pointOfIntersection;
+                Vec4 pointOfIntersection_v = ray.TRInverse() * pointOfIntersection;
                 Triangle viewSpaceTri = (*triangles)[j];
                 for (size_t k = 0; k < 3; k++) {
-                    viewSpaceTri.verts[k] = Camera::cameras[2]->TRInverse() * worldSpaceTri.verts[k];
+                    viewSpaceTri.verts[k] = ray.TRInverse() * worldSpaceTri.verts[k];
                 }
 
                 if (PointInsideTriangle(pointOfIntersection_v, viewSpaceTri.verts))
@@ -866,12 +880,20 @@ static void Physics()
     if (Physics::raycasting)
     {
         RaycastInfo<Mesh> info;
-        if (Raycast<Mesh>(Camera::cameras[2]->position, Camera::cameras[2]->position + Camera::cameras[2]->Forward() * 50, info))
+        if (Raycast<Mesh>(Camera::cameras[1]->position, Camera::cameras[1]->position + Camera::cameras[1]->Forward() * 50, info))
+        {
+            cout << "RAYCAST HIT" << '\n';
+            Line::AddWorldLine(Line(Camera::cameras[1]->position, Camera::cameras[1]->position + Camera::cameras[1]->Forward() * 50, Color::green, 3));
+            Point::AddWorldPoint(Point(info.contactPoint, Color::green, 10));
+            info.objectHit->SetColor(&Color::blue);
+        }
+        RaycastInfo<Mesh> info2;
+        if (Raycast<Mesh>(Camera::cameras[2]->position, Camera::cameras[2]->position + Camera::cameras[2]->Forward() * 50, info2))
         {
             cout << "RAYCAST HIT" << '\n';
             Line::AddWorldLine(Line(Camera::cameras[2]->position, Camera::cameras[2]->position + Camera::cameras[2]->Forward() * 50, Color::green, 3));
-            Point::AddWorldPoint(Point(info.contactPoint, Color::green, 10));
-            info.objectHit->SetColor(&Color::purple);
+            Point::AddWorldPoint(Point(info2.contactPoint, Color::green, 10));
+            info2.objectHit->SetColor(&Color::red);
         }
     }
 
