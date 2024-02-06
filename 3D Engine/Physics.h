@@ -757,7 +757,7 @@ bool Raycast(Vec3 from, Vec3 to, RaycastInfo<T>& raycastInfo)
             for (size_t k = 0; k < 3; k++) {
                 worldSpaceTri.verts[k] = ManagedObjectPool<T>::objects[i]->TRS() * worldSpaceTri.verts[k];
             }
-            //------------------Ray casting (world & view space)--------------------------
+            //------------------Ray casting (World & Ray Space)--------------------------
             Vec3 pointOfIntersection;
             if (LinePlaneIntersecting(from, to, worldSpaceTri, &pointOfIntersection))
             {
