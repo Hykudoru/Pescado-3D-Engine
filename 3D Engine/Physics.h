@@ -93,7 +93,7 @@ public:
             root = this;
         }
     }
-    Node<T>(int num) 
+    Node<T>(int num)
     {
         if (!root)
         {
@@ -153,15 +153,15 @@ public:
     Vec3 angularVelocity = Vec3::zero;
 };
 
-class Collider: public Component
+class Collider : public Component
 {
-   
+
 public:
     Mesh* mesh;
     bool isStatic = false;
     bool isTrigger = false;
     float coefficientRestitution = 1.0;
-    
+
     Collider(bool isStatic = false, bool isTrigger = false)
     {
         this->isStatic = isStatic;
@@ -179,15 +179,15 @@ public:
     }
 };
 
-class BoxCollider: public Collider, public ManagedObjectPool<BoxCollider>
+class BoxCollider : public Collider, public ManagedObjectPool<BoxCollider>
 {
 public:
-    BoxCollider(bool isStatic = false, bool isTrigger = false) : Collider(isStatic, isTrigger), ManagedObjectPool<BoxCollider>(this) 
-    { 
+    BoxCollider(bool isStatic = false, bool isTrigger = false) : Collider(isStatic, isTrigger), ManagedObjectPool<BoxCollider>(this)
+    {
         mesh = new CubeMesh();
         mesh->SetColor(&Color::red);
         mesh->SetParent(this);
-        mesh->SetVisibility(false); 
+        mesh->SetVisibility(false);
     }
 
     List<Vec3> WorldBounds()
@@ -196,11 +196,11 @@ public:
     }
 };
 
-class SphereCollider: public Collider, public ManagedObjectPool<SphereCollider>
+class SphereCollider : public Collider, public ManagedObjectPool<SphereCollider>
 {
 public:
     float radius = 1;
-    SphereCollider(bool isStatic = false, bool isTrigger = false) : Collider(isStatic, isTrigger), ManagedObjectPool<SphereCollider>(this) 
+    SphereCollider(bool isStatic = false, bool isTrigger = false) : Collider(isStatic, isTrigger), ManagedObjectPool<SphereCollider>(this)
     {
         mesh = LoadMeshFromOBJFile("Sphere.obj");
         mesh->SetColor(&Color::red);
@@ -222,7 +222,7 @@ public:
     }
 };
 
-class PlaneCollider: public Collider, public ManagedObjectPool<PlaneCollider>
+class PlaneCollider : public Collider, public ManagedObjectPool<PlaneCollider>
 {
 public:
     Vec3 normal;
@@ -236,8 +236,8 @@ public:
     }
 };
 
-class PhysicsObject: public Transform, public RigidBody, public ManagedObjectPool<PhysicsObject>
-{ 
+class PhysicsObject : public Transform, public RigidBody, public ManagedObjectPool<PhysicsObject>
+{
 public:
     Collider* collider;
     Mesh* mesh;
@@ -247,12 +247,12 @@ public:
         collider->Scale(mesh->Scale());
         collider->position = mesh->position;
         collider->rotation = mesh->rotation;
-        
+
         SetCollider(collider);
         SetMesh(mesh);
     }
 
-    PhysicsObject(float scale, Vec3 position, Matrix3x3 rotation, Mesh* mesh, Collider* collider): ManagedObjectPool<PhysicsObject>(this)
+    PhysicsObject(float scale, Vec3 position, Matrix3x3 rotation, Mesh* mesh, Collider* collider) : ManagedObjectPool<PhysicsObject>(this)
     {
         collider->Scale(mesh->Scale());
         collider->position = mesh->position;
@@ -271,7 +271,7 @@ public:
         delete collider;
         delete mesh;
     }
-    
+
     void Scale(float scale) override
     {
         this->scale = Vec3(scale, scale, scale);
@@ -312,13 +312,13 @@ struct CollisionInfo
     bool colliding = false;
 };
 
-struct BoxCollisionInfo: public CollisionInfo
+struct BoxCollisionInfo : public CollisionInfo
 {
     float minOverlap = 0;
     Vec3 minOverlapAxis = Vec3::zero;
 };
 
-struct SphereCollisionInfo: public CollisionInfo
+struct SphereCollisionInfo : public CollisionInfo
 {
     Vec3 pointOfContact = Vec3::zero;
     Vec3 lineOfImpact = Vec3::zero;
@@ -362,17 +362,17 @@ bool SpherePlaneColliding(SphereCollider& sphere, PlaneCollider& plane, SphereCo
     Vec3 normal = plane.Rotation() * plane.normal;
     Vec3 vPerp = normal * (DotProduct(v, normal));//ProjectOnPlane(v, plane.plane.normal);
     Vec3 closestPointOnPlane = sphereCenter - vPerp;
-    
+
     if ((closestPointOnPlane - sphereCenter).SqrMagnitude() < sphere.radius * sphere.radius)
     {
         collisionInfo.colliding = true;
-        if (resolve) 
+        if (resolve)
         {
             Vec3 pointOnSphere = ClosestPointOnSphere(sphereCenter, sphere.radius, closestPointOnPlane);
             Vec3 offset = pointOnSphere - closestPointOnPlane;//overlapping
             sphere.root->position -= offset;
-            collisionInfo.lineOfImpact = normal *-1.0;
-        }        
+            collisionInfo.lineOfImpact = normal * -1.0;
+        }
     }
 
     if (Graphics::debugPlaneCollisions)
@@ -458,7 +458,8 @@ bool OBBSATColliding(BoxCollider& physObj1, BoxCollider& physObj2, BoxCollisionI
             if (rangeA.max > rangeB.max) {
                 potentialMinOverlap = rangeB.max - rangeA.min;
                 axis *= -1.0;// Reverse push direction since object B is behind object A and we will always push A backwards and B forwards.
-            } else {
+            }
+            else {
                 potentialMinOverlap = rangeA.max - rangeB.min;
             }
 
@@ -484,7 +485,7 @@ bool OBBSATColliding(BoxCollider& physObj1, BoxCollider& physObj2, BoxCollisionI
             for (size_t j = 0; j < physObj2Normals.size(); j++)
             {
                 Vec3 nB = physObj2Normals[j];
-                
+
                 //Make sure normals are not the same before using them to calculate the cross product (otherwise the axis would be <0, 0, 0>).
                 float dot = DotProduct(nA, nB);
                 bool sameAxis = dot >= 1.0 || dot <= -1.0;
@@ -497,7 +498,7 @@ bool OBBSATColliding(BoxCollider& physObj1, BoxCollider& physObj2, BoxCollisionI
                         nB = physObj2Normals[j + 1];
                     }
                 }
-                
+
                 // Search for possible 3D Edge-Edge collision
                 Vec3 axis = CrossProduct(nA, nB);
                 Range rangeA = ProjectVertsOntoAxis(physObj1Verts.data(), physObj1Verts.size(), axis);
@@ -507,22 +508,22 @@ bool OBBSATColliding(BoxCollider& physObj1, BoxCollider& physObj2, BoxCollisionI
                     collisionInfo.colliding = false;
                     return false;
                 }
-               /* To-Do...
-                //Compare and cache minimum projection distance and axis for later use if needed for collision resolution.
-                float potentialMinOverlap = 0;
-                if (rangeA.max > rangeB.max) {
-                    potentialMinOverlap = rangeB.max - rangeA.min;
-                    axis *= -1.0;// Reverse push direction since object B is behind object A and we will always push A backwards and B forwards.
-                } 
-                else {
-                    potentialMinOverlap = rangeA.max - rangeB.min;
-                }
+                /* To-Do...
+                 //Compare and cache minimum projection distance and axis for later use if needed for collision resolution.
+                 float potentialMinOverlap = 0;
+                 if (rangeA.max > rangeB.max) {
+                     potentialMinOverlap = rangeB.max - rangeA.min;
+                     axis *= -1.0;// Reverse push direction since object B is behind object A and we will always push A backwards and B forwards.
+                 }
+                 else {
+                     potentialMinOverlap = rangeA.max - rangeB.min;
+                 }
 
-                if (potentialMinOverlap < collisionInfo.minOverlap)
-                {
-                    collisionInfo.minOverlap = potentialMinOverlap;
-                    collisionInfo.minOverlapAxis = axis;
-                }*/
+                 if (potentialMinOverlap < collisionInfo.minOverlap)
+                 {
+                     collisionInfo.minOverlap = potentialMinOverlap;
+                     collisionInfo.minOverlapAxis = axis;
+                 }*/
             }
         }
     }
@@ -537,7 +538,7 @@ bool OBBSATColliding(BoxCollider& physObj1, BoxCollider& physObj2, BoxCollisionI
         if (neitherStatic)
         {
             offset *= 0.5;
-            physObj1.root->position -= (offset*1.01);
+            physObj1.root->position -= (offset * 1.01);
             physObj2.root->position += (offset * 1.01);
         }
         //Only one is movable at this stage
@@ -566,15 +567,15 @@ void DetectCollisions()
         if ((i + 1) >= BoxCollider::count) {
             break;
         }
-        
+
         // Current Collider
         BoxCollider* box1 = BoxCollider::objects[i];
 
         for (size_t j = i + 1; j < BoxCollider::count; j++)
-        { 
+        {
             // Next Collider
             BoxCollider* box2 = BoxCollider::objects[j];
-            
+
             if (box1->isStatic && box2->isStatic) {
                 continue;
             }
@@ -582,9 +583,9 @@ void DetectCollisions()
             BoxCollisionInfo collisionInfo;
             bool resolveIfNotTrigger = !(box1->isTrigger || box2->isTrigger);
             if (OBBSATColliding(*box1, *box2, collisionInfo, resolveIfNotTrigger))
-            {   
+            {
                 if (Physics::dynamics)
-                {   
+                {
                     if (box1->object->isKinematic || box2->object->isKinematic) {
                         continue;
                     }
@@ -594,21 +595,21 @@ void DetectCollisions()
                     Consequently, objects touching a static collider would be effected, so the
                     velocity is zeroed out to prevent this.
                     */
-                    if (box1->isStatic) 
+                    if (box1->isStatic)
                     {
                         box1->object->velocity = Vec3::zero;
                     }
-                    else if (box2->isStatic) 
+                    else if (box2->isStatic)
                     {
                         box2->object->velocity = Vec3::zero;
                     }
 
                     CalculateCollision(
-                        collisionInfo.minOverlapAxis, 
-                        box1->object->mass, 
-                        box2->object->mass, 
-                        box1->object->velocity, 
-                        box2->object->velocity, 
+                        collisionInfo.minOverlapAxis,
+                        box1->object->mass,
+                        box2->object->mass,
+                        box1->object->velocity,
+                        box2->object->velocity,
                         1.0
                     );
                 }
@@ -694,9 +695,9 @@ void DetectCollisions()
                     }
                     else if (plane->isStatic)
                     {
-                        CalculateStaticCollision(collisionInfo.lineOfImpact, sphere1->object->velocity, sphere1->coefficientRestitution);                        
+                        CalculateStaticCollision(collisionInfo.lineOfImpact, sphere1->object->velocity, sphere1->coefficientRestitution);
                     }
-                    else 
+                    else
                     {
                         CalculateCollision(
                             collisionInfo.lineOfImpact,
@@ -713,6 +714,73 @@ void DetectCollisions()
     }
 }
 
+class Ray
+{
+protected:
+    Transform transform = Transform();
+    Vec3 endPosition;
+    Vec3 direction;
+public:
+
+    float distance = 1;
+
+    Ray(Vec3 start, Vec3 end)
+    {
+        Set(start, end);
+    }
+
+    Ray(Vec3 start, Vec3 dir, float dist)
+    {
+        Set(start, start + dir * dist);
+    }
+
+    void Set(Vec3 start, Vec3 end)
+    {
+        Vec3 disp = (end - start);
+        distance = disp.Magnitude();
+        direction = disp.Normalized();
+        transform.rotation = LookAt(direction);
+        transform.position = start;
+        endPosition = start + direction * distance;
+    }
+
+    Vec3 StartPosition()
+    {
+        return transform.Position();
+    }
+
+    Vec3 EndPosition()
+    {
+        return endPosition;
+    }
+
+    Vec3 Direction()
+    {
+        return direction;
+    }
+
+    Matrix4x4 WorldToRaySpaceMatrix()
+    {
+        return transform.TRInverse();
+    }
+
+    static Matrix3x3 LookAt(Vec3 dir)
+    {
+        float random = Clamp(-1.0, 1.0, rand());
+        Vec3 rayZ = dir * -1.0;
+        Vec3 rayX = CrossProduct(rayZ, Vec3(random, random, random));
+        Vec3 rayY = CrossProduct(rayZ, rayX);
+        rayX.Normalize();
+        rayY.Normalize();
+        float rotationMatrix[3][3] = {
+            { rayX.x, rayY.x, rayZ.x },
+            { rayX.y, rayY.y, rayZ.y },
+            { rayX.z, rayY.z, rayZ.z }
+        };
+
+        return rotationMatrix;
+    }
+};
 template <typename T>
 struct RaycastInfo
 {
@@ -728,42 +796,28 @@ struct RaycastInfo
 };
 
 template <typename T>
-bool Raycast(Vec3 from, Vec3 to, RaycastInfo<T>& raycastInfo)
+bool Raycast(Ray& ray, RaycastInfo<T>& raycastInfo)
 {
-    Vec3 rayDir = (to - from).Normalized();
-    float closestSqrDistHit = (to - from).SqrMagnitude();
-    float random = Clamp(-1.0, 1.0, rand());
-    
-    Vec3 rayZ = rayDir * -1.0;
-    Vec3 rayX = CrossProduct(rayZ, Vec3(random, random, random));
-    Vec3 rayY = CrossProduct(rayZ, rayX);
-    rayX.Normalize();
-    rayY.Normalize();
-    Transform ray = Transform();
-    float rotationMatrix[3][3] = {
-        { rayX.x, rayY.x, rayZ.x },
-        { rayX.y, rayY.y, rayZ.y },
-        { rayX.z, rayY.z, rayZ.z }
-    };
-    ray.rotation = rotationMatrix;
-    ray.position = from;
+    Vec3 from = ray.StartPosition();
+    Vec3 to = ray.EndPosition();
 
-    for (size_t i = 0; i < ManagedObjectPool<T>::objects.size(); i++)
+    float closestSqrDistHit = ray.distance * ray.distance;
+    for (size_t i = 0; i < Mesh::objects.size(); i++)
     {
-        auto triangles = ManagedObjectPool<T>::objects[i]->MapVertsToTriangles();
+        auto triangles = Mesh::objects[i]->MapVertsToTriangles();
         for (size_t j = 0; j < triangles->size(); j++)
         {
             Triangle worldSpaceTri = (*triangles)[j];
             for (size_t k = 0; k < 3; k++) {
-                worldSpaceTri.verts[k] = ManagedObjectPool<T>::objects[i]->TRS() * worldSpaceTri.verts[k];
+                worldSpaceTri.verts[k] = Mesh::objects[i]->TRS() * worldSpaceTri.verts[k];
             }
             //------------------Ray casting (World & Ray Space)--------------------------
             Vec3 pointOfIntersection;
             if (LinePlaneIntersecting(from, to, worldSpaceTri, &pointOfIntersection))
             {
                 Line::AddWorldLine(Line(from, to, Color::red));
-                
-                Matrix4x4 worldToRaySpaceMatrix = ray.TRInverse();
+
+                Matrix4x4 worldToRaySpaceMatrix = ray.WorldToRaySpaceMatrix();
                 Vec4 pointOfIntersection_v = worldToRaySpaceMatrix * pointOfIntersection;
                 Triangle viewSpaceTri = (*triangles)[j];
                 for (size_t k = 0; k < 3; k++) {
@@ -773,7 +827,6 @@ bool Raycast(Vec3 from, Vec3 to, RaycastInfo<T>& raycastInfo)
                 if (PointInsideTriangle(pointOfIntersection_v, viewSpaceTri.verts))
                 {
                     // ---------- Debugging -----------
-                    
                     Point::AddWorldPoint(Point(pointOfIntersection, Color::red, 5));
                     /*
                     // Reflect
@@ -786,12 +839,12 @@ bool Raycast(Vec3 from, Vec3 to, RaycastInfo<T>& raycastInfo)
                     Vec3 vecPlane = ProjectOnPlane(v, n);
                     Line::AddLine(Line(pointOfIntersection_p, (Vec3)(worldToViewToProjectedMatrix * (pointOfIntersection + vecPlane)), Color::black));
                     */
-               
+
                     float sqrDist = (pointOfIntersection - from).SqrMagnitude();
                     if (sqrDist <= closestSqrDistHit)
                     {
                         closestSqrDistHit = sqrDist;
-                        raycastInfo.objectHit = ManagedObjectPool<T>::objects[i];
+                        raycastInfo.objectHit = Mesh::objects[i];
                         raycastInfo.contactPoint = pointOfIntersection;
                     }
                 }
@@ -801,6 +854,14 @@ bool Raycast(Vec3 from, Vec3 to, RaycastInfo<T>& raycastInfo)
 
     return raycastInfo.objectHit != NULL;
 }
+
+template <typename T>
+bool Raycast(Vec3 from, Vec3 to, RaycastInfo<T>& raycastInfo)
+{
+    Ray ray = Ray(from, to);
+    return Raycast(ray, raycastInfo);
+}
+
 extern Transform* grabbing;
 extern Vec3 grabOffset;
 static void Physics()
@@ -814,11 +875,11 @@ static void Physics()
         cam = Camera::main;
     }
     //---------- Physics Update ------------
-    if (isKinematic) 
+    if (isKinematic)
     {
         cam->position += moveDir * accel * deltaTime;
     }
-    else 
+    else
     {
         velocity += moveDir * accel * deltaTime;
         if (Physics::gravity) {
@@ -852,7 +913,7 @@ static void Physics()
     }
     if (spaceShip3)
     {
-        float shipRotationSpeed = (20*PI / 180) * deltaTime;
+        float shipRotationSpeed = (20 * PI / 180) * deltaTime;
         spaceShip3->rotation = Matrix3x3::RotY(shipRotationSpeed) * Matrix3x3::RotZ(shipRotationSpeed) * spaceShip3->rotation;// *spaceShip2->rotation;// MatrixMultiply(YPR(angle * ((screenWidth / 2)), angle * -((screenWidth / 2)), 0), Mesh.meshes[1].rotation);
         spaceShip3->position += spaceShip3->Forward() * 15 * deltaTime;
 
@@ -877,29 +938,32 @@ static void Physics()
     {
         DetectCollisions();
     }
-    
+
     if (Physics::raycasting)
     {
+        Ray ray1 = Ray(Camera::cameras[1]->position, Camera::cameras[1]->position + Camera::cameras[1]->Forward() * 50);
         RaycastInfo<Mesh> info;
-        if (Raycast<Mesh>(Camera::cameras[1]->position, Camera::cameras[1]->position + Camera::cameras[1]->Forward() * 50, info))
+        if (Raycast(ray1, info))
         {
-            cout << "RAYCAST HIT" << '\n';
-            Line::AddWorldLine(Line(Camera::cameras[1]->position, Camera::cameras[1]->position + Camera::cameras[1]->Forward() * 50, Color::green, 3));
-            Point::AddWorldPoint(Point(info.contactPoint, Color::green, 10));
-            info.objectHit->SetColor(&Color::blue);
+            //cout << "RAYCAST HIT" << '\n';
+            Line::AddWorldLine(Line(ray1.StartPosition(), ray1.EndPosition(), Color::green, 3));
+            Point::AddWorldPoint(Point(info.contactPoint, Color::green, 7));
+            info.objectHit->SetColor(&Color::purple);
         }
+        
+        Ray ray2 = Ray(Camera::cameras[2]->position, Camera::cameras[2]->Forward(), 50);
         RaycastInfo<Mesh> info2;
-        if (Raycast<Mesh>(Camera::cameras[2]->position, Camera::cameras[2]->position + Camera::cameras[2]->Forward() * 50, info2))
+        if (Raycast(ray2, info2))
         {
-            cout << "RAYCAST HIT" << '\n';
-            Line::AddWorldLine(Line(Camera::cameras[2]->position, Camera::cameras[2]->position + Camera::cameras[2]->Forward() * 50, Color::green, 3));
-            Point::AddWorldPoint(Point(info2.contactPoint, Color::green, 10));
+            //cout << "RAYCAST HIT" << '\n';
+            Line::AddWorldLine(Line(ray2.StartPosition(), ray2.EndPosition(), Color::green, 3));
+            Point::AddWorldPoint(Point(info2.contactPoint, Color::green, 7));
             info2.objectHit->SetColor(&Color::red);
         }
     }
 
-    if (DEBUGGING) 
-    { 
+    if (DEBUGGING)
+    {
         std::cout << "--------PHYSICS-------" << endl;
 
         string onoff = Physics::collisionDetection ? "On" : "Off";
@@ -907,12 +971,12 @@ static void Physics()
 
         onoff = Physics::gravity ? "On" : "Off";
         std::cout << "Gravity: " << onoff << " (press G)" << endl;
-        
+
         std::cout << "Sphere Colliders: " << SphereCollider::count << endl;
         std::cout << "Box Colliders: " << BoxCollider::count << endl;
         std::cout << "Plane Colliders: " << PlaneCollider::count << endl;
         std::cout << "Colliders: " << PhysicsObject::count << endl;
-        
+
         std::cout << "--------PLAYER-------" << endl;
 
         onoff = isKinematic ? "On" : "Off";
