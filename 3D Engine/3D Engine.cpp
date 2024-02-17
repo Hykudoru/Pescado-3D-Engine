@@ -101,11 +101,13 @@ void Init(GLFWwindow* window)
     //chair->position += (Camera::main->Forward() * 10) + Camera::main->Left();
 
     //Plane* plane = new Plane(1, Vec3(0, 0, 0), Vec3(0, 0, 0));
-    /*for (size_t i = 1; i < Camera::cameras.size(); i++)//starts at 1 to avoid projector camera
+
+    for (size_t i = 1; i < Camera::cameras.size(); i++)//starts at 1 to avoid projector camera
     {
-       Mesh* cameraMesh = LoadMeshFromOBJFile("Objects/Camera.obj");
+       Mesh* cameraMesh = LoadMeshFromOBJFile("Camera.obj");
        cameraMesh->SetParent(Camera::cameras[i]);
-    }*/
+       cameraMesh->position += -Direction::forward;
+    }
 
     //physicsObj->collider->isStatic = true;
     
@@ -133,17 +135,14 @@ void Init(GLFWwindow* window)
     //physicsObj->collider->isTrigger = true;
 
 }
-bool temp = false;
+
 extern Transform* grabbing;
 extern Vec3 grabOffset;
+
 void Update()
 {
-    if (temp) {
-        physicsObj->position = Camera::main->position + Camera::main->Forward() * 5;
-        physicsObj->rotation = Camera::main->rotation;
-    }
     if (grabbing) {
-        grabbing->root->position = Camera::main->position + Camera::main->Forward() * grabOffset.Magnitude();
+        grabbing->root->position = Camera::main->position + grabOffset;
         grabbing->root->rotation = Camera::main->rotation;
     }
 }
