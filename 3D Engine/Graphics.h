@@ -1199,19 +1199,22 @@ void Draw()
             // ---------- Debug -----------
             if (Graphics::debugAxes)
             {
-                Matrix4x4 mvp = ProjectionMatrix() * Camera::main->TRInverse() * Mesh::objects[i]->TRS();
+                if (DotProduct(Mesh::objects[i]->Position()-Camera::main->Position(), Camera::main->Forward()) > 0)
+                {
+                    Matrix4x4 mvp = ProjectionMatrix() * Camera::main->TRInverse() * Mesh::objects[i]->TRS();
 
-                Vec2 center_p = mvp * Vec4(0, 0, 0, 1);
-                Vec2 xAxis_p = mvp * Vec4(0.5, 0, 0, 1);
-                Vec2 yAxis_p = mvp * Vec4(0, 0.5, 0, 1);
-                Vec2 zAxis_p = mvp * Vec4(0, 0, 0.5, 1);
-                Vec2 forward_p = mvp * (Direction::forward);
+                    Vec2 center_p = mvp * Vec4(0, 0, 0, 1);
+                    Vec2 xAxis_p = mvp * Vec4(0.5, 0, 0, 1);
+                    Vec2 yAxis_p = mvp * Vec4(0, 0.5, 0, 1);
+                    Vec2 zAxis_p = mvp * Vec4(0, 0, 0.5, 1);
+                    Vec2 forward_p = mvp * (Direction::forward);
 
-                Point::AddPoint(Point(center_p, Color::red, 4));
-                Line::AddLine(Line(center_p, xAxis_p, Color::red));
-                Line::AddLine(Line(center_p, yAxis_p, Color::yellow));
-                Line::AddLine(Line(center_p, zAxis_p, Color::blue));
-                Line::AddLine(Line(center_p, mvp * (Direction::forward), Color::turquoise, 3));
+                    Point::AddPoint(Point(center_p, Color::red, 4));
+                    Line::AddLine(Line(center_p, xAxis_p, Color::red));
+                    Line::AddLine(Line(center_p, yAxis_p, Color::yellow));
+                    Line::AddLine(Line(center_p, zAxis_p, Color::blue));
+                    Line::AddLine(Line(center_p, mvp * (Direction::forward), Color::turquoise, 3));
+                }
             }
         }
 
