@@ -105,7 +105,8 @@ void Init(GLFWwindow* window)
     for (size_t i = 1; i < Camera::cameras.size(); i++)//starts at 1 to avoid projector camera
     {
        Mesh* cameraMesh = LoadMeshFromOBJFile("Camera.obj");
-       cameraMesh->SetParent(Camera::cameras[i]);
+       cameraMesh->parent = Camera::cameras[i];
+       cameraMesh->root = Camera::cameras[i];
        cameraMesh->position += -Direction::forward;
     }
 
@@ -136,15 +137,8 @@ void Init(GLFWwindow* window)
 
 }
 
-extern Transform* grabbing;
-extern Vec3 grabOffset;
-
 void Update()
 {
-    if (grabbing) {
-        grabbing->root->position = Camera::main->position + grabOffset;
-        grabbing->root->rotation = Camera::main->rotation;
-    }
 }
 
 int main(void)

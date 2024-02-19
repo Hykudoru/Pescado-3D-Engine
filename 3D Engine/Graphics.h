@@ -571,15 +571,40 @@ public:
         this->root = this;
         SetParent(parent);
     }
-
-    void SetParent(Transform* parent)
+    
+    // Use this function if the desired result is a change of basis.
+    void SetParent(Transform* newParent)
     {
-        if (parent)
+        if (newParent && newParent != this)
         {
-            this->parent = parent;
-            this->root = this->parent->root;
+            // If you immediatley parent a transform, everything is calculated relative to its immediate parent's reference frame. 
+            // This would result in a transformation if the original coordinates didn't change. 
+            // Instead what we want is a change of basis.
+            
+            Vec3 pos = newParent->TRInverse() * this->Position();
+            Vec3 xAxis = Matrix4x4::Transpose(newParent->RotationMatrix4x4()) * this->Right();
+            Vec3 yAxis = Matrix4x4::Transpose(newParent->RotationMatrix4x4()) * this->Up();
+            Vec3 zAxis = Matrix4x4::Transpose(newParent->RotationMatrix4x4()) * this->Back();
+            float rot[3][3] = {
+                { xAxis.x, yAxis.x, zAxis.x },
+                { xAxis.y, yAxis.y, zAxis.y },
+                { xAxis.z, yAxis.z, zAxis.z }
+            };
+
+            this->position = pos;
+            this->rotation = rot;
+
+            this->parent = newParent;
+            this->root = newParent->root;
         }
         else {
+            // Assigns (possibly parented) global values to the local values. 
+            // This way of unparenting will maintain the previous parented position and rotation in the new reference frame.
+            // The result is a change of basis. Nothing changes if never parented.
+            this->position = this->Position();
+            this->rotation = this->Rotation();
+            
+            this->parent = NULL;
             this->root = this;
         }
     }
@@ -1224,10 +1249,9 @@ void Draw()
     Mesh::worldTriangleDrawCount = triBuffer->size();
 
     // ---------- Sort (Painter's algorithm) -----------
-    sort(triBuffer->begin(), triBuffer->end(), [](const Triangle& triA, const Triangle& triB) -> bool
-        {
-            return triA.centroid.w > triB.centroid.w;
-        });
+    sort(triBuffer->begin(), triBuffer->end(), [](const Triangle& triA, const Triangle& triB) -> bool {
+        return triA.centroid.w > triB.centroid.w;
+    });
     /*
     Matrix4x4 matrix = ProjectionMatrix() * Camera::main->TRInverse();
 
@@ -1240,7 +1264,8 @@ void Draw()
     Vec3 corner7 = ((Direction::left + Direction::up) * 0.2);
     Vec3 corner8 = ((Direction::left) * 0.2);
 
-    lineBuffer->emplace_back(Line(corner1, corner2, Color::green, 4));
+    Plane plane1 = Plane(Camera::main->TRS()*corner1, Camera::main->TRS() * corner2, Camera::main->TRS() * Vec3(0,0,1));
+    lineBuffer->emplace_back(Line(corner1, corner2, Color::purple, 4));
     lineBuffer->emplace_back(Line(corner2, corner3, Color::green, 4));
     lineBuffer->emplace_back(Line(corner3, corner4, Color::green, 4));
     lineBuffer->emplace_back(Line(corner4, corner5, Color::green, 4));
@@ -1249,28 +1274,64 @@ void Draw()
     lineBuffer->emplace_back(Line(corner7, corner8, Color::green, 4));
     lineBuffer->emplace_back(Line(corner8, corner1, Color::green, 4));
 
+    lineBuffer->emplace_back(Line(ProjectionMatrix()*corner1, ProjectionMatrix() * corner2, Color::pink, 4));
+    lineBuffer->emplace_back(Line(ProjectionMatrix() * corner2, ProjectionMatrix() * corner3, Color::blue, 4));
+    lineBuffer->emplace_back(Line(ProjectionMatrix() * corner3, ProjectionMatrix() * corner4, Color::blue, 4));
+    lineBuffer->emplace_back(Line(ProjectionMatrix() * corner4, ProjectionMatrix() * corner5, Color::blue, 4));
+    lineBuffer->emplace_back(Line(ProjectionMatrix() * corner5, ProjectionMatrix() * corner6, Color::blue, 4));
+    lineBuffer->emplace_back(Line(ProjectionMatrix() * corner6, ProjectionMatrix() * corner7, Color::blue, 4));
+    lineBuffer->emplace_back(Line(ProjectionMatrix() * corner7, ProjectionMatrix() * corner8, Color::blue, 4));
+    lineBuffer->emplace_back(Line(ProjectionMatrix() * corner8, ProjectionMatrix() * corner1, Color::blue, 4));
+
 
     for (int i = -50; i < 50; i++)
     {
         Vec3 from = Vec3(i, 0, -100);
         Vec3 to = Vec3(i, 0, 100);
-
+        Vec3 from_c = Camera::main->TRInverse() * from;
+        Vec3 to_c = Camera::main->TRInverse()* to;
         Vec3 from_p = matrix * from;
         Vec3 to_p = matrix * to;
+        
+        
+        Vec3 intersection = Vec3();
+        if (LinePlaneIntersecting(from, to, plane1, &intersection))
+        {
+            Point::AddWorldPoint(Point(intersection, Color::purple, 10));
+            Point::AddPoint(Point(Camera::main->TRInverse()* intersection, Color::orange, 8));
+            
+            Vec3 n_c = Camera::main->TRInverse()*plane1.Normal();
+            bool fromIsInside = DotProduct(from_c, n_c) > 0;
+            bool toIsInside = DotProduct(to_c, n_c) > 0;
+            if (!fromIsInside)
+            {
+                from = intersection;
+            }
+            else if (!toIsInside)
+            {
+                to = intersection;
+            }
 
-        bool p1Outside = (from_p.x > 0.5 || from_p.x < -0.5) || (from_p.y > 0.5 || from_p.y < -0.5);
-        bool p2Outside = (to_p.x > 0.5 || to_p.x < -0.5) || (to_p.y > 0.5 || to_p.y < -0.5);
+            Line::AddWorldLine(Line(from, to, Color::white, 4));
+            Point::AddWorldPoint(Point(from, Color::orange, 10));
+            Point::AddWorldPoint(Point(to, Color::yellow, 10));
 
-        from_p.x = Clamp(from_p.x, -0.5, 0.5);
-        from_p.y = Clamp(from_p.y, -0.5, 0.5);
-        to_p.x = Clamp(to_p.x, -0.5, 0.5);
-        to_p.y = Clamp(to_p.y, -0.5, 0.5);
+        }
+        else {
+            bool p1Outside = (from_p.x > 0.5 || from_p.x < -0.5) || (from_p.y > 0.5 || from_p.y < -0.5);
+            bool p2Outside = (to_p.x > 0.5 || to_p.x < -0.5) || (to_p.y > 0.5 || to_p.y < -0.5);
 
-        pointBuffer->emplace_back(Point(from_p, Color::red, 4));
-        pointBuffer->emplace_back(Point(to_p, Color::red, 4));
-        lineBuffer->emplace_back(Line(from_p, to_p, Color::green, 4));
-    }*/
-    /*--------------------------------------------------------------------------------
+            from_p.x = Clamp(from_p.x, -0.5, 0.5);
+            from_p.y = Clamp(from_p.y, -0.5, 0.5);
+            to_p.x = Clamp(to_p.x, -0.5, 0.5);
+            to_p.y = Clamp(to_p.y, -0.5, 0.5);
+
+            Point::AddPoint(Point(from, Color::red, 4));
+            Point::AddPoint(Point(to, Color::red, 4));
+            Line::AddWorldLine(Line(from, to, Color::white, 4));
+        }
+    }
+    //--------------------------------------------------------------------------------
     Matrix4x4 matrix = ProjectionMatrix() * Camera::main->TRInverse();
 
     Vec3 corner1 = ((Direction::left + Direction::down) * 0.5);
@@ -1292,8 +1353,8 @@ void Draw()
             Vec3 from_p = matrix * from;
             Vec3 to_p = matrix * to;
 
-            bool p1Outside = (from_p.x > 0.5 || from_p.x < -0.5) || (from_p.y > 0.5 || from_p.y < -0.5);
-            bool p2Outside = (to_p.x > 0.5 || to_p.x < -0.5) || (to_p.y > 0.5 || to_p.y < -0.5);
+            //bool p1Outside = (from_p.x > 0.5 || from_p.x < -0.5) || (from_p.y > 0.5 || from_p.y < -0.5);
+            //bool p2Outside = (to_p.x > 0.5 || to_p.x < -0.5) || (to_p.y > 0.5 || to_p.y < -0.5);
 
             from_p.x = Clamp(from_p.x, -0.5, 0.5);
             from_p.y = Clamp(from_p.y, -0.5, 0.5);
@@ -1302,8 +1363,9 @@ void Draw()
 
             pointBuffer->emplace_back(Point(from_p, Color::red, 4));
             pointBuffer->emplace_back(Point(to_p, Color::red, 4));
-            lineBuffer->emplace_back(Line(from_p, to_p, Color::green, 4));
-    }---------------------------------------------------------------------------------------------------*/
+            Line::AddLine(Line(from_p, to_p, Color::green, 4));
+    }*/
+    //---------------------------------------------------------------------------------------------------*/
 
 
     // ---------- Draw -----------

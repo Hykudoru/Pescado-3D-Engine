@@ -85,24 +85,27 @@ void OnMouseButtonEvent(GLFWwindow* window, int button, int action, int mods)
             obj->mesh->SetColor(&Color::blue);
         }
         else if (button == 2) {
-            RaycastInfo<Mesh> info;
-            if (Raycast<Mesh>(Camera::cameras[2]->position, Camera::cameras[2]->position + Camera::cameras[2]->Forward() * 50, info))
+            if (!grabbing)
             {
-                cout << "RAYCAST HIT" << '\n';
-                Line::AddWorldLine(Line(Camera::cameras[2]->position, Camera::cameras[2]->position + Camera::cameras[2]->Forward() * 50, Color::green, 3));
-                Point::AddWorldPoint(Point(info.contactPoint, Color::green, 10));
-                grabbing = info.objectHit;
-                Vec3 disp = info.contactPoint - Camera::cameras[2]->position;
-                grabOffset = disp;
+                RaycastInfo<Mesh> info;
+                if (Raycast<Mesh>(Camera::main->position, Camera::main->position + Camera::main->Forward() * 1000, info))
+                {
+                    cout << "RAYCAST HIT" << '\n';
+                    Line::AddWorldLine(Line(Camera::main->position, Camera::main->position + Camera::main->Forward() * 1000, Color::green, 3));
+                    Point::AddWorldPoint(Point(info.contactPoint, Color::green, 10));
+                    grabbing = info.objectHit->root;
+                    grabbing->SetParent(Camera::main);
+                }
             }
-            Physics::raycasting = true;
         }
     }
     if (action == GLFW_RELEASE)
     {
         if (button == 2) {
-            Physics::raycasting = false;
-            grabbing = NULL;
+            if (grabbing) {
+                grabbing->SetParent(NULL);
+                grabbing = NULL;
+            }
         }
     }
 }
@@ -263,15 +266,12 @@ void OnKeyPressEvent(GLFWwindow* window, int key, int scancode, int action, int 
         }
         else if (key == GLFW_KEY_TAB)
         {
+            Physics::raycasting = true;
+
             RaycastInfo<Mesh> info;
-            if (Raycast<Mesh>(Camera::main->position, Camera::main->position + Camera::main->Forward() * 1000, info))
+            if (Raycast<Mesh>(Camera::main->position, Camera::main->position + Camera::main->Forward() * 10, info))
             {
                 cout << "RAYCAST HIT" << '\n';
-                Line::AddWorldLine(Line(Camera::main->position, info.contactPoint, Color::green, 3));
-                Point::AddWorldPoint(Point(info.contactPoint, Color::green, 10));
-                grabbing = info.objectHit;
-                Vec3 disp = info.objectHit->position - Camera::main->position;
-                grabOffset = disp;
             }
         }
     }
@@ -280,7 +280,7 @@ void OnKeyPressEvent(GLFWwindow* window, int key, int scancode, int action, int 
     {
         if (key == GLFW_KEY_TAB)
         {
-            grabbing = NULL;
+            Physics::raycasting = false;
         }
     }
 }

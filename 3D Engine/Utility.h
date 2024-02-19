@@ -244,7 +244,7 @@ bool LinePlaneIntersecting(Vec3& lineStart, Vec3& lineEnd, Plane& plane, Vec3* p
     if (divisor != 0.0) 
     {
         float t = DotProduct(n, pointPlane - lineStart) / divisor;    
-        if (t >= 0.0)
+        //if (t >= 0.0)
         {
             *pointIntersecting = lineStart + (v*t);
             return true;

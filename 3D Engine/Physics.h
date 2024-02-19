@@ -815,37 +815,40 @@ bool Raycast(Ray& ray, RaycastInfo<T>& raycastInfo)
             Vec3 pointOfIntersection;
             if (LinePlaneIntersecting(from, to, worldSpaceTri, &pointOfIntersection))
             {
-                Line::AddWorldLine(Line(from, to, Color::red));
-
-                Matrix4x4 worldToRaySpaceMatrix = ray.WorldToRaySpaceMatrix();
-                Vec4 pointOfIntersection_v = worldToRaySpaceMatrix * pointOfIntersection;
-                Triangle viewSpaceTri = (*triangles)[j];
-                for (size_t k = 0; k < 3; k++) {
-                    viewSpaceTri.verts[k] = worldToRaySpaceMatrix * worldSpaceTri.verts[k];
-                }
-
-                if (PointInsideTriangle(pointOfIntersection_v, viewSpaceTri.verts))
+                if (DotProduct(pointOfIntersection - from, ray.Direction()) >= 0)
                 {
-                    // ---------- Debugging -----------
-                    Point::AddWorldPoint(Point(pointOfIntersection, Color::red, 5));
-                    /*
-                    // Reflect
-                    Vec3 n = worldSpaceTri.Normal();
-                    Vec3 v = (pointOfIntersection - from);
-                    Vec3 reflection = Reflect(v, n);
-                    Line::AddLine(Line(pointOfIntersection_p, (Vec3)(worldToViewToProjectedMatrix * (pointOfIntersection + reflection)), Color::red));
+                    Line::AddWorldLine(Line(from, to, Color::red));
 
-                    // Project
-                    Vec3 vecPlane = ProjectOnPlane(v, n);
-                    Line::AddLine(Line(pointOfIntersection_p, (Vec3)(worldToViewToProjectedMatrix * (pointOfIntersection + vecPlane)), Color::black));
-                    */
+                    Matrix4x4 worldToRaySpaceMatrix = ray.WorldToRaySpaceMatrix();
+                    Vec4 pointOfIntersection_v = worldToRaySpaceMatrix * pointOfIntersection;
+                    Triangle viewSpaceTri = (*triangles)[j];
+                    for (size_t k = 0; k < 3; k++) {
+                        viewSpaceTri.verts[k] = worldToRaySpaceMatrix * worldSpaceTri.verts[k];
+                    }
 
-                    float sqrDist = (pointOfIntersection - from).SqrMagnitude();
-                    if (sqrDist <= closestSqrDistHit)
+                    if (PointInsideTriangle(pointOfIntersection_v, viewSpaceTri.verts))
                     {
-                        closestSqrDistHit = sqrDist;
-                        raycastInfo.objectHit = Mesh::objects[i];
-                        raycastInfo.contactPoint = pointOfIntersection;
+                        // ---------- Debugging -----------
+                        Point::AddWorldPoint(Point(pointOfIntersection, Color::red, 5));
+                        /*
+                        // Reflect
+                        Vec3 n = worldSpaceTri.Normal();
+                        Vec3 v = (pointOfIntersection - from);
+                        Vec3 reflection = Reflect(v, n);
+                        Line::AddLine(Line(pointOfIntersection_p, (Vec3)(worldToViewToProjectedMatrix * (pointOfIntersection + reflection)), Color::red));
+
+                        // Project
+                        Vec3 vecPlane = ProjectOnPlane(v, n);
+                        Line::AddLine(Line(pointOfIntersection_p, (Vec3)(worldToViewToProjectedMatrix * (pointOfIntersection + vecPlane)), Color::black));
+                        */
+
+                        float sqrDist = (pointOfIntersection - from).SqrMagnitude();
+                        if (sqrDist <= closestSqrDistHit)
+                        {
+                            closestSqrDistHit = sqrDist;
+                            raycastInfo.objectHit = Mesh::objects[i];
+                            raycastInfo.contactPoint = pointOfIntersection;
+                        }
                     }
                 }
             }
@@ -862,7 +865,7 @@ bool Raycast(Vec3 from, Vec3 to, RaycastInfo<T>& raycastInfo)
     return Raycast(ray, raycastInfo);
 }
 
-extern Transform* grabbing;
+//extern Transform* grabbing;
 extern Vec3 grabOffset;
 static void Physics()
 {
