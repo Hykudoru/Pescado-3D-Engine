@@ -572,40 +572,54 @@ public:
         SetParent(parent);
     }
     
-    // Use this function if the desired result is a change of basis.
-    void SetParent(Transform* newParent)
+    void SetParent(Transform* newParent, bool changeOfBasisTransition = true)
     {
-        if (newParent && newParent != this)
+        if (newParent == NULL)
         {
-            // If you immediatley parent a transform, everything is calculated relative to its immediate parent's reference frame. 
-            // This would result in a transformation if the original coordinates didn't change. 
-            // Instead what we want is a change of basis.
-            
-            Vec3 pos = newParent->TRInverse() * this->Position();
-            Vec3 xAxis = Matrix4x4::Transpose(newParent->RotationMatrix4x4()) * this->Right();
-            Vec3 yAxis = Matrix4x4::Transpose(newParent->RotationMatrix4x4()) * this->Up();
-            Vec3 zAxis = Matrix4x4::Transpose(newParent->RotationMatrix4x4()) * this->Back();
-            float rot[3][3] = {
-                { xAxis.x, yAxis.x, zAxis.x },
-                { xAxis.y, yAxis.y, zAxis.y },
-                { xAxis.z, yAxis.z, zAxis.z }
-            };
+            if (changeOfBasisTransition)
+            {
+                // Results in seemless unparenting. Assigns (possibly parented) global values to the local values. 
+                // This way of unparenting will maintain the previous parented position and rotation but in the new reference frame.
+                // Also nothing changes if never parented.
+                this->position = this->Position();
+                this->rotation = this->Rotation();
 
-            this->position = pos;
-            this->rotation = rot;
-
-            this->parent = newParent;
-            this->root = newParent->root;
+                this->parent = NULL;
+                this->root = this;
+            }
+            else { 
+                // Will cause repositioning with respect to the standard basis.
+                this->parent = NULL;
+                this->root = this;
+            }
         }
-        else {
-            // Assigns (possibly parented) global values to the local values. 
-            // This way of unparenting will maintain the previous parented position and rotation in the new reference frame.
-            // The result is a change of basis. Nothing changes if never parented.
-            this->position = this->Position();
-            this->rotation = this->Rotation();
-            
-            this->parent = NULL;
-            this->root = this;
+        else if (newParent != this)
+        {
+            if (changeOfBasisTransition)
+            {
+                // If you immediatley parent a transform, everything is calculated relative to its immediate parent's reference frame. 
+                // This would result in a transformation if the original coordinates didn't change. 
+                // Instead what we want is a change of basis.
+                Vec3 pos = newParent->TRInverse() * this->Position();
+                Vec3 xAxis = Matrix4x4::Transpose(newParent->RotationMatrix4x4()) * this->Right();
+                Vec3 yAxis = Matrix4x4::Transpose(newParent->RotationMatrix4x4()) * this->Up();
+                Vec3 zAxis = Matrix4x4::Transpose(newParent->RotationMatrix4x4()) * this->Back();
+                float rot[3][3] = {
+                    { xAxis.x, yAxis.x, zAxis.x },
+                    { xAxis.y, yAxis.y, zAxis.y },
+                    { xAxis.z, yAxis.z, zAxis.z }
+                };
+
+                this->position = pos;
+                this->rotation = rot;
+
+                this->parent = newParent;
+                this->root = newParent->root;
+            }
+            else { // Immediately repositions the child relative to the parent's transform.
+                this->parent = newParent;
+                this->root = newParent->root;
+            }
         }
     }
 

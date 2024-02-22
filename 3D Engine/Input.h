@@ -140,10 +140,10 @@ void OnKeyPressEvent(GLFWwindow* window, int key, int scancode, int action, int 
         }
         // Spawn
         else if (glfwGetKey(window, GLFW_KEY_9) == GLFW_PRESS) {
-            Mesh* mesh = (Mesh*)new PhysicsObject(new CubeMesh(), new BoxCollider());//LoadMeshFromOBJFile("Objects/Sphere.obj");
-            mesh->position = Camera::main->position + (Camera::main->Forward() * 10);
-            mesh->rotation = Camera::main->rotation;
-            mesh->SetColor(&Color::orange);
+            PhysicsObject* obj = new PhysicsObject(new CubeMesh(), new BoxCollider());//LoadMeshFromOBJFile("Objects/Sphere.obj");
+            obj->position = Camera::main->position + (Camera::main->Forward() * 10);
+            obj->rotation = Camera::main->rotation;
+            obj->mesh->SetColor(&Color::orange);
         }
         else if (glfwGetKey(window, GLFW_KEY_ENTER) == GLFW_PRESS) {
             PhysicsObject* obj = new PhysicsObject(new CubeMesh(), new BoxCollider());//LoadMeshFromOBJFile("Objects/Sphere.obj");

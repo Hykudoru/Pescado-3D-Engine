@@ -6,10 +6,25 @@
 #include <Utility.h>
 using namespace std;
 
+
+/*TO-DO
+* 
+* // OPTIMIZATIONS
+* Revisit sphere-plane collisions (possible performance optimization)
+* Box collisions not quite right
+* 
+* // ISSUES
+* Fix Physics Object collider parenting issue
+* 
+* // FUTURE (POSSIBLE BIG CHANGE)
+* World Partitioning
+* 
+*/
+
+
 #ifndef PHYSICS_H
 #define PHYSICS_H
 extern bool DEBUGGING;
-extern GLFWwindow* window;
 Vec3 gravity = Vec3(0, -9.81, 0);
 const float defaultAcceleration = 50;
 float accel = defaultAcceleration;
@@ -173,10 +188,7 @@ public:
         delete mesh;
     }
 
-    virtual void RecalculateBounds()
-    {
-
-    }
+    virtual void RecalculateBounds() {}
 };
 
 class BoxCollider : public Collider, public ManagedObjectPool<BoxCollider>
@@ -827,7 +839,7 @@ bool Raycast(Ray& ray, RaycastInfo<T>& raycastInfo)
                     Line::AddWorldLine(Line(from, to, Color::red));
 
                     Matrix4x4 worldToRaySpaceMatrix = ray.WorldToRaySpaceMatrix();
-                    Vec4 pointOfIntersection_v = worldToRaySpaceMatrix * pointOfIntersection;
+                    Vec3 pointOfIntersection_v = worldToRaySpaceMatrix * pointOfIntersection;
                     Triangle viewSpaceTri = (*triangles)[j];
                     for (size_t k = 0; k < 3; k++) {
                         viewSpaceTri.verts[k] = worldToRaySpaceMatrix * worldSpaceTri.verts[k];
@@ -836,19 +848,18 @@ bool Raycast(Ray& ray, RaycastInfo<T>& raycastInfo)
                     if (PointInsideTriangle(pointOfIntersection_v, viewSpaceTri.verts))
                     {
                         // ---------- Debugging -----------
-                        Point::AddWorldPoint(Point(pointOfIntersection, Color::red, 5));
+                        Point::AddWorldPoint(Point(pointOfIntersection_v, Color::red, 5));
                         /*
                         // Reflect
                         Vec3 n = worldSpaceTri.Normal();
                         Vec3 v = (pointOfIntersection - from);
                         Vec3 reflection = Reflect(v, n);
-                        Line::AddLine(Line(pointOfIntersection_p, (Vec3)(worldToViewToProjectedMatrix * (pointOfIntersection + reflection)), Color::red));
+                        Line::AddWorldLine(Line(pointOfIntersection, pointOfIntersection + reflection, Color::red));
 
                         // Project
                         Vec3 vecPlane = ProjectOnPlane(v, n);
-                        Line::AddLine(Line(pointOfIntersection_p, (Vec3)(worldToViewToProjectedMatrix * (pointOfIntersection + vecPlane)), Color::black));
+                        Line::AddWorldLine(Line(pointOfIntersection, pointOfIntersection + vecPlane, Color::black));
                         */
-
                         float sqrDist = (pointOfIntersection - from).SqrMagnitude();
                         if (sqrDist <= closestSqrDistHit)
                         {

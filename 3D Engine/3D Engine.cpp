@@ -88,9 +88,9 @@ void Init(GLFWwindow* window)
     child = new CubeMesh(1, Vec3(0, 0, 2), Vec3(0, 45, 0));
     grandchild = new CubeMesh(2, Vec3(0, 0, 2), Vec3(0, 45, 0));
     greatGrandchild = new CubeMesh(1, Vec3(0, 0, 2), Vec3(0, 45, 0));
-    child->SetParent(parent);
-    grandchild->SetParent(child);
-    greatGrandchild->SetParent(grandchild);
+    child->SetParent(parent, false);
+    grandchild->SetParent(child, false);
+    greatGrandchild->SetParent(grandchild, false);
     parent->SetColor(&Color::red);
     child->SetColor(&Color::orange);
     grandchild->SetColor(&Color::yellow);
@@ -105,8 +105,7 @@ void Init(GLFWwindow* window)
     for (size_t i = 1; i < Camera::cameras.size(); i++)//starts at 1 to avoid projector camera
     {
        Mesh* cameraMesh = LoadMeshFromOBJFile("Camera.obj");
-       cameraMesh->parent = Camera::cameras[i];
-       cameraMesh->root = Camera::cameras[i];
+       cameraMesh->SetParent(Camera::cameras[i], false);
        cameraMesh->position += -Direction::forward;
     }
 
