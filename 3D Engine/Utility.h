@@ -162,6 +162,22 @@ float Clamp(float value, float min, float max)
     return value;
 }
 
+Vec3 RandomVector()
+{
+    float random = Clamp(-1.0, 1.0, rand());
+    Vec3 randomVector = Vec3(random, random, random);
+
+    return randomVector;
+}
+
+Vec3 RandomDirection()
+{
+    Vec3 vec = RandomVector();
+    vec.Normalize();
+
+    return vec;
+}
+
 float ToDeg(float rad) {
     return rad * 180.0 / PI;
 }

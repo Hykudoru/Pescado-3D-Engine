@@ -739,7 +739,7 @@ public:
         Vec3 disp = (end - start);
         distance = disp.Magnitude();
         direction = disp.Normalized();
-        transform.rotation = LookAt(direction);
+        transform.rotation = OrthogonalMatrixLookAt(direction);
         transform.position = start;
         endPosition = start + direction * distance;
     }
@@ -763,12 +763,19 @@ public:
     {
         return transform.TRInverse();
     }
-
-    static Matrix3x3 LookAt(Vec3 dir)
+   
+    // Builds a 3x3 orthogonal matrix with its -Z axis facing the given direction (similar to a camera with no rotation.
+    static Matrix3x3 OrthogonalMatrixLookAt(Vec3 direction)
     {
-        float random = Clamp(-1.0, 1.0, rand());
-        Vec3 rayZ = dir * -1.0;
-        Vec3 rayX = CrossProduct(rayZ, Vec3(random, random, random));
+        // Cached staticallly since highly improbable the initial random vector will ever be exactly aligned with direction arg. 
+        // Prevent recalculating a random vector every call.
+        static Vec3 randomDirection = RandomDirection();
+
+        Vec3 rayZ = direction * -1.0;
+        if (rayZ == randomDirection) {
+            randomDirection = RandomDirection();
+        }
+        Vec3 rayX = CrossProduct(rayZ, randomDirection);
         Vec3 rayY = CrossProduct(rayZ, rayX);
         rayX.Normalize();
         rayY.Normalize();
