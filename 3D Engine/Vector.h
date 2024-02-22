@@ -140,6 +140,10 @@ public:
         return *this;
     }
 
+
+    friend bool operator==(const Vector2& vecA, const Vector2& vecB) { return (vecA.x == vecB.x && vecA.y == vecB.y); }
+    friend bool operator!=(const Vector2& vecA, const Vector2& vecB) { return (vecA.x != vecB.x || vecA.y != vecB.y); }
+
     operator Vector3<T>();
 };
 
@@ -287,6 +291,9 @@ public:
         }
     }
 
+    friend bool operator==(const Vector3& vecA, const Vector3& vecB) { return (vecA.x == vecB.x && vecA.y == vecB.y && vecA.z == vecB.z); }
+    friend bool operator!=(const Vector3& vecA, const Vector3& vecB) { return (vecA.x != vecB.x || vecA.y != vecB.y || vecA.z == vecB.z); }
+
     operator Vector2<T>();
     operator Vector4<T>();
 };
@@ -409,7 +416,7 @@ Vector4<T>::operator Vector2<T>()
 #define Vec4 Vector4<float>
 #define Euler Vec3;
 
-template <typename T>
+template <typename T>//Syntax: scalar * vector
 Vector2<T> operator*(const float& scalar, const Vector2<T>& vector)
 {
     Vector2<T> scaledVector = vector;
@@ -418,7 +425,7 @@ Vector2<T> operator*(const float& scalar, const Vector2<T>& vector)
     return scaledVector;
 }
 
-template <typename T>
+template <typename T> //Syntax: vector * scalar
 Vector2<T> operator*(const Vector2<T>& vector, const float& scalar)
 {
     Vector2<T> scaledVector = vector;
@@ -427,7 +434,7 @@ Vector2<T> operator*(const Vector2<T>& vector, const float& scalar)
     return scaledVector;
 }
 
-template <typename T>
+template <typename T> //Syntax: scalar * vector
 Vector3<T> operator*(const float& scalar, const Vector3<T>& vector)
 {
     Vector3<T> scaledVector = vector;
@@ -437,7 +444,7 @@ Vector3<T> operator*(const float& scalar, const Vector3<T>& vector)
     return scaledVector;
 }
 
-template <typename T>
+template <typename T> //Syntax: vector * scalar
 Vector3<T> operator*(const Vector3<T>& vector, const float& scalar)
 {
     Vector3<T> scaledVector = vector;
