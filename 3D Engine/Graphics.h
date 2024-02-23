@@ -1004,7 +1004,7 @@ int Mesh::worldTriangleDrawCount = 0;
 class CubeMesh : public Mesh
 {
 public:
-    CubeMesh(int scale = 1, Vec3 position = Vec3(0, 0, 0), Vec3 rotationEuler = Vec3(0, 0, 0))
+    CubeMesh(float scale = 1, Vec3 position = Vec3(0, 0, 0), Vec3 rotationEuler = Vec3(0, 0, 0))
         :Mesh(scale, position, rotationEuler) 
     {
         // Local Space (Object Space)
@@ -1050,7 +1050,7 @@ public:
 class PlaneMesh : public Mesh
 {
 public:
-    PlaneMesh(int scale = 1, Vec3 position = Vec3(0, 0, 0), Vec3 rotationEuler = Vec3(0, 0, 0))
+    PlaneMesh(float scale = 1, Vec3 position = Vec3(0, 0, 0), Vec3 rotationEuler = Vec3(0, 0, 0))
         :Mesh(scale, position, rotationEuler) 
     {
         this->vertices = new List<Vec3> {

@@ -266,21 +266,13 @@ void OnKeyPressEvent(GLFWwindow* window, int key, int scancode, int action, int 
         }
         else if (key == GLFW_KEY_TAB)
         {
-            Physics::raycasting = true;
+            Physics::raycasting = !Physics::raycasting;
 
             RaycastInfo<Mesh> info;
             if (Raycast<Mesh>(Camera::main->position, Camera::main->position + Camera::main->Forward() * 10, info))
             {
                 cout << "RAYCAST HIT" << '\n';
             }
-        }
-    }
-
-    if (action == GLFW_RELEASE)
-    {
-        if (key == GLFW_KEY_TAB)
-        {
-            Physics::raycasting = false;
         }
     }
 }

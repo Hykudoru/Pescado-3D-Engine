@@ -4,6 +4,7 @@
 #include <Matrix.h>
 #include <Graphics.h>
 #include <Utility.h>
+#include <Functional>
 using namespace std;
 
 
@@ -46,11 +47,13 @@ public:
     static bool collisionDetection;
     static bool dynamics;
     static bool raycasting;
+    static bool raycastDebugging;
     static bool gravity;
 };
 bool Physics::collisionDetection = true;
 bool Physics::dynamics = true;
 bool Physics::raycasting = false;
+bool Physics::raycastDebugging = false;
 bool Physics::gravity = false;
 
 double deltaTime = 0;
@@ -168,16 +171,15 @@ public:
     Vec3 angularVelocity = Vec3::zero;
 };
 
-class Collider : public Component
+class Collider : public Component, public  ManagedObjectPool<Collider>
 {
-
 public:
     Mesh* mesh;
     bool isStatic = false;
     bool isTrigger = false;
     float coefficientRestitution = 1.0;
 
-    Collider(bool isStatic = false, bool isTrigger = false)
+    Collider(bool isStatic = false, bool isTrigger = false): ManagedObjectPool<Collider>(this)
     {
         this->isStatic = isStatic;
         this->isTrigger = isTrigger;
@@ -189,6 +191,16 @@ public:
     }
 
     virtual void RecalculateBounds() {}
+
+    List<Triangle>* MapVertsToTriangles()
+    {
+        return mesh->MapVertsToTriangles();
+    }
+    
+    List<Vec3> WorldBounds()
+    {
+        return mesh->WorldVertices();
+    }
 };
 
 class BoxCollider : public Collider, public ManagedObjectPool<BoxCollider>
@@ -202,10 +214,7 @@ public:
         mesh->SetVisibility(false);
     }
 
-    List<Vec3> WorldBounds()
-    {
-        return mesh->WorldVertices();
-    }
+    
 };
 
 class SphereCollider : public Collider, public ManagedObjectPool<SphereCollider>
@@ -336,7 +345,7 @@ struct SphereCollisionInfo : public CollisionInfo
     Vec3 lineOfImpact = Vec3::zero;
 };
 
-void CalculateCollision(Vec3 lineOfImpact, float m1, float m2, Vec3& v1, Vec3& v2, float e = 1.0)
+void CalculateCollision(Vec3 lineOfImpact, float& m1, float& m2, Vec3& v1, Vec3& v2, float e = 1.0)
 {
     /* Elastic collision (conserves both momentum and kinetic energy)
     Conservation Momentum: m1*v1 + m2*v2 = m1*v1' + m2*v2'
@@ -573,20 +582,20 @@ void DetectCollisions()
     // Compare B:C, B:D, B:E
     // Compare C:D, C:E
     // Compare D:E
-    for (size_t i = 0; i < BoxCollider::count; i++)
+    for (size_t i = 0; i < ManagedObjectPool<BoxCollider>::count; i++)
     {
         // exit if this is the last Collider
-        if ((i + 1) >= BoxCollider::count) {
+        if ((i + 1) >= ManagedObjectPool<BoxCollider>::count) {
             break;
         }
 
         // Current Collider
-        BoxCollider* box1 = BoxCollider::objects[i];
+        BoxCollider* box1 = ManagedObjectPool<BoxCollider>::objects[i];
 
-        for (size_t j = i + 1; j < BoxCollider::count; j++)
+        for (size_t j = i + 1; j < ManagedObjectPool<BoxCollider>::count; j++)
         {
             // Next Collider
-            BoxCollider* box2 = BoxCollider::objects[j];
+            BoxCollider* box2 = ManagedObjectPool<BoxCollider>::objects[j];
 
             if (box1->isStatic && box2->isStatic) {
                 continue;
@@ -629,16 +638,16 @@ void DetectCollisions()
         }
     }
 
-    for (size_t i = 0; i < SphereCollider::count; i++)
+    for (size_t i = 0; i < ManagedObjectPool<SphereCollider>::count; i++)
     {
         // Current Collider
-        SphereCollider* sphere1 = SphereCollider::objects[i];
+        SphereCollider* sphere1 = ManagedObjectPool<SphereCollider>::objects[i];
 
         // SPHERE-SPHERE COLLISIONS
-        for (size_t j = i + 1; j < SphereCollider::count; j++)
+        for (size_t j = i + 1; j < ManagedObjectPool<SphereCollider>::count; j++)
         {
             // Next Collider
-            SphereCollider* sphere2 = SphereCollider::objects[j];
+            SphereCollider* sphere2 = ManagedObjectPool<SphereCollider>::objects[j];
 
             if (sphere1->isStatic && sphere2->isStatic) {
                 continue;
@@ -683,10 +692,10 @@ void DetectCollisions()
         }
 
         // SPHERE-PLANE COLLISIONS
-        for (size_t ii = 0; ii < PlaneCollider::count; ii++)
+        for (size_t ii = 0; ii < ManagedObjectPool<PlaneCollider>::count; ii++)
         {
             // Next Collider
-            PlaneCollider* plane = PlaneCollider::objects[ii];
+            PlaneCollider* plane = ManagedObjectPool<PlaneCollider>::objects[ii];
 
             if (sphere1->isStatic && plane->isStatic) {
                 continue;
@@ -800,6 +809,7 @@ public:
         return rotationMatrix;
     }
 };
+
 template <typename T>
 struct RaycastInfo
 {
@@ -815,20 +825,20 @@ struct RaycastInfo
 };
 
 template <typename T>
-bool Raycast(Ray& ray, RaycastInfo<T>& raycastInfo)
+bool Raycast(Ray& ray, RaycastInfo<T>& raycastInfo, const std::function<void(RaycastInfo<T>&)>& callback = NULL)
 {
     Vec3 from = ray.StartPosition();
     Vec3 to = ray.EndPosition();
 
     float closestSqrDistHit = ray.distance * ray.distance;
-    for (size_t i = 0; i < Mesh::objects.size(); i++)
+    for (size_t i = 0; i < ManagedObjectPool<T>::objects.size(); i++)
     {
-        auto triangles = Mesh::objects[i]->MapVertsToTriangles();
+        auto triangles = ManagedObjectPool<T>::objects[i]->MapVertsToTriangles();
         for (size_t j = 0; j < triangles->size(); j++)
         {
             Triangle worldSpaceTri = (*triangles)[j];
             for (size_t k = 0; k < 3; k++) {
-                worldSpaceTri.verts[k] = Mesh::objects[i]->TRS() * worldSpaceTri.verts[k];
+                worldSpaceTri.verts[k] = ManagedObjectPool<T>::objects[i]->TRS() * worldSpaceTri.verts[k];
             }
             //------------------Ray casting (World & Ray Space)--------------------------
             Vec3 pointOfIntersection;
@@ -844,28 +854,34 @@ bool Raycast(Ray& ray, RaycastInfo<T>& raycastInfo)
                     for (size_t k = 0; k < 3; k++) {
                         viewSpaceTri.verts[k] = worldToRaySpaceMatrix * worldSpaceTri.verts[k];
                     }
-
                     if (PointInsideTriangle(pointOfIntersection_v, viewSpaceTri.verts))
                     {
-                        // ---------- Debugging -----------
-                        Point::AddWorldPoint(Point(pointOfIntersection_v, Color::red, 5));
-                        /*
-                        // Reflect
-                        Vec3 n = worldSpaceTri.Normal();
-                        Vec3 v = (pointOfIntersection - from);
-                        Vec3 reflection = Reflect(v, n);
-                        Line::AddWorldLine(Line(pointOfIntersection, pointOfIntersection + reflection, Color::red));
-
-                        // Project
-                        Vec3 vecPlane = ProjectOnPlane(v, n);
-                        Line::AddWorldLine(Line(pointOfIntersection, pointOfIntersection + vecPlane, Color::black));
-                        */
+                        // Check if within range
                         float sqrDist = (pointOfIntersection - from).SqrMagnitude();
                         if (sqrDist <= closestSqrDistHit)
                         {
                             closestSqrDistHit = sqrDist;
-                            raycastInfo.objectHit = Mesh::objects[i];
+                            raycastInfo.objectHit = ManagedObjectPool<T>::objects[i];
                             raycastInfo.contactPoint = pointOfIntersection;
+                            
+                            if (callback) {
+                                callback(raycastInfo);
+                            }
+                         
+                            // ---------- Debugging -----------
+                            if (Physics::raycastDebugging)
+                            {
+                                Point::AddWorldPoint(Point(pointOfIntersection_v, Color::red, 5));
+                                // Reflect
+                                Vec3 n = worldSpaceTri.Normal();
+                                Vec3 v = (pointOfIntersection - from);
+                                Vec3 reflection = Reflect(v, n);
+                                Line::AddWorldLine(Line(pointOfIntersection, pointOfIntersection + reflection, Color::red));
+
+                                // Project
+                                Vec3 vecPlane = ProjectOnPlane(v, n);
+                                Line::AddWorldLine(Line(pointOfIntersection, pointOfIntersection + vecPlane, Color::pink));
+                            }
                         }
                     }
                 }
@@ -877,7 +893,7 @@ bool Raycast(Ray& ray, RaycastInfo<T>& raycastInfo)
 }
 
 template <typename T>
-bool Raycast(Vec3 from, Vec3 to, RaycastInfo<T>& raycastInfo)
+bool Raycast(Vec3 from, Vec3 to, RaycastInfo<T>& raycastInfo, const std::function<void(RaycastInfo<T>&)>& callback = NULL)
 {
     Ray ray = Ray(from, to);
     return Raycast(ray, raycastInfo);
@@ -973,13 +989,13 @@ static void Physics()
         }
         
         Ray ray2 = Ray(Camera::cameras[2]->position, Camera::cameras[2]->Forward(), 50);
-        RaycastInfo<Mesh> info2;
-        if (Raycast(ray2, info2))
+        RaycastInfo<Collider> info2;
+        if (Raycast<Collider>(ray2, info2))
         {
             //cout << "RAYCAST HIT" << '\n';
             Line::AddWorldLine(Line(ray2.StartPosition(), ray2.EndPosition(), Color::green, 3));
             Point::AddWorldPoint(Point(info2.contactPoint, Color::green, 7));
-            info2.objectHit->SetColor(&Color::red);
+            info2.objectHit->object->mesh->SetColor(&Color::red);
         }
     }
 
@@ -993,10 +1009,10 @@ static void Physics()
         onoff = Physics::gravity ? "On" : "Off";
         std::cout << "Gravity: " << onoff << " (press G)" << endl;
 
-        std::cout << "Sphere Colliders: " << SphereCollider::count << endl;
-        std::cout << "Box Colliders: " << BoxCollider::count << endl;
-        std::cout << "Plane Colliders: " << PlaneCollider::count << endl;
-        std::cout << "Colliders: " << PhysicsObject::count << endl;
+        std::cout << "Sphere Colliders: " << ManagedObjectPool<SphereCollider>::count << endl;
+        std::cout << "Box Colliders: " << ManagedObjectPool <BoxCollider>::count << endl;
+        std::cout << "Plane Colliders: " << ManagedObjectPool<PlaneCollider>::count << endl;
+        std::cout << "Colliders: " << Collider::count << endl;
 
         std::cout << "--------PLAYER-------" << endl;
 

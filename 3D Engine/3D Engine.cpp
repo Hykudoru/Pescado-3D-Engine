@@ -85,9 +85,9 @@ void Init(GLFWwindow* window)
     spaceShip3->position = Direction::right * 20 + Direction::up * 10;
 
     parent = new CubeMesh(1, Vec3(0, 10, 2), Vec3(0, 45, 0));
-    child = new CubeMesh(1, Vec3(0, 0, 2), Vec3(0, 45, 0));
+    child = new CubeMesh(2, Vec3(0, 0, 2), Vec3(0, 45, 0));
     grandchild = new CubeMesh(2, Vec3(0, 0, 2), Vec3(0, 45, 0));
-    greatGrandchild = new CubeMesh(1, Vec3(0, 0, 2), Vec3(0, 45, 0));
+    greatGrandchild = new CubeMesh(1.0/2, Vec3(0, 0, 2), Vec3(0, 45, 0));
     child->SetParent(parent, false);
     grandchild->SetParent(child, false);
     greatGrandchild->SetParent(grandchild, false);
@@ -120,6 +120,8 @@ void Init(GLFWwindow* window)
             block->position = Direction::down*15 + Direction::left*i*10 + Direction::back * j*10;
         }
     }
+
+    
     /*
     PhysicsObject* ground = new PhysicsObject(100, Direction::down * 15, Matrix3x3::identity, new PlaneMesh(), new PlaneCollider(Direction::up, true));
     PhysicsObject* leftWall = new PhysicsObject(100, Direction::left * 200, Matrix3x3::RotZ(ToRad(-90)), new PlaneMesh(), new PlaneCollider(Direction::up, true));
