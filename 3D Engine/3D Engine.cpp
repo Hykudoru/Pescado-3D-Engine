@@ -138,6 +138,10 @@ void Init(GLFWwindow* window)
 
 void Update()
 {
+    if (CameraSettings::displayReticle)
+    {
+        Point::AddPoint(Point(Vec3(), Color::orange, 5));
+    }
 }
 
 int main(void)

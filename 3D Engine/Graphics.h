@@ -743,8 +743,10 @@ bool Transform::parentHierarchyDefault = true;
 struct CameraSettings
 {
     static bool outsiderViewPerspective;
+    static bool displayReticle;
 };
 bool CameraSettings::outsiderViewPerspective = false;
+bool CameraSettings::displayReticle = true;
 
 class Camera : public Transform
 {
