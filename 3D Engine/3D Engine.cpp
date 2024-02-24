@@ -39,6 +39,7 @@ void Debug()
 
 Mesh* giantText;
 Mesh* planet;
+Mesh* moon;
 Mesh* spaceShip;
 Mesh* spaceShip2;
 Mesh* spaceShip3;
@@ -64,11 +65,17 @@ void Init(GLFWwindow* window)
     Graphics::matrixMode = true;
     //GraphicSettings::debugAxes = true;
 
-    planet = LoadMeshFromOBJFile("Sphere.obj");
+    planet = LoadMeshFromOBJFile("Planet.obj");
     planet->Scale(Vec3(500, 500, 500));
-    planet->position += Direction::forward * 1000;
+    planet->position += Direction::forward * 1200;
     planet->SetColor(&Color::white);
     
+    moon = LoadMeshFromOBJFile("Moon.obj");
+    //moon->position += Direction::forward * 500;
+    moon->Scale(0.07);
+    moon->SetParent(planet, false);
+    moon->position += (-Direction::forward + 1.1 *Direction::left);
+
     giantText = LoadMeshFromOBJFile("PescadoTextThickLime.obj");// "PescadoText.obj");//"Hello3DWorldText.obj");
     giantText->Scale(Vec3(2.5, 2.5, 2.5));
     giantText->position = Vec3(50, 25, -490);
