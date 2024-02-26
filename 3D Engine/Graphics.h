@@ -67,6 +67,12 @@ struct Color
         this->a = vec.w;
     }
 
+    static Color Random()
+    {
+        Color c = Color(Clamp(0, 255, rand()), Clamp(0, 255, rand()), Clamp(0, 255, rand()));
+        return c;
+    }
+
     Color operator+(const Color& other)
     {
         Color color;
@@ -782,7 +788,7 @@ public:
     List<Vec3>* vertices;
     List<int>* indices;
     List<Triangle>* triangles;
-    Color* color = &Color::white;
+    Color color = Color::white;
 
     Mesh(float scale = 1, Vec3 position = Vec3(0, 0, 0), Vec3 rotationEuler = Vec3(0, 0, 0))
     : Transform(scale, position, rotationEuler), ManagedObjectPool<Mesh>(this)
@@ -810,13 +816,13 @@ public:
         }
     }
 
-    void SetColor(Color* c)
+    void SetColor(Color& c)
     {
         if (triangles)
         {
             for (int i = 0; i < triangles->size(); i++)
             {
-                (*triangles)[i].color = *c;
+                (*triangles)[i].color = c;
             }
         }
     }

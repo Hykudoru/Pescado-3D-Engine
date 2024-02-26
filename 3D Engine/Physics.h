@@ -22,6 +22,7 @@ using namespace std;
 * 
 */
 
+class PhysicsObject;
 
 #ifndef PHYSICS_H
 #define PHYSICS_H
@@ -36,7 +37,7 @@ bool dampenersActive = true;
 Vec3 moveDir = Vec3(0, 0, 0);
 Vec3 velocity = Vec3(0, 0, 0);
 
-extern Mesh* planet;
+extern PhysicsObject* planet;
 extern Mesh* spaceShip;
 extern Mesh* spaceShip2;
 extern Mesh* spaceShip3;
@@ -209,7 +210,7 @@ public:
     BoxCollider(bool isStatic = false, bool isTrigger = false) : Collider(isStatic, isTrigger), ManagedObjectPool<BoxCollider>(this)
     {
         mesh = new CubeMesh();
-        mesh->SetColor(&Color::red);
+        mesh->SetColor(Color::red);
         mesh->SetParent(this);
         mesh->SetVisibility(false);
     }
@@ -224,7 +225,7 @@ public:
     SphereCollider(bool isStatic = false, bool isTrigger = false) : Collider(isStatic, isTrigger), ManagedObjectPool<SphereCollider>(this)
     {
         mesh = LoadMeshFromOBJFile("Sphere.obj");
-        mesh->SetColor(&Color::red);
+        mesh->SetColor(Color::red);
         mesh->SetParent(this);
         mesh->SetVisibility(false);
     }
@@ -251,7 +252,7 @@ public:
     {
         this->normal = normal;
         mesh = new PlaneMesh();
-        mesh->SetColor(&Color::red);
+        mesh->SetColor(Color::red);
         mesh->SetParent(this);
         mesh->SetVisibility(false);
     }
@@ -813,7 +814,8 @@ public:
 template <typename T>
 struct RaycastInfo
 {
-    T* objectHit = NULL;
+    T* objectHit = nullptr;
+    Triangle* TriangleHit = nullptr;
     Vec3 contactPoint = Vec3::zero;
 
     RaycastInfo() {};
@@ -850,11 +852,11 @@ bool Raycast(Ray& ray, RaycastInfo<T>& raycastInfo, const std::function<void(Ray
 
                     Matrix4x4 worldToRaySpaceMatrix = ray.WorldToRaySpaceMatrix();
                     Vec3 pointOfIntersection_v = worldToRaySpaceMatrix * pointOfIntersection;
-                    Triangle viewSpaceTri = (*triangles)[j];
+                    Triangle* viewSpaceTri = &((*triangles)[j]);
                     for (size_t k = 0; k < 3; k++) {
-                        viewSpaceTri.verts[k] = worldToRaySpaceMatrix * worldSpaceTri.verts[k];
+                        viewSpaceTri->verts[k] = worldToRaySpaceMatrix * worldSpaceTri.verts[k];
                     }
-                    if (PointInsideTriangle(pointOfIntersection_v, viewSpaceTri.verts))
+                    if (PointInsideTriangle(pointOfIntersection_v, viewSpaceTri->verts))
                     {
                         // Check if within range
                         float sqrDist = (pointOfIntersection - from).SqrMagnitude();
@@ -863,7 +865,8 @@ bool Raycast(Ray& ray, RaycastInfo<T>& raycastInfo, const std::function<void(Ray
                             closestSqrDistHit = sqrDist;
                             raycastInfo.objectHit = ManagedObjectPool<T>::objects[i];
                             raycastInfo.contactPoint = pointOfIntersection;
-                            
+                            raycastInfo.TriangleHit = viewSpaceTri;
+
                             if (callback) {
                                 callback(raycastInfo);
                             }
@@ -889,7 +892,7 @@ bool Raycast(Ray& ray, RaycastInfo<T>& raycastInfo, const std::function<void(Ray
         }
     }
 
-    return raycastInfo.objectHit != NULL;
+    return raycastInfo.objectHit != nullptr;
 }
 
 template <typename T>
@@ -985,7 +988,8 @@ static void Physics()
             //cout << "RAYCAST HIT" << '\n';
             Line::AddWorldLine(Line(ray1.StartPosition(), ray1.EndPosition(), Color::green, 3));
             Point::AddWorldPoint(Point(info.contactPoint, Color::green, 7));
-            info.objectHit->SetColor(&Color::purple);
+            //info.objectHit->SetColor(Color::purple);
+            info.TriangleHit->color = Color::purple;//Color::Random();
         }
         
         Ray ray2 = Ray(Camera::cameras[2]->position, Camera::cameras[2]->Forward(), 50);
@@ -995,7 +999,7 @@ static void Physics()
             //cout << "RAYCAST HIT" << '\n';
             Line::AddWorldLine(Line(ray2.StartPosition(), ray2.EndPosition(), Color::green, 3));
             Point::AddWorldPoint(Point(info2.contactPoint, Color::green, 7));
-            info2.objectHit->object->mesh->SetColor(&Color::red);
+            info2.objectHit->object->mesh->SetColor(Color::red);
         }
     }
 

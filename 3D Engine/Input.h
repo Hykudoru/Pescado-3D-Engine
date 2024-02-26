@@ -4,6 +4,7 @@
 #include <GLFW/glfw3.h>
 #include <Graphics.h>
 #include <Physics.h>
+#include <functional>
 extern CubeMesh* parent;
 extern CubeMesh* child;
 extern CubeMesh* grandchild;
@@ -13,6 +14,7 @@ static double deltaMouseX;
 static double deltaMouseY;
 float mouseSensitivity = .1;
 bool mouseCameraControlEnabled = true;
+
 
 void OnMouseMoveEvent(GLFWwindow* window, double mouseX, double mouseY)
 {
@@ -46,43 +48,35 @@ float massFactor = 1;
 Transform* grabbing;
 Vec3 grabOffset;
 
+std::function<PhysicsObject* ()> spawn = []() { return new PhysicsObject(LoadMeshFromOBJFile("Sphere.obj"), new SphereCollider()); };
+
 void OnMouseButtonEvent(GLFWwindow* window, int button, int action, int mods)
 {
     std::cout << "Mouse button:" << button << std::endl;
 
+     auto Throw = [&](PhysicsObject &obj) mutable {
+        obj.position = Camera::main->position + (Camera::main->Forward() * 10);
+        obj.rotation = Camera::main->rotation;
+        obj.velocity = velocity + obj.Forward() * 25;
+        obj.mass = massFactor;
+        };
+
     if (action == GLFW_PRESS)
     {
-        if (glfwGetKey(window, GLFW_KEY_LEFT_ALT) == GLFW_PRESS)
-        {
-            // Spawn/Throw Mesh
-            if (button == 0) {
-                PhysicsObject* obj = new PhysicsObject(LoadMeshFromOBJFile("Sphere.obj"), new SphereCollider());//LoadMeshFromOBJFile("Objects/Sphere.obj");
-                obj->position = Camera::main->position + (Camera::main->Forward() * 10);
-                obj->rotation = Camera::main->rotation;
-                obj->velocity = velocity + obj->Forward() * 25;
-                obj->mass = massFactor;
-                obj->mesh->SetColor(&Color::orange);
-                obj->Scale(1);
-            }
-
-            return;
-        }
         // Spawn/Throw Mesh
         if (button == 0) {
-            PhysicsObject* obj = new PhysicsObject(new CubeMesh(), new BoxCollider());//LoadMeshFromOBJFile("Objects/Sphere.obj");
-            obj->position = Camera::main->position + (Camera::main->Forward() * 10);
-            obj->rotation = Camera::main->rotation;
-            obj->velocity = velocity + obj->Forward() * 25;
+            PhysicsObject* obj = spawn();// new PhysicsObject(new CubeMesh(), new BoxCollider());//LoadMeshFromOBJFile("Objects/Sphere.obj");
+            Throw(*obj);
             obj->mass = massFactor;
-            obj->mesh->SetColor(&Color::orange);
+            obj->mesh->SetColor(Color::orange);
         }
         // Spawn Mesh
         if (button == 1) {
-            PhysicsObject* obj = new PhysicsObject(new CubeMesh(), new BoxCollider());//LoadMeshFromOBJFile("Objects/Sphere.obj");
+            PhysicsObject* obj = spawn();// new PhysicsObject(new CubeMesh(), new BoxCollider());//LoadMeshFromOBJFile("Objects/Sphere.obj");
             obj->position = Camera::main->position + (Camera::main->Forward() * 10);
             obj->rotation = Camera::main->rotation;
             obj->isKinematic = true;
-            obj->mesh->SetColor(&Color::blue);
+            obj->mesh->SetColor(Color::blue);
         }
         else if (button == 2) {
             if (!grabbing)
@@ -91,7 +85,7 @@ void OnMouseButtonEvent(GLFWwindow* window, int button, int action, int mods)
                 if (Raycast<Mesh>(Camera::main->position, Camera::main->position + Camera::main->Forward() * 1000, info))
                 {
                     cout << "RAYCAST HIT" << '\n';
-                    Line::AddWorldLine(Line(Camera::main->position, Camera::main->position + Camera::main->Forward() * 1000, Color::green, 3));
+                    Line::AddWorldLine(Line(Camera::main->position, Camera::main->position + Camera::main->Forward() * 1000000, Color::green, 3));
                     Point::AddWorldPoint(Point(info.contactPoint, Color::green, 10));
                     grabbing = info.objectHit->root;
                     grabbing->SetParent(Camera::main);
@@ -138,40 +132,29 @@ void OnKeyPressEvent(GLFWwindow* window, int key, int scancode, int action, int 
             Camera::projector->rotation = Matrix3x3::identity;
             Camera::projector->position = Vec3();
         }
+
         // Spawn
-        else if (glfwGetKey(window, GLFW_KEY_9) == GLFW_PRESS) {
-            PhysicsObject* obj = new PhysicsObject(new CubeMesh(), new BoxCollider());//LoadMeshFromOBJFile("Objects/Sphere.obj");
-            obj->position = Camera::main->position + (Camera::main->Forward() * 10);
-            obj->rotation = Camera::main->rotation;
-            obj->mesh->SetColor(&Color::orange);
+        else if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS) 
+        {
+            spawn = []() { return new PhysicsObject(LoadMeshFromOBJFile("Sphere.obj"), new SphereCollider()); };
         }
-        else if (glfwGetKey(window, GLFW_KEY_ENTER) == GLFW_PRESS) {
-            PhysicsObject* obj = new PhysicsObject(new CubeMesh(), new BoxCollider());//LoadMeshFromOBJFile("Objects/Sphere.obj");
-            obj->position = Camera::main->position + (Camera::main->Forward() * 10);
-            obj->rotation = Camera::main->rotation;
-            obj->Scale(2);
-            obj->velocity = obj->Forward() * 50;
-            obj->mesh->SetColor(&Color::orange);
-        }
-        else if (glfwGetKey(window, GLFW_KEY_6) == GLFW_PRESS) {
-            PhysicsObject* obj = new PhysicsObject(LoadMeshFromOBJFile("Sphere.obj"), new SphereCollider());
-            obj->position = Camera::main->position + (Camera::main->Forward() * 10);
-            obj->rotation = Camera::main->rotation;
-            obj->velocity = velocity + (Camera::main->Forward() * 50);
+        else if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS) 
+        {
+            spawn = []() { return new PhysicsObject(new CubeMesh(), new BoxCollider()); }; //= spawnCube;
         }
         else if (glfwGetKey(window, GLFW_KEY_7) == GLFW_PRESS) {
             Mesh* mesh = LoadMeshFromOBJFile("Diamond.obj");
             mesh->position = Camera::main->position + (Camera::main->Forward() * 10);
             mesh->rotation = Camera::main->rotation;
             mesh->Scale(0.1);
-            mesh->SetColor(&Color::red);
+            mesh->SetColor(Color::red);
         }
         else if (glfwGetKey(window, GLFW_KEY_8) == GLFW_PRESS) {
             Mesh* mesh = LoadMeshFromOBJFile("Icosahedron.obj");
             mesh->position = Camera::main->position + (Camera::main->Forward() * 10);
             mesh->rotation = Camera::main->rotation;
             mesh->Scale(0.1);
-            mesh->SetColor(&Color::purple);
+            mesh->SetColor(Color::purple);
         }
 
         //------------------Physics-------------------

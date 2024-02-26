@@ -38,7 +38,7 @@ void Debug()
 }
 
 Mesh* giantText;
-Mesh* planet;
+PhysicsObject* planet;
 Mesh* moon;
 Mesh* spaceShip;
 Mesh* spaceShip2;
@@ -65,10 +65,9 @@ void Init(GLFWwindow* window)
     Graphics::matrixMode = true;
     //GraphicSettings::debugAxes = true;
 
-    planet = LoadMeshFromOBJFile("Planet.obj");
-    planet->Scale(Vec3(500, 500, 500));
-    planet->position += Direction::forward * 1200;
-    
+    planet = new PhysicsObject(500.0, Direction::forward * 1200, Matrix3x3::identity, LoadMeshFromOBJFile("Planet.obj"), new SphereCollider());
+    planet->mass = 100000;
+
     moon = LoadMeshFromOBJFile("Moon.obj");
     //moon->position += Direction::forward * 500;
     moon->Scale(0.07);
@@ -97,10 +96,10 @@ void Init(GLFWwindow* window)
     child->SetParent(parent, false);
     grandchild->SetParent(child, false);
     greatGrandchild->SetParent(grandchild, false);
-    parent->SetColor(&Color::red);
-    child->SetColor(&Color::orange);
-    grandchild->SetColor(&Color::yellow);
-    greatGrandchild->SetColor(&Color::green);
+    parent->SetColor(Color::red);
+    child->SetColor(Color::orange);
+    grandchild->SetColor(Color::yellow);
+    greatGrandchild->SetColor(Color::green);
     //Mesh* guitar = LoadMeshFromOBJFile("Objects/Guitar.obj");
     //guitar->position += (Camera::main->Forward() * 10) + Camera::main->Right();
     //Mesh* chair = LoadMeshFromOBJFile("Objects/Chair.obj");
