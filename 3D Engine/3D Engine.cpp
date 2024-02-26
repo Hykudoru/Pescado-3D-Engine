@@ -68,7 +68,6 @@ void Init(GLFWwindow* window)
     planet = LoadMeshFromOBJFile("Planet.obj");
     planet->Scale(Vec3(500, 500, 500));
     planet->position += Direction::forward * 1200;
-    planet->SetColor(&Color::white);
     
     moon = LoadMeshFromOBJFile("Moon.obj");
     //moon->position += Direction::forward * 500;
