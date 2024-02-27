@@ -164,8 +164,7 @@ float Clamp(float value, float min, float max)
 
 Vec3 RandomVector()
 {
-    float random = Clamp(-1.0, 1.0, rand());
-    Vec3 randomVector = Vec3(random, random, random);
+    Vec3 randomVector = Vec3(rand(), rand(), rand());
 
     return randomVector;
 }
