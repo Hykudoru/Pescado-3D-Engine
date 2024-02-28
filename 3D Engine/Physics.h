@@ -265,27 +265,19 @@ public:
     Mesh* mesh;
 
     PhysicsObject(Mesh* mesh, Collider* collider) : ManagedObjectPool<PhysicsObject>(this)
-    {
-        collider->Scale(mesh->Scale());
-        collider->position = mesh->position;
-        collider->rotation = mesh->rotation;
-
-        SetCollider(collider);
+    { 
         SetMesh(mesh);
+        SetCollider(collider);
     }
 
     PhysicsObject(float scale, Vec3 position, Matrix3x3 rotation, Mesh* mesh, Collider* collider) : ManagedObjectPool<PhysicsObject>(this)
     {
-        collider->Scale(mesh->Scale());
-        collider->position = mesh->position;
-        collider->rotation = mesh->rotation;
-        SetCollider(collider);
-
-        SetMesh(mesh);
-
-        this->Scale(scale);
+        this->scale = Vec3(scale, scale, scale);
         this->position = position;
         this->rotation = rotation;
+        
+        SetMesh(mesh);
+        SetCollider(collider);
     }
 
     virtual ~PhysicsObject()
@@ -293,7 +285,7 @@ public:
         delete collider;
         delete mesh;
     }
-
+    /*
     void Scale(float scale) override
     {
         this->scale = Vec3(scale, scale, scale);
@@ -304,7 +296,7 @@ public:
     {
         this->scale = scale;
         collider->RecalculateBounds();
-    }
+    }*/
 
     void SetCollider(Collider* collider)
     {
@@ -313,7 +305,7 @@ public:
             delete this->collider;
             this->collider = collider;
             this->collider->object = this;
-            this->collider->SetParent(this);
+            this->collider->SetParent(mesh, false);
         }
     }
 
@@ -324,7 +316,7 @@ public:
             delete this->mesh;
             this->mesh = mesh;
             //this->mesh->object = this;
-            this->mesh->SetParent(this);
+            this->mesh->SetParent(this, false);
         }
     }
 };

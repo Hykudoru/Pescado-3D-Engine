@@ -47,7 +47,7 @@ float massFactor = 1;
 
 Transform* grabbing;
 Vec3 grabOffset;
-
+Transform* grabbingsOriginalParent = NULL;
 std::function<PhysicsObject* ()> spawn = []() { return new PhysicsObject(LoadMeshFromOBJFile("Sphere.obj"), new SphereCollider()); };
 
 void OnMouseButtonEvent(GLFWwindow* window, int button, int action, int mods)
@@ -88,6 +88,7 @@ void OnMouseButtonEvent(GLFWwindow* window, int button, int action, int mods)
                     Line::AddWorldLine(Line(Camera::main->position, Camera::main->position + Camera::main->Forward() * 1000000, Color::green, 3));
                     Point::AddWorldPoint(Point(info.contactPoint, Color::green, 10));
                     grabbing = info.objectHit->root;
+                    grabbingsOriginalParent = grabbing->parent;
                     grabbing->SetParent(Camera::main);
                 }
             }
@@ -97,8 +98,9 @@ void OnMouseButtonEvent(GLFWwindow* window, int button, int action, int mods)
     {
         if (button == 2) {
             if (grabbing) {
-                grabbing->SetParent(NULL);
+                grabbing->SetParent(grabbingsOriginalParent);
                 grabbing = NULL;
+                grabbingsOriginalParent = NULL;
             }
         }
     }
@@ -146,14 +148,14 @@ void OnKeyPressEvent(GLFWwindow* window, int key, int scancode, int action, int 
             Mesh* mesh = LoadMeshFromOBJFile("Diamond.obj");
             mesh->position = Camera::main->position + (Camera::main->Forward() * 10);
             mesh->rotation = Camera::main->rotation;
-            mesh->Scale(0.1);
+            mesh->scale *= 0.1;
             mesh->SetColor(Color::red);
         }
         else if (glfwGetKey(window, GLFW_KEY_8) == GLFW_PRESS) {
             Mesh* mesh = LoadMeshFromOBJFile("Icosahedron.obj");
             mesh->position = Camera::main->position + (Camera::main->Forward() * 10);
             mesh->rotation = Camera::main->rotation;
-            mesh->Scale(0.1);
+            mesh->scale *= 0.1;
             mesh->SetColor(Color::purple);
         }
 

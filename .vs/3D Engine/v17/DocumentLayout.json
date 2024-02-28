@@ -1,0 +1,116 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "Z:\\3D Engine\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{CF081055-ADCC-4747-B081-95BED8F3A00A}|3D Engine\\3D Engine.vcxproj|Z:\\3D Engine\\3D Engine\\Input.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{CF081055-ADCC-4747-B081-95BED8F3A00A}|3D Engine\\3D Engine.vcxproj|solutionrelative:3D Engine\\Input.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{CF081055-ADCC-4747-B081-95BED8F3A00A}|3D Engine\\3D Engine.vcxproj|Z:\\3D Engine\\3D Engine\\3D Engine.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{CF081055-ADCC-4747-B081-95BED8F3A00A}|3D Engine\\3D Engine.vcxproj|solutionrelative:3D Engine\\3D Engine.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{CF081055-ADCC-4747-B081-95BED8F3A00A}|3D Engine\\3D Engine.vcxproj|Z:\\3D Engine\\3D Engine\\Physics.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{CF081055-ADCC-4747-B081-95BED8F3A00A}|3D Engine\\3D Engine.vcxproj|solutionrelative:3D Engine\\Physics.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{CF081055-ADCC-4747-B081-95BED8F3A00A}|3D Engine\\3D Engine.vcxproj|Z:\\3D Engine\\3D Engine\\Graphics.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{CF081055-ADCC-4747-B081-95BED8F3A00A}|3D Engine\\3D Engine.vcxproj|solutionrelative:3D Engine\\Graphics.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{CF081055-ADCC-4747-B081-95BED8F3A00A}|3D Engine\\3D Engine.vcxproj|Z:\\3D Engine\\3D Engine\\Utility.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{CF081055-ADCC-4747-B081-95BED8F3A00A}|3D Engine\\3D Engine.vcxproj|solutionrelative:3D Engine\\Utility.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 1,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedHeight": 200,
+          "SelectedChildIndex": 6,
+          "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:1:0:{e8b06f52-6d01-11d2-aa7d-00c04f990343}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{6d4078d1-5951-4ed1-ac0e-0a8099c1cce5}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{cce594b6-0c39-4442-ba28-10c64ac7e89f}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "Graphics.h",
+              "DocumentMoniker": "Z:\\3D Engine\\3D Engine\\Graphics.h",
+              "RelativeDocumentMoniker": "3D Engine\\Graphics.h",
+              "ToolTip": "Z:\\3D Engine\\3D Engine\\Graphics.h",
+              "RelativeToolTip": "3D Engine\\Graphics.h",
+              "ViewState": "AQIAAC4CAAAAAAAAAAAAADgCAAAAAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
+              "WhenOpened": "2024-02-24T11:48:11.599Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "Physics.h",
+              "DocumentMoniker": "Z:\\3D Engine\\3D Engine\\Physics.h",
+              "RelativeDocumentMoniker": "3D Engine\\Physics.h",
+              "ToolTip": "Z:\\3D Engine\\3D Engine\\Physics.h",
+              "RelativeToolTip": "3D Engine\\Physics.h",
+              "ViewState": "AQIAAP0AAAAAAAAAAAAuwBMBAAAiAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
+              "WhenOpened": "2024-02-24T11:48:11.626Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "3D Engine.cpp",
+              "DocumentMoniker": "Z:\\3D Engine\\3D Engine\\3D Engine.cpp",
+              "RelativeDocumentMoniker": "3D Engine\\3D Engine.cpp",
+              "ToolTip": "Z:\\3D Engine\\3D Engine\\3D Engine.cpp",
+              "RelativeToolTip": "3D Engine\\3D Engine.cpp",
+              "ViewState": "AQIAAD8AAAAAAAAAAAASwFAAAAAEAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
+              "WhenOpened": "2024-02-24T11:48:11.578Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "Input.h",
+              "DocumentMoniker": "Z:\\3D Engine\\3D Engine\\Input.h",
+              "RelativeDocumentMoniker": "3D Engine\\Input.h",
+              "ToolTip": "Z:\\3D Engine\\3D Engine\\Input.h",
+              "RelativeToolTip": "3D Engine\\Input.h",
+              "ViewState": "AQIAAKUAAAAAAAAAAAAkwLMAAAAlAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
+              "WhenOpened": "2024-02-24T11:48:11.681Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "Utility.h",
+              "DocumentMoniker": "Z:\\3D Engine\\3D Engine\\Utility.h",
+              "RelativeDocumentMoniker": "3D Engine\\Utility.h",
+              "ToolTip": "Z:\\3D Engine\\3D Engine\\Utility.h",
+              "RelativeToolTip": "3D Engine\\Utility.h",
+              "ViewState": "AQIAAKAAAAAAAAAAAAAAAKIAAAABAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
+              "WhenOpened": "2024-02-24T11:48:11.682Z"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -70,12 +70,12 @@ void Init(GLFWwindow* window)
 
     moon = LoadMeshFromOBJFile("Moon.obj");
     //moon->position += Direction::forward * 500;
-    moon->Scale(0.07);
+    moon->scale *= 0.07;
     moon->SetParent(planet, false);
     moon->position += (-Direction::forward + 1.1 *Direction::left);
 
     giantText = LoadMeshFromOBJFile("PescadoTextThickLime.obj");// "PescadoText.obj");//"Hello3DWorldText.obj");
-    giantText->Scale(Vec3(2.5, 2.5, 2.5));
+    giantText->scale *= 2.5;
     giantText->position = Vec3(50, 25, -490);
    // textHelloWorld->color = &Color::green;
     
@@ -121,7 +121,7 @@ void Init(GLFWwindow* window)
         for (int j = -10; j < 10; j++)
         {
             PhysicsObject* block = new PhysicsObject(new CubeMesh(), new BoxCollider(true));
-            block->Scale(2);
+            block->scale *= 2;
             block->position = Direction::down*15 + Direction::left*i*10 + Direction::back * j*10;
         }
     }
@@ -136,7 +136,7 @@ void Init(GLFWwindow* window)
     */
     
     physicsObj = new PhysicsObject(LoadMeshFromOBJFile("Sphere.obj"), new SphereCollider());
-    physicsObj->Scale(2);
+    physicsObj->scale *= 2;
     //physicsObj->mesh->SetVisibility(false);
     physicsObj->collider->mesh->SetVisibility(true);
     //physicsObj->collider->isTrigger = true;
