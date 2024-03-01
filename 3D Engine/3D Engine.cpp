@@ -39,6 +39,7 @@ void Debug()
 
 Mesh* giantText;
 PhysicsObject* planet;
+Mesh* sun;
 Mesh* moon;
 Mesh* spaceShip;
 Mesh* spaceShip2;
@@ -46,8 +47,7 @@ Mesh* spaceShip3;
 CubeMesh* parent;
 CubeMesh* child;
 CubeMesh* grandchild;
-CubeMesh* greatGrandchild;
-PhysicsObject* physicsObj;    
+CubeMesh* greatGrandchild;  
 
 void Init(GLFWwindow* window)
 {
@@ -64,15 +64,19 @@ void Init(GLFWwindow* window)
 
     Graphics::matrixMode = true;
     //GraphicSettings::debugAxes = true;
-
+    
+    sun = LoadMeshFromOBJFile("Sun.obj");
+    sun->position = lightSource * 10000;
+    sun->scale *= 1000;
+    sun->ignoreLighting = true;
+    
     planet = new PhysicsObject(500.0, Direction::forward * 1200, Matrix3x3::identity, LoadMeshFromOBJFile("Planet.obj"), new SphereCollider());
     planet->mass = 100000;
 
     moon = LoadMeshFromOBJFile("Moon.obj");
     //moon->position += Direction::forward * 500;
-    moon->scale *= 0.07;
-    moon->SetParent(planet, false);
-    moon->position += (-Direction::forward + 1.1 *Direction::left);
+    moon->scale *= 70;
+    moon->position = planet->Position() + 1.3*(500*-Direction::forward + 400*Direction::left) + 100*Direction::up;
 
     giantText = LoadMeshFromOBJFile("PescadoTextThickLime.obj");// "PescadoText.obj");//"Hello3DWorldText.obj");
     giantText->scale *= 2.5;
@@ -128,17 +132,17 @@ void Init(GLFWwindow* window)
 
     
     /*
-    PhysicsObject* ground = new PhysicsObject(100, Direction::down * 15, Matrix3x3::identity, new PlaneMesh(), new PlaneCollider(Direction::up, true));
-    PhysicsObject* leftWall = new PhysicsObject(100, Direction::left * 200, Matrix3x3::RotZ(ToRad(-90)), new PlaneMesh(), new PlaneCollider(Direction::up, true));
-    PhysicsObject* rightWall = new PhysicsObject(100, Direction::right * 200, Matrix3x3::RotZ(ToRad(90)), new PlaneMesh(), new PlaneCollider(Direction::up, true));
-    PhysicsObject* backWall = new PhysicsObject(100, Direction::forward * 200, Matrix3x3::RotX(ToRad(90)), new PlaneMesh(), new PlaneCollider(Direction::up, true));
-    PhysicsObject* frontWall = new PhysicsObject(new PlaneMesh(100, Direction::back * 200, Vec3(ToRad(-90), 0, 0)), new PlaneCollider(Direction::up, true));
+    PhysicsObject* ground = new PhysicsObject(400, Direction::down * 200, Matrix3x3::identity, new PlaneMesh(), new PlaneCollider(Direction::up, true));
+    PhysicsObject* leftWall = new PhysicsObject(300, Direction::left * 200, Matrix3x3::RotZ(ToRad(-90)), new PlaneMesh(), new PlaneCollider(Direction::up, true));
+    PhysicsObject* rightWall = new PhysicsObject(300, Direction::right * 200, Matrix3x3::RotZ(ToRad(90)), new PlaneMesh(), new PlaneCollider(Direction::up, true));
+    PhysicsObject* backWall = new PhysicsObject(300, Direction::forward * 200, Matrix3x3::RotX(ToRad(90)), new PlaneMesh(), new PlaneCollider(Direction::up, true));
+    PhysicsObject* frontWall = new PhysicsObject(new PlaneMesh(300, Direction::back * 200, Vec3(ToRad(-90), 0, 0)), new PlaneCollider(Direction::up, true));
     */
     
-    physicsObj = new PhysicsObject(LoadMeshFromOBJFile("Sphere.obj"), new SphereCollider());
-    physicsObj->scale *= 2;
+    //physicsObj = new PhysicsObject(LoadMeshFromOBJFile("Sphere.obj"), new SphereCollider());
+    //physicsObj->scale *= 2;
     //physicsObj->mesh->SetVisibility(false);
-    physicsObj->collider->mesh->SetVisibility(true);
+    //physicsObj->collider->mesh->SetVisibility(true);
     //physicsObj->collider->isTrigger = true;
 
 }
@@ -148,6 +152,7 @@ void Update()
     if (CameraSettings::displayReticle)
     {
         Point::AddPoint(Point(Vec3(), Color::orange, 5));
+        lightSource = sun->position.Normalized();
     }
 }
 

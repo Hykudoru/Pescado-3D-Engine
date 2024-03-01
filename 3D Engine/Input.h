@@ -81,11 +81,12 @@ void OnMouseButtonEvent(GLFWwindow* window, int button, int action, int mods)
         else if (button == 2) {
             if (!grabbing)
             {
+                static int maxDist = 1000000;
                 RaycastInfo<Mesh> info;
-                if (Raycast<Mesh>(Camera::main->position, Camera::main->position + Camera::main->Forward() * 1000, info))
+                if (Raycast<Mesh>(Camera::main->position, Camera::main->position + Camera::main->Forward() * maxDist, info))
                 {
                     cout << "RAYCAST HIT" << '\n';
-                    Line::AddWorldLine(Line(Camera::main->position, Camera::main->position + Camera::main->Forward() * 1000000, Color::green, 3));
+                    Line::AddWorldLine(Line(Camera::main->position, Camera::main->position + Camera::main->Forward() * maxDist, Color::green, 3));
                     Point::AddWorldPoint(Point(info.contactPoint, Color::green, 10));
                     grabbing = info.objectHit->root;
                     grabbingsOriginalParent = grabbing->parent;
@@ -204,15 +205,14 @@ void OnKeyPressEvent(GLFWwindow* window, int key, int scancode, int action, int 
         else if (key == GLFW_KEY_COMMA) {
             Graphics::debugAxes = !Graphics::debugAxes;
         }
-        else if (key == GLFW_KEY_PERIOD) {
-            Graphics::debugSphereCollisions = !Graphics::debugSphereCollisions;
-            Graphics::debugBoxCollisions = !Graphics::debugBoxCollisions;
-            Graphics::debugPlaneCollisions = false;
+        else if (key == GLFW_KEY_LEFT_BRACKET) {
+                Physics::collisionDetection = true;
+                Graphics::debugSphereCollisions = !Graphics::debugSphereCollisions;
+                Graphics::debugBoxCollisions = !Graphics::debugBoxCollisions;
         }
-        else if (key == GLFW_KEY_EQUAL) {
+        else if (key == GLFW_KEY_RIGHT_BRACKET) {
+            Physics::collisionDetection = true;
             Graphics::debugPlaneCollisions = !Graphics::debugPlaneCollisions;
-            Graphics::debugSphereCollisions = false;
-            Graphics::debugBoxCollisions = false;
         }
         else if (key == GLFW_KEY_L) {
             Graphics::lighting = !Graphics::lighting;

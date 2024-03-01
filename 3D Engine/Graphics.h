@@ -1,24 +1,23 @@
 #pragma once
 #include <Matrix.h>
-#include <math.h>
 #include <vector>
 #include <algorithm>
 #include <string.h>
 #include <iostream>
 #include <fstream>
 #include <sstream>
-#include <Utility.h>
-using namespace std;
+#include <Utility.h>;
 
 #ifndef GRAPHICS_H
 #define GRAPHICS_H
 
-class Mesh;
 struct Plane;
 struct Point;
 struct Line;
 struct  Triangle;
+class Transform;
 class Camera;
+class Mesh;
 
 List<Point>* pointBuffer = new List<Point>();
 List<Line>* lineBuffer = new List<Line>();
@@ -69,7 +68,7 @@ struct Color
 
     static Color Random()
     {
-        Color c = Color(Clamp(0, 255, rand()), Clamp(0, 255, rand()), Clamp(0, 255, rand()));
+        Color c = Color(Clamp(rand(), 0, 255), Clamp(rand(), 0, 255), Clamp(rand(), 0, 255));
         return c;
     }
 
@@ -191,10 +190,10 @@ Color Color::orange = Color(255, 158, 0);
 
 struct Material
 {
-    string name = "";
+    std::string name = "";
     Color color = Color::white;
 
-    Material(string id = "", Color color = Color::white)
+    Material(std::string id = "", Color color = Color::white)
     {
         this->name = id;
         this->color = color;
@@ -309,6 +308,7 @@ Vec3 Direction::left = Vec3(-1, 0, 0);
 Vec3 Direction::up = Vec3(0, 1, 0);
 Vec3 Direction::down = Vec3(0, -1, 0);
 
+Vec3 lightSource = Direction::up + Direction::right + Direction::back * .5;
 static float worldScale = 1;
 int screenWidth = 1600;
 int screenHeight = 900;
@@ -824,10 +824,12 @@ public:
     List<int>* indices;
     List<Triangle>* triangles;
     Color color = Color::white;
+    bool ignoreLighting = false;
 
     Mesh(float scale = 1, Vec3 position = Vec3(0, 0, 0), Vec3 rotationEuler = Vec3(0, 0, 0))
         : Transform(scale, position, rotationEuler), ManagedObjectPool<Mesh>(this)
     {
+        triangles = new List<Triangle>{};
         MapVertsToTriangles();
         SetColor(color);
     }
@@ -908,6 +910,7 @@ public:
 
         //Transform Triangles
         List<Triangle>* tris = MapVertsToTriangles();
+
         for (int i = 0; i < tris->size(); i++)
         {
             Triangle tri = (*tris)[i];
@@ -988,11 +991,12 @@ public:
 
             if (Graphics::lighting && Graphics::fillTriangles)
             {
-                Vec3 lightSource = Direction::up + Direction::right + Direction::back * .5;
-                float amountFacingLight = DotProduct((Vec3)worldSpaceTri.Normal(), lightSource);
-                Color colorLit = Color(((Vec3)projectedTri.color) * Clamp(amountFacingLight, 0.15, 1));
-
-                projectedTri.color = colorLit;
+                if (!ignoreLighting)
+                {
+                    float amountFacingLight = DotProduct((Vec3)worldSpaceTri.Normal(), lightSource);
+                    Color colorLit = projectedTri.color * Clamp(amountFacingLight, 0.15, 1);
+                    projectedTri.color = colorLit;
+                }
             }
 
             if (Graphics::vfx)
@@ -1101,35 +1105,33 @@ public:
                 Vec3(0.5, 0, 0.5)
         };
 
-        this->triangles = new List<Triangle>{
-            Triangle((*vertices)[0], (*vertices)[1], (*vertices)[2]),
-            Triangle((*vertices)[0], (*vertices)[2], (*vertices)[3])
-        };
+        this->triangles->emplace_back(Triangle((*vertices)[0], (*vertices)[1], (*vertices)[2]));
+        this->triangles->emplace_back(Triangle((*vertices)[0], (*vertices)[2], (*vertices)[3]));
     }
 };
 
 //------------------------------HELPER FUNCTIONS------------------------------------------------
 
-Mesh* LoadMeshFromOBJFile(string objFileName)
+Mesh* LoadMeshFromOBJFile(std::string objFileName)
 {
-    static string filePath = "./Objects/";
+    static std::string filePath = "./Objects/";
 
-    string mtlFileName = "";
+    std::string mtlFileName = "";
     std::ifstream mtlFile;
 
     // ----------- Read object file -------------
-    List<string> strings;
-    string line;
+    List<std::string> strings;
+    std::string line;
     std::ifstream objFile;
     objFile.open(filePath + objFileName);
     if (objFile.is_open())
     {
         while (objFile) {
             // 1st. Gets the next line.
-            // 2nd. Seperates each word from that line then stores each word into the strings array.
+            // 2nd. Seperates each word from that line then stores each word into the std::strings array.
             getline(objFile, line);
-            string word;
-            stringstream ss(line);
+            std::string word;
+            std::stringstream ss(line);
             while (getline(ss, word, ' '))
             {
                 if (word == "mtllib") {
@@ -1154,7 +1156,7 @@ Mesh* LoadMeshFromOBJFile(string objFileName)
     {
         // v = vertex
         // f = face
-        string objFileSubString = strings[i];
+        std::string objFileSubString = strings[i];
 
         // if .obj encounters "usemtl" then the next string will be material id.
         if (objFileSubString == "usemtl")
@@ -1164,7 +1166,7 @@ Mesh* LoadMeshFromOBJFile(string objFileName)
             // check if using material before looking for material key words
             if (mtlFile.is_open())
             {
-                string mtlID = strings[++i];
+                std::string mtlID = strings[++i];
                 bool mtlIDFound = false;
                 //materials->emplace_back(Material(materialID));
                 // search .mtl for material properties under the the current materialID
@@ -1173,8 +1175,8 @@ Mesh* LoadMeshFromOBJFile(string objFileName)
                     // 1st. Gets the next line.
                     // 2nd. Seperates each word from that line then stores each word into the strings array.
                     getline(mtlFile, line);
-                    string word;
-                    stringstream ss(line);
+                    std::string word;
+                    std::stringstream ss(line);
                     while (!mtlIDFound && getline(ss, word, ' '))
                     {
                         if (word == "newmtl")
