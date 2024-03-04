@@ -48,6 +48,7 @@ float massFactor = 1;
 Transform* grabbing;
 Vec3 grabOffset;
 Transform* grabbingsOriginalParent = NULL;
+
 std::function<PhysicsObject* ()> spawn = []() { return new PhysicsObject(LoadMeshFromOBJFile("Sphere.obj"), new SphereCollider()); };
 
 void OnMouseButtonEvent(GLFWwindow* window, int button, int action, int mods)
@@ -63,22 +64,22 @@ void OnMouseButtonEvent(GLFWwindow* window, int button, int action, int mods)
 
     if (action == GLFW_PRESS)
     {
-        // Spawn/Throw Mesh
+        // Spawn Dynamic
         if (button == 0) {
             PhysicsObject* obj = spawn();// new PhysicsObject(new CubeMesh(), new BoxCollider());//LoadMeshFromOBJFile("Objects/Sphere.obj");
             Throw(*obj);
             obj->mass = massFactor;
             obj->mesh->SetColor(Color::orange);
         }
-        // Spawn Mesh
-        if (button == 1) {
+        // Spawn Kinematic
+        if (button == 2) {
             PhysicsObject* obj = spawn();// new PhysicsObject(new CubeMesh(), new BoxCollider());//LoadMeshFromOBJFile("Objects/Sphere.obj");
             obj->position = Camera::main->position + (Camera::main->Forward() * 10);
             obj->rotation = Camera::main->rotation;
             obj->isKinematic = true;
             obj->mesh->SetColor(Color::blue);
         }
-        else if (button == 2) {
+        else if (button == 1) {
             if (!grabbing)
             {
                 static int maxDist = 1000000;
@@ -97,9 +98,10 @@ void OnMouseButtonEvent(GLFWwindow* window, int button, int action, int mods)
     }
     if (action == GLFW_RELEASE)
     {
-        if (button == 2) {
+        if (button == 1) {
             if (grabbing) {
-                grabbing->SetParent(grabbingsOriginalParent);
+                //grabbing->SetParent(grabbingsOriginalParent);
+                grabbing->SetParent(NULL);
                 grabbing = NULL;
                 grabbingsOriginalParent = NULL;
             }
@@ -252,12 +254,6 @@ void OnKeyPressEvent(GLFWwindow* window, int key, int scancode, int action, int 
         else if (key == GLFW_KEY_TAB)
         {
             Physics::raycasting = !Physics::raycasting;
-
-            RaycastInfo<Mesh> info;
-            if (Raycast<Mesh>(Camera::main->position, Camera::main->position + Camera::main->Forward() * 10, info))
-            {
-                cout << "RAYCAST HIT" << '\n';
-            }
         }
     }
 }

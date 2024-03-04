@@ -272,10 +272,10 @@ public:
 
     PhysicsObject(float scale, Vec3 position, Matrix3x3 rotation, Mesh* mesh, Collider* collider) : ManagedObjectPool<PhysicsObject>(this)
     {
-        this->scale = Vec3(scale, scale, scale);
+        //this->scale = Vec3(scale, scale, scale);
         this->position = position;
         this->rotation = rotation;
-        
+        mesh->scale = Vec3(scale, scale, scale);
         SetMesh(mesh);
         SetCollider(collider);
     }
@@ -807,13 +807,14 @@ template <typename T>
 struct RaycastInfo
 {
     T* objectHit = nullptr;
-    Triangle* TriangleHit = nullptr;
+    Triangle* triangleHit = nullptr;
     Vec3 contactPoint = Vec3::zero;
 
     RaycastInfo() {};
-    RaycastInfo(T* obj, Vec3 contactPoint)
+    RaycastInfo(T* objHit, Triangle* triHit, Vec3 contactPoint)
     {
-        objectHit = obj;
+        this->objectHit = objHit;
+        this->triangleHit = triHit;
         this->contactPoint = contactPoint;
     }
 };
@@ -857,7 +858,7 @@ bool Raycast(Ray& ray, RaycastInfo<T>& raycastInfo, const std::function<void(Ray
                             closestSqrDistHit = sqrDist;
                             raycastInfo.objectHit = ManagedObjectPool<T>::objects[i];
                             raycastInfo.contactPoint = pointOfIntersection;
-                            raycastInfo.TriangleHit = viewSpaceTri;
+                            raycastInfo.triangleHit = viewSpaceTri;
 
                             if (callback) {
                                 callback(raycastInfo);
@@ -927,7 +928,7 @@ static void Physics()
     }
 
     if (planet) {
-        float planetRotationSpeed = (1.5 * PI / 180) * deltaTime;
+        float planetRotationSpeed = ((2*PI)/240) * deltaTime;
         planet->rotation = Matrix3x3::RotX(-planetRotationSpeed) * Matrix3x3::RotY(planetRotationSpeed + 0.000001) * planet->rotation;// MatrixMultiply(YPR(angle * ((screenWidth / 2)), angle * -((screenWidth / 2)), 0), Mesh.meshes[1].rotation);
     }
 
@@ -981,7 +982,7 @@ static void Physics()
             Line::AddWorldLine(Line(ray1.StartPosition(), ray1.EndPosition(), Color::green, 3));
             Point::AddWorldPoint(Point(info.contactPoint, Color::green, 7));
             //info.objectHit->SetColor(Color::purple);
-            info.TriangleHit->color = Color::purple;//Color::Random();
+            info.triangleHit->color = Color::purple;//Color::Random();
         }
         
         Ray ray2 = Ray(Camera::cameras[2]->position, Camera::cameras[2]->Forward(), 50);

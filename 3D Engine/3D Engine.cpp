@@ -66,9 +66,13 @@ void Init(GLFWwindow* window)
     //GraphicSettings::debugAxes = true;
     
     sun = LoadMeshFromOBJFile("Sun.obj");
+    sun->rotation = Matrix3x3::identity;
     sun->position = lightSource * 10000;
     sun->scale *= 1000;
     sun->ignoreLighting = true;
+    camera2->SetParent(sun, false);
+    camera2->position = Vec3::zero;
+    camera2->rotation = Matrix3x3::identity;
     
     planet = new PhysicsObject(500.0, Direction::forward * 1200, Matrix3x3::identity, LoadMeshFromOBJFile("Planet.obj"), new SphereCollider());
     planet->mass = 100000;
@@ -78,9 +82,9 @@ void Init(GLFWwindow* window)
     moon->scale *= 70;
     moon->position = planet->Position() + 1.3*(500*-Direction::forward + 400*Direction::left) + 100*Direction::up;
 
-    giantText = LoadMeshFromOBJFile("PescadoTextThickLime.obj");// "PescadoText.obj");//"Hello3DWorldText.obj");
+    giantText = LoadMeshFromOBJFile("Hello3DWorldText.obj");
     giantText->scale *= 2.5;
-    giantText->position = Vec3(50, 25, -490);
+    giantText->position = Vec3(0, 25, -490);// Vec3(50, 25, -490);
    // textHelloWorld->color = &Color::green;
     
     spaceShip = LoadMeshFromOBJFile("SpaceShip_2.2.obj");
@@ -93,10 +97,10 @@ void Init(GLFWwindow* window)
     spaceShip3 = LoadMeshFromOBJFile("SpaceShip_5.obj");
     spaceShip3->position = Direction::right * 20 + Direction::up * 10;
 
-    parent = new CubeMesh(1, Vec3(0, 10, 2), Vec3(0, 45, 0));
-    child = new CubeMesh(2, Vec3(0, 0, 2), Vec3(0, 45, 0));
-    grandchild = new CubeMesh(2, Vec3(0, 0, 2), Vec3(0, 45, 0));
-    greatGrandchild = new CubeMesh(1.0/2, Vec3(0, 0, 2), Vec3(0, 45, 0));
+    parent = new CubeMesh(3, Vec3(0, 10, 100), Vec3(0, 45, 0));
+    child = new CubeMesh(3, Vec3(0, 0, 2), Vec3(0, 45, 0));
+    grandchild = new CubeMesh(3, Vec3(0, 0, 2), Vec3(0, 45, 0));
+    greatGrandchild = new CubeMesh(3, Vec3(0, 0, 2), Vec3(0, 45, 0));
     child->SetParent(parent, false);
     grandchild->SetParent(child, false);
     greatGrandchild->SetParent(grandchild, false);
@@ -129,8 +133,6 @@ void Init(GLFWwindow* window)
             block->position = Direction::down*15 + Direction::left*i*10 + Direction::back * j*10;
         }
     }
-
-    
     /*
     PhysicsObject* ground = new PhysicsObject(400, Direction::down * 200, Matrix3x3::identity, new PlaneMesh(), new PlaneCollider(Direction::up, true));
     PhysicsObject* leftWall = new PhysicsObject(300, Direction::left * 200, Matrix3x3::RotZ(ToRad(-90)), new PlaneMesh(), new PlaneCollider(Direction::up, true));
@@ -151,9 +153,20 @@ void Update()
 {
     if (CameraSettings::displayReticle)
     {
-        Point::AddPoint(Point(Vec3(), Color::orange, 5));
-        lightSource = sun->position.Normalized();
+        Point::AddPoint(Point(Vec3(), Color::white, 5));
     }
+
+    if (grabbing != sun)
+    {
+        float r = sun->position.Magnitude();
+        float vSpeed = (((2.0 * PI * r))/ 3650.0) * deltaTime;
+        Vec3 directionTowardCenter = -sun->position.Normalized();
+        Vec3 centripitalAccel = directionTowardCenter * ((vSpeed * vSpeed) / r) * deltaTime;
+        Vec3 v = CrossProduct(directionTowardCenter, Direction::up) * vSpeed;
+        sun->position += v + centripitalAccel;
+    }
+
+    lightSource = sun->Position().Normalized();
 }
 
 int main(void)

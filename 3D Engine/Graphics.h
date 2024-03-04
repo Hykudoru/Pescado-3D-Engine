@@ -308,7 +308,7 @@ Vec3 Direction::left = Vec3(-1, 0, 0);
 Vec3 Direction::up = Vec3(0, 1, 0);
 Vec3 Direction::down = Vec3(0, -1, 0);
 
-Vec3 lightSource = Direction::up + Direction::right + Direction::back * .5;
+Vec3 lightSource = .25*Direction::up  + Direction::back * .5;
 static float worldScale = 1;
 int screenWidth = 1600;
 int screenHeight = 900;
@@ -608,6 +608,9 @@ public:
 
                 this->position = pos;
                 this->rotation = rot;
+                if (this != this->root) {
+                    //this->scale = this->ScaleMatrix4x4Inverse() * Vec3(1.0, 1.0, 1.0);
+                }
             }
             this->parent = NULL;
             this->root = this;
@@ -734,22 +737,6 @@ public:
         }
 
         return trs;
-    }
-
-    // S^-1 * R^-1 * T^-1
-    Matrix4x4 TRSInverse()
-    {
-        if (parent)
-        {
-            if (Transform::parentHierarchyDefault) {
-                return ScaleMatrix4x4Inverse() * Matrix4x4::Transpose(RotationMatrix4x4()) * TranslationMatrix4x4Inverse() * parent->TRSInverse();
-            }
-            else {//NEEDS TESTING
-                return TranslationMatrix4x4Inverse() * Matrix4x4::Transpose(RotationMatrix4x4()) * ScaleMatrix4x4Inverse() * parent->TRSInverse();
-            }
-        }
-
-        return ScaleMatrix4x4Inverse() * Matrix4x4::Transpose(RotationMatrix4x4()) * TranslationMatrix4x4Inverse();
     }
 
     // 1:Rotate, 2:Translate
