@@ -67,8 +67,8 @@ void Init(GLFWwindow* window)
     
     sun = LoadMeshFromOBJFile("Sun.obj");
     sun->rotation = Matrix3x3::identity;
-    sun->position = lightSource * 10000;
-    sun->scale *= 1000;
+    sun->position = lightSource * 100000;
+    sun->scale *= 5000;
     sun->ignoreLighting = true;
     camera2->SetParent(sun, false);
     camera2->position = Vec3::zero;
@@ -97,7 +97,10 @@ void Init(GLFWwindow* window)
     spaceShip3 = LoadMeshFromOBJFile("SpaceShip_5.obj");
     spaceShip3->position = Direction::right * 20 + Direction::up * 10;
 
-    parent = new CubeMesh(3, Vec3(0, 10, 100), Vec3(0, 45, 0));
+    Mesh* bender = LoadMeshFromOBJFile("Bender.obj");
+    bender->position += Direction::back * 3;
+
+    parent = new CubeMesh(3, Vec3(0, 10, 500), Vec3(0, 45, 0));
     child = new CubeMesh(3, Vec3(0, 0, 2), Vec3(0, 45, 0));
     grandchild = new CubeMesh(3, Vec3(0, 0, 2), Vec3(0, 45, 0));
     greatGrandchild = new CubeMesh(3, Vec3(0, 0, 2), Vec3(0, 45, 0));
@@ -159,14 +162,77 @@ void Update()
     if (grabbing != sun)
     {
         float r = sun->position.Magnitude();
-        float vSpeed = (((2.0 * PI * r))/ 3650.0) * deltaTime;
+        float vSpeed = (((2.0 * PI * r)) / 365.0) * deltaTime;
         Vec3 directionTowardCenter = -sun->position.Normalized();
         Vec3 centripitalAccel = directionTowardCenter * ((vSpeed * vSpeed) / r) * deltaTime;
         Vec3 v = CrossProduct(directionTowardCenter, Direction::up) * vSpeed;
         sun->position += v + centripitalAccel;
+        //static float t = 0;
+        //t += deltaTime;
+        //sun->position = Vec3(r * cos((2.0 * PI)*t/36), 0, r * sin(((2.0 * PI)*t/36)));
     }
 
     lightSource = sun->Position().Normalized();
+
+    if (planet) {
+        float planetRotationSpeed = ((2 * PI) / 240) * deltaTime;
+        planet->rotation = Matrix3x3::RotX(-planetRotationSpeed) * Matrix3x3::RotY(planetRotationSpeed + 0.000001) * planet->rotation;// MatrixMultiply(YPR(angle * ((screenWidth / 2)), angle * -((screenWidth / 2)), 0), Mesh.meshes[1].rotation);
+    }
+
+    if (spaceShip)
+    {
+        float shipRotationSpeed = (10 * PI / 180) * deltaTime;
+        spaceShip->rotation = Matrix3x3::RotY(-shipRotationSpeed) * spaceShip->rotation;// MatrixMultiply(YPR(angle * ((screenWidth / 2)), angle * -((screenWidth / 2)), 0), Mesh.meshes[1].rotation);
+        spaceShip->position += spaceShip->Forward() * 20 * deltaTime;
+    }
+    if (spaceShip2)
+    {
+        float shipRotationSpeed = (5 * PI / 180) * deltaTime;
+        spaceShip2->rotation = Matrix3x3::RotZ(shipRotationSpeed) * Matrix3x3::RotY(-shipRotationSpeed) * spaceShip2->rotation;// *spaceShip2->rotation;// MatrixMultiply(YPR(angle * ((screenWidth / 2)), angle * -((screenWidth / 2)), 0), Mesh.meshes[1].rotation);
+        spaceShip2->position += spaceShip2->Forward() * 10 * deltaTime;
+    }
+    if (spaceShip3)
+    {
+        float shipRotationSpeed = (20 * PI / 180) * deltaTime;
+        spaceShip3->rotation = Matrix3x3::RotY(shipRotationSpeed) * Matrix3x3::RotZ(shipRotationSpeed) * spaceShip3->rotation;// *spaceShip2->rotation;// MatrixMultiply(YPR(angle * ((screenWidth / 2)), angle * -((screenWidth / 2)), 0), Mesh.meshes[1].rotation);
+        spaceShip3->position += spaceShip3->Forward() * 15 * deltaTime;
+
+    }
+    /*
+    static float t = 0;
+    t += deltaTime;
+
+    for (int i = 0; i < Mesh::objects.size(); i++)
+    {
+        Mesh* mesh = Mesh::objects[i];
+        for (int ii = 0; ii < mesh->vertices->size(); ii++)
+        {
+            Vec3* v = &(*(mesh->vertices))[ii]; 
+            
+            //DECAY
+            //*v += *v * 0.001*cos(2.0*PI*t*ii);
+
+            //FLUID
+            //*v += (*v * (0.001 * sin(2.0 * PI * t + ((float)ii))));
+
+            //WAVE
+            //*v += (*v * (0.005 * sin(2.0 * PI * t + ii)));
+
+            //CRUSH
+            //*v += (v->Normalized() * (0.001 * sin(2.0 * PI * t + ((float)ii))));
+            //*v += (v->Normalized() * (0.001 * sin(t * ii / 2.0) / cos((2.0 * PI / 4.0) * t)));
+
+            //STRETCH
+            //*v += (RandomDirection() * ii * (0.001 * sin((2.0 * PI / 4.0) * t)));
+           
+            //STRETCH 2
+            //*v += (RandomDirection()* ii *(0.001 * abs(sin((2.0 * PI / 4.0) * t ))));
+
+            //Stretch 3
+            //*v += (RandomDirection() * -ii * (0.001 * t * abs(sin(t * .1))));
+        }
+        
+    }*/
 }
 
 int main(void)

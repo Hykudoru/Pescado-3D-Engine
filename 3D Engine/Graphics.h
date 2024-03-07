@@ -570,7 +570,7 @@ public:
     Vec3 Scale()
     {
         if (parent) {
-            Matrix4x4 matrix = this->ScaleMatrix4x4() * ScaleMatrix4x4();
+            Matrix4x4 matrix = this->parent->ScaleMatrix4x4() * ScaleMatrix4x4();
             return matrix * Vec3(1.0, 1.0, 1.0);
         }
         return scale;
@@ -608,9 +608,7 @@ public:
 
                 this->position = pos;
                 this->rotation = rot;
-                if (this != this->root) {
-                    //this->scale = this->ScaleMatrix4x4Inverse() * Vec3(1.0, 1.0, 1.0);
-                }
+                this->scale = this->Scale();
             }
             this->parent = NULL;
             this->root = this;
@@ -641,9 +639,10 @@ public:
                     { xAxis.y, yAxis.y, zAxis.y },
                     { xAxis.z, yAxis.z, zAxis.z }
                 };*/
-
+                
                 this->position = pos;
                 this->rotation = rot;
+                this->scale = this->Scale();
             }
 
             this->parent = newParent;
@@ -655,10 +654,10 @@ public:
     {
         float matrix[4][4] =
         {
-                    {this->scale.x, 0, 0, 0},
-                    {0, this->scale.y, 0, 0},
-                    {0, 0, this->scale.z, 0},
-                    {0, 0, 0, 1}
+            {this->scale.x, 0, 0, 0},
+            {0, this->scale.y, 0, 0},
+            {0, 0, this->scale.z, 0},
+            {0, 0, 0, 1}
         };
 
         return Matrix4x4(matrix);
@@ -668,10 +667,10 @@ public:
     {
         float inverse[4][4] =
         {
-                    {1.0 / this->scale.x, 0, 0, 0},
-                    {0, 1.0 / this->scale.y, 0, 0},
-                    {0, 0, 1.0 / this->scale.z, 0},
-                    {0, 0, 0, 1}
+            {1.0 / this->scale.x, 0, 0, 0},
+            {0, 1.0 / this->scale.y, 0, 0},
+            {0, 0, 1.0 / this->scale.z, 0},
+            {0, 0, 0, 1}
         };
 
         return Matrix4x4(inverse);
@@ -737,6 +736,17 @@ public:
         }
 
         return trs;
+    }
+
+    // R^-1T^-1
+    Matrix4x4 TRSInverse()
+    {
+        if (parent)
+        {
+            return  ScaleMatrix4x4Inverse() * Matrix4x4::Transpose(RotationMatrix4x4()) * TranslationMatrix4x4Inverse() * parent->TRSInverse();
+        }
+
+        return ScaleMatrix4x4Inverse() * Matrix4x4::Transpose(RotationMatrix4x4()) * TranslationMatrix4x4Inverse();
     }
 
     // 1:Rotate, 2:Translate

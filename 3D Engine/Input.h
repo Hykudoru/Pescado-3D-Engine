@@ -100,8 +100,7 @@ void OnMouseButtonEvent(GLFWwindow* window, int button, int action, int mods)
     {
         if (button == 1) {
             if (grabbing) {
-                //grabbing->SetParent(grabbingsOriginalParent);
-                grabbing->SetParent(NULL);
+                grabbing->SetParent(grabbingsOriginalParent);
                 grabbing = NULL;
                 grabbingsOriginalParent = NULL;
             }

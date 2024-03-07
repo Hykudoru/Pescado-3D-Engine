@@ -1,0 +1,13 @@
+# Blender 3.5.1 MTL File: 'Bender.blend'
+# www.blender.org
+
+newmtl base_material
+Ka 1.000000 1.000000 1.000000
+Kd 0.800000 0.800000 0.800000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 2
+map_Ns C:/e13cf4e55733_Bender_from_futuram_roughness.jpg
+map_refl C:/e13cf4e55733_Bender_from_futuram_metallic.jpg

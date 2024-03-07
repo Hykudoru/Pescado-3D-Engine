@@ -927,31 +927,6 @@ static void Physics()
         cam->position += velocity * deltaTime;
     }
 
-    if (planet) {
-        float planetRotationSpeed = ((2*PI)/240) * deltaTime;
-        planet->rotation = Matrix3x3::RotX(-planetRotationSpeed) * Matrix3x3::RotY(planetRotationSpeed + 0.000001) * planet->rotation;// MatrixMultiply(YPR(angle * ((screenWidth / 2)), angle * -((screenWidth / 2)), 0), Mesh.meshes[1].rotation);
-    }
-
-    if (spaceShip)
-    {
-        float shipRotationSpeed = (10 * PI / 180) * deltaTime;
-        spaceShip->rotation = Matrix3x3::RotY(-shipRotationSpeed) * spaceShip->rotation;// MatrixMultiply(YPR(angle * ((screenWidth / 2)), angle * -((screenWidth / 2)), 0), Mesh.meshes[1].rotation);
-        spaceShip->position += spaceShip->Forward() * 20 * deltaTime;
-    }
-    if (spaceShip2)
-    {
-        float shipRotationSpeed = (5 * PI / 180) * deltaTime;
-        spaceShip2->rotation = Matrix3x3::RotZ(shipRotationSpeed) * Matrix3x3::RotY(-shipRotationSpeed) * spaceShip2->rotation;// *spaceShip2->rotation;// MatrixMultiply(YPR(angle * ((screenWidth / 2)), angle * -((screenWidth / 2)), 0), Mesh.meshes[1].rotation);
-        spaceShip2->position += spaceShip2->Forward() * 10 * deltaTime;
-    }
-    if (spaceShip3)
-    {
-        float shipRotationSpeed = (20 * PI / 180) * deltaTime;
-        spaceShip3->rotation = Matrix3x3::RotY(shipRotationSpeed) * Matrix3x3::RotZ(shipRotationSpeed) * spaceShip3->rotation;// *spaceShip2->rotation;// MatrixMultiply(YPR(angle * ((screenWidth / 2)), angle * -((screenWidth / 2)), 0), Mesh.meshes[1].rotation);
-        spaceShip3->position += spaceShip3->Forward() * 15 * deltaTime;
-
-    }
-
     if (Physics::dynamics)
     {
         for (size_t i = 0; i < ManagedObjectPool<PhysicsObject>::count; i++)
