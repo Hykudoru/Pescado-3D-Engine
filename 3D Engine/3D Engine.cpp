@@ -47,8 +47,9 @@ Mesh* spaceShip3;
 CubeMesh* parent;
 CubeMesh* child;
 CubeMesh* grandchild;
-CubeMesh* greatGrandchild;  
-
+CubeMesh* greatGrandchild; 
+Mesh* compass;
+Mesh* temp;
 void Init(GLFWwindow* window)
 {
     glfwSetCursorPosCallback(window, OnMouseMoveEvent);
@@ -64,16 +65,22 @@ void Init(GLFWwindow* window)
 
     Graphics::matrixMode = true;
     //GraphicSettings::debugAxes = true;
-    
+    compass = LoadMeshFromOBJFile("Compass.obj");
+    compass->scale *= 0.1;
     sun = LoadMeshFromOBJFile("Sun.obj");
-    sun->rotation = Matrix3x3::identity;
+    sun->rotation = Matrix3x3::RotX(ToRad(45));
     sun->position = lightSource * 100000;
     sun->scale *= 5000;
     sun->ignoreLighting = true;
-    camera2->SetParent(sun, false);
-    camera2->position = Vec3::zero;
-    camera2->rotation = Matrix3x3::identity;
+    Camera* sunCam = new Camera();
+    sunCam->SetParent(sun);
+    sunCam->position = Vec3::zero;
+    sunCam->rotation = Matrix3x3::identity;
     
+    Transform* camOrigin = new Transform(1, Vec3(0, 0, 0), Vec3(ToRad(-90), 0, 0));
+    camera2->SetParent(camOrigin);
+    camera2->rotation = Matrix3x3::identity;
+
     planet = new PhysicsObject(500.0, Direction::forward * 1200, Matrix3x3::identity, LoadMeshFromOBJFile("Planet.obj"), new SphereCollider());
     planet->mass = 100000;
 
@@ -100,6 +107,9 @@ void Init(GLFWwindow* window)
     Mesh* bender = LoadMeshFromOBJFile("Bender.obj");
     bender->position += Direction::back * 3;
 
+    Mesh* computer = LoadMeshFromOBJFile("Computer-Lab-Module.obj");
+    computer->position += Direction::back * 5;
+
     parent = new CubeMesh(3, Vec3(0, 10, 500), Vec3(0, 45, 0));
     child = new CubeMesh(3, Vec3(0, 0, 2), Vec3(0, 45, 0));
     grandchild = new CubeMesh(3, Vec3(0, 0, 2), Vec3(0, 45, 0));
@@ -111,6 +121,8 @@ void Init(GLFWwindow* window)
     child->SetColor(Color::orange);
     grandchild->SetColor(Color::yellow);
     greatGrandchild->SetColor(Color::green);
+
+    temp = LoadMeshFromOBJFile("Sphere.obj");
     //Mesh* guitar = LoadMeshFromOBJFile("Objects/Guitar.obj");
     //guitar->position += (Camera::main->Forward() * 10) + Camera::main->Right();
     //Mesh* chair = LoadMeshFromOBJFile("Objects/Chair.obj");
@@ -154,6 +166,8 @@ void Init(GLFWwindow* window)
 
 void Update()
 {
+    compass->position = Camera::main->Position() + (Camera::main->Forward() + (Camera::main->Down()*.5)+(Camera::main->Right()*0.8));
+    temp->position = greatGrandchild->Position() + greatGrandchild->Right();
     if (CameraSettings::displayReticle)
     {
         Point::AddPoint(Point(Vec3(), Color::white, 5));
@@ -201,7 +215,7 @@ void Update()
     /*
     static float t = 0;
     t += deltaTime;
-
+    
     for (int i = 0; i < Mesh::objects.size(); i++)
     {
         Mesh* mesh = Mesh::objects[i];
@@ -231,7 +245,6 @@ void Update()
             //Stretch 3
             //*v += (RandomDirection() * -ii * (0.001 * t * abs(sin(t * .1))));
         }
-        
     }*/
 }
 
@@ -265,7 +278,6 @@ int main(void)
     {
         /* Render here */
         glClear(GL_COLOR_BUFFER_BIT);
-
         {
             Time();
             Input();

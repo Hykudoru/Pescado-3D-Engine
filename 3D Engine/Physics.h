@@ -266,8 +266,8 @@ public:
 
     PhysicsObject(Mesh* mesh, Collider* collider) : ManagedObjectPool<PhysicsObject>(this)
     { 
-        SetMesh(mesh);
         SetCollider(collider);
+        SetMesh(mesh);
     }
 
     PhysicsObject(float scale, Vec3 position, Matrix3x3 rotation, Mesh* mesh, Collider* collider) : ManagedObjectPool<PhysicsObject>(this)
@@ -275,9 +275,9 @@ public:
         //this->scale = Vec3(scale, scale, scale);
         this->position = position;
         this->rotation = rotation;
-        mesh->scale = Vec3(scale, scale, scale);
-        SetMesh(mesh);
+        this->scale = Vec3(scale, scale, scale);
         SetCollider(collider);
+        SetMesh(mesh);
     }
 
     virtual ~PhysicsObject()
@@ -305,7 +305,7 @@ public:
             delete this->collider;
             this->collider = collider;
             this->collider->object = this;
-            this->collider->SetParent(mesh, false);
+            this->collider->SetParent(this, false);
         }
     }
 
@@ -316,7 +316,7 @@ public:
             delete this->mesh;
             this->mesh = mesh;
             //this->mesh->object = this;
-            this->mesh->SetParent(this, false);
+            this->mesh->SetParent(collider, false);
         }
     }
 };
@@ -432,21 +432,21 @@ bool SpheresColliding(SphereCollider& sphere1, SphereCollider& sphere2, SphereCo
 }
 
 // Oriented Bounding Box (OBB) with Separating Axis Theorem (SAT) algorithm
-bool OBBSATColliding(BoxCollider& physObj1, BoxCollider& physObj2, BoxCollisionInfo& collisionInfo, bool resolve = true)
+bool OBBSATColliding(BoxCollider& box1, BoxCollider& box2, BoxCollisionInfo& collisionInfo, bool resolve = true)
 {
     bool gap = true;
 
     collisionInfo = BoxCollisionInfo();
 
-    if (physObj1.isStatic && physObj2.isStatic)
+    if (box1.isStatic && box2.isStatic)
     {
         return false;
     }
 
-    List<Vec3> physObj1Verts = physObj1.WorldBounds();
-    List<Vec3> physObj2Verts = physObj2.WorldBounds();
-    List<Vec3> physObj1Normals = List<Vec3>{ physObj1.Right(), physObj1.Up(), physObj1.Forward() };// mesh1.WorldXYZNormals();
-    List<Vec3> physObj2Normals = List<Vec3>{ physObj2.Right(), physObj2.Up(), physObj2.Forward() }; //mesh2.WorldXYZNormals();
+    List<Vec3> physObj1Verts = box1.WorldBounds();
+    List<Vec3> physObj2Verts = box2.WorldBounds();
+    List<Vec3> physObj1Normals = List<Vec3>{ box1.Right(), box1.Up(), box1.Forward() };// mesh1.WorldXYZNormals();
+    List<Vec3> physObj2Normals = List<Vec3>{ box2.Right(), box2.Up(), box2.Forward() }; //mesh2.WorldXYZNormals();
 
     // Note: Collision detection stops if at any time a gap is found.
     // Note: Cache the minimum distance projection and axis for later use to resolve the collision if needed.
@@ -548,19 +548,19 @@ bool OBBSATColliding(BoxCollider& physObj1, BoxCollider& physObj2, BoxCollisionI
     {
         Vec3 offset = collisionInfo.minOverlapAxis * collisionInfo.minOverlap;
 
-        bool neitherStatic = !physObj1.isStatic && !physObj2.isStatic;
+        bool neitherStatic = !box1.isStatic && !box2.isStatic;
         if (neitherStatic)
         {
             offset *= 0.5;
-            physObj1.root->position -= (offset * 1.01);
-            physObj2.root->position += (offset * 1.01);
+            box1.root->position -= (offset * 1.01);
+            box2.root->position += (offset * 1.01);
         }
         //Only one is movable at this stage
-        else if (physObj1.isStatic) {
-            physObj2.root->position += offset;
+        else if (box1.isStatic) {
+            box2.root->position += offset;
         }
         else {
-            physObj1.root->position -= offset;
+            box1.root->position -= offset;
         }
     }
 
@@ -949,7 +949,7 @@ static void Physics()
 
     if (Physics::raycasting)
     {
-        Ray ray1 = Ray(Camera::cameras[1]->position, Camera::cameras[1]->position + Camera::cameras[1]->Forward() * 50);
+        Ray ray1 = Ray(Camera::cameras[1]->Position(), Camera::cameras[1]->Position() + Camera::cameras[1]->Forward() * 50);
         RaycastInfo<Mesh> info;
         if (Raycast(ray1, info))
         {
@@ -960,7 +960,7 @@ static void Physics()
             info.triangleHit->color = Color::purple;//Color::Random();
         }
         
-        Ray ray2 = Ray(Camera::cameras[2]->position, Camera::cameras[2]->Forward(), 50);
+        Ray ray2 = Ray(Camera::cameras[2]->Position(), Camera::cameras[2]->Forward(), 50);
         RaycastInfo<Collider> info2;
         if (Raycast<Collider>(ray2, info2))
         {
@@ -994,7 +994,7 @@ static void Physics()
         onoff = dampenersActive ? "On" : "Off";
         std::cout << "Inertial Dampeners: " << onoff << " (press Z)" << endl;
 
-        std::cout << "Position: (" << Camera::main->position.x << ", " << Camera::main->position.y << ", " << Camera::main->position.z << ")" << endl;
+        std::cout << "Position: (" << Camera::main->Position().x << ", " << Camera::main->Position().y << ", " << Camera::main->Position().z << ")" << endl;
         std::cout << "Velocity: <" << velocity.x << ", " << velocity.y << ", " << velocity.z << ">" << endl;
     }
 }

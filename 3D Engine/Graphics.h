@@ -223,7 +223,7 @@ struct Graphics
         glColor4ub(color.r, color.g, color.b, color.a);
     }
 
-    static void SetDrawColor(float r, float g, float b, float a = .1)
+    static void SetDrawColor(float r, float g, float b, float a = 1)
     {
         glColor4ub(r, g, b, a);
     }
@@ -310,8 +310,8 @@ Vec3 Direction::down = Vec3(0, -1, 0);
 
 Vec3 lightSource = .25*Direction::up  + Direction::back * .5;
 static float worldScale = 1;
-int screenWidth = 1600;
-int screenHeight = 900;
+int screenWidth = 1920;//1600;
+int screenHeight = 1080;// 900;
 float nearClippingPlane = -0.1;
 float farClippingPlane = -100000.0;
 float fieldOfViewDeg = 60;
@@ -531,7 +531,6 @@ public:
     Matrix3x3 rotation = Matrix3x3::identity;
     Transform* root = nullptr;
     Transform* parent = nullptr;
-    static bool parentHierarchyDefault;
 
     Vec3 Forward() { return Rotation() * Direction::forward; }
     Vec3 Back() { return Rotation() * Direction::back; }
@@ -543,14 +542,12 @@ public:
     Matrix3x3 Rotation()
     {
         if (parent) {
-            Matrix4x4 matrix = TR();
-            float globalRotation[3][3] =
-            {
+            Matrix4x4 matrix = TRS();// parent->RotationMatrix4x4()* RotationMatrix4x4();
+            float globalRotation[3][3] = {
                 {matrix.m[0][0], matrix.m[0][1], matrix.m[0][2]},
                 {matrix.m[1][0], matrix.m[1][1], matrix.m[1][2]},
                 {matrix.m[2][0], matrix.m[2][1], matrix.m[2][2]}
             };
-
             return globalRotation;
         }
 
@@ -559,7 +556,7 @@ public:
 
     Vec3 Position()
     {
-        if (parent) {//TR already checks for parent but checks again here because cheaper to return local position without matrix multiplication
+        if (parent) {//TRS already checks for parent but checks again here because cheaper to return local position without matrix multiplication
             Matrix4x4 matrix = TR();
             return Vec3(matrix.m[0][3], matrix.m[1][3], matrix.m[2][3]);
         }
@@ -608,7 +605,7 @@ public:
 
                 this->position = pos;
                 this->rotation = rot;
-                this->scale = this->Scale();
+                //this->scale = this->Scale();
             }
             this->parent = NULL;
             this->root = this;
@@ -642,7 +639,7 @@ public:
                 
                 this->position = pos;
                 this->rotation = rot;
-                this->scale = this->Scale();
+                //this->scale = this->Scale();
             }
 
             this->parent = newParent;
@@ -727,55 +724,39 @@ public:
         };
 
         if (parent) {
-            if (Transform::parentHierarchyDefault) {
-                return parent->TRS() * trs;
-            }
-            else {
-                return parent->TRS() * ScaleMatrix4x4() * RotationMatrix4x4() * TranslationMatrix4x4();
-            }
+            return parent->TRS() * trs;
         }
 
         return trs;
     }
 
-    // R^-1T^-1
-    Matrix4x4 TRSInverse()
-    {
-        if (parent)
-        {
-            return  ScaleMatrix4x4Inverse() * Matrix4x4::Transpose(RotationMatrix4x4()) * TranslationMatrix4x4Inverse() * parent->TRSInverse();
-        }
-
-        return ScaleMatrix4x4Inverse() * Matrix4x4::Transpose(RotationMatrix4x4()) * TranslationMatrix4x4Inverse();
-    }
-
     // 1:Rotate, 2:Translate
     Matrix4x4 TR()
     {
+        float tr[4][4] =
+        {
+            {this->rotation.m[0][0], this->rotation.m[0][1], this->rotation.m[0][2], position.x},
+            {this->rotation.m[1][0], this->rotation.m[1][1], this->rotation.m[1][2], position.y},
+            {this->rotation.m[2][0], this->rotation.m[2][1], this->rotation.m[2][2], position.z},
+            {0,                                         0,                                  0,                      1}
+        };
         if (parent) {
-            if (parentHierarchyDefault) {
-                return parent->TR() * TranslationMatrix4x4() * RotationMatrix4x4();
-            }
-            else {
-                return parent->TR() * RotationMatrix4x4() * TranslationMatrix4x4();
-            }
+            return parent->TR() * tr;
         }
 
-        return TranslationMatrix4x4() * RotationMatrix4x4();
+        return tr;
     }
 
     // R^-1T^-1
     Matrix4x4 TRInverse()
     {
-        if (parent)
-        {
+        if (parent) {
             return  Matrix4x4::Transpose(RotationMatrix4x4()) * TranslationMatrix4x4Inverse() * parent->TRInverse();
         }
 
         return Matrix4x4::Transpose(RotationMatrix4x4()) * TranslationMatrix4x4Inverse();
     }
 };
-bool Transform::parentHierarchyDefault = true;
 
 //-----------------------------CAMERA-------------------------------------------------
 struct CameraSettings
@@ -800,7 +781,7 @@ public:
         : Transform(1, position, rotationEuler)
     {
         cameras.emplace(cameras.begin() + cameraCount++, this);
-        name = std::string("Camera " + cameraCount);
+        name = "Camera " + cameraCount;
     }
 };
 List<Camera*> Camera::cameras = List<Camera*>();
@@ -1245,7 +1226,7 @@ void Draw()
         if (Graphics::frustumCulling)
         {
             // Scale/Distance ratio culling
-            float sqrDist = (Mesh::objects[i]->root->position - Camera::main->position).SqrMagnitude();
+            float sqrDist = (Mesh::objects[i]->root->position - Camera::main->Position()).SqrMagnitude();
             if (sqrDist != 0.0)
             {
                 bool meshTooSmallToSee = Mesh::objects[i]->root->scale.SqrMagnitude() / sqrDist < 0.0000000000001;

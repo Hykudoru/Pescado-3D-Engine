@@ -56,9 +56,9 @@ void OnMouseButtonEvent(GLFWwindow* window, int button, int action, int mods)
     std::cout << "Mouse button:" << button << std::endl;
 
      auto Throw = [&](PhysicsObject &obj) mutable {
-        obj.position = Camera::main->position + (Camera::main->Forward() * 10);
-        obj.rotation = Camera::main->rotation;
-        obj.velocity = velocity + obj.Forward() * 25;
+        obj.position = Camera::main->Position() + (Camera::main->Forward() * 10);
+        obj.rotation = Camera::main->Rotation();
+        obj.velocity = velocity + Camera::main->Forward() * 25;
         obj.mass = massFactor;
         };
 
@@ -74,8 +74,8 @@ void OnMouseButtonEvent(GLFWwindow* window, int button, int action, int mods)
         // Spawn Kinematic
         if (button == 2) {
             PhysicsObject* obj = spawn();// new PhysicsObject(new CubeMesh(), new BoxCollider());//LoadMeshFromOBJFile("Objects/Sphere.obj");
-            obj->position = Camera::main->position + (Camera::main->Forward() * 10);
-            obj->rotation = Camera::main->rotation;
+            obj->position = Camera::main->Position() + (Camera::main->Forward() * 10);
+            obj->rotation = Camera::main->Rotation();
             obj->isKinematic = true;
             obj->mesh->SetColor(Color::blue);
         }
@@ -84,10 +84,10 @@ void OnMouseButtonEvent(GLFWwindow* window, int button, int action, int mods)
             {
                 static int maxDist = 1000000;
                 RaycastInfo<Mesh> info;
-                if (Raycast<Mesh>(Camera::main->position, Camera::main->position + Camera::main->Forward() * maxDist, info))
+                if (Raycast<Mesh>(Camera::main->Position(), Camera::main->Position() + Camera::main->Forward() * maxDist, info))
                 {
                     cout << "RAYCAST HIT" << '\n';
-                    Line::AddWorldLine(Line(Camera::main->position, Camera::main->position + Camera::main->Forward() * maxDist, Color::green, 3));
+                    Line::AddWorldLine(Line(Camera::main->Position(), Camera::main->Position() + Camera::main->Forward() * maxDist, Color::green, 3));
                     Point::AddWorldPoint(Point(info.contactPoint, Color::green, 10));
                     grabbing = info.objectHit->root;
                     grabbingsOriginalParent = grabbing->parent;
@@ -119,19 +119,21 @@ void OnKeyPressEvent(GLFWwindow* window, int key, int scancode, int action, int 
 {
     if (action == GLFW_PRESS)
     {
+        static int mainCamIndex = 1;
+
         // Reset Camera
-        if (glfwGetKey(window, GLFW_KEY_0) == GLFW_PRESS || key == GLFW_KEY_BACKSPACE) {
+        if (key == GLFW_KEY_0 || key == GLFW_KEY_BACKSPACE) {
             Camera::main->rotation = Matrix3x3::identity;
             Camera::main->position = Vec3();
         }
         // Switch between Cameras
-        else if (glfwGetKey(window, GLFW_KEY_F1) == GLFW_PRESS) {
-            Camera::main = Camera::cameras[1];
+        else if (key == GLFW_KEY_F2) {
+            if (++mainCamIndex >= Camera::cameras.size()) {
+                mainCamIndex = 1;
+            }
+            Camera::main = Camera::cameras[mainCamIndex];
         }
-        else if (glfwGetKey(window, GLFW_KEY_F2) == GLFW_PRESS) {
-            Camera::main = Camera::cameras[2];
-        }
-        else if (glfwGetKey(window, GLFW_KEY_F3) == GLFW_PRESS) {
+        else if (key == GLFW_KEY_F3) {
             CameraSettings::outsiderViewPerspective = !CameraSettings::outsiderViewPerspective;
             Camera::projector->rotation = Matrix3x3::identity;
             Camera::projector->position = Vec3();
@@ -148,15 +150,15 @@ void OnKeyPressEvent(GLFWwindow* window, int key, int scancode, int action, int 
         }
         else if (glfwGetKey(window, GLFW_KEY_7) == GLFW_PRESS) {
             Mesh* mesh = LoadMeshFromOBJFile("Diamond.obj");
-            mesh->position = Camera::main->position + (Camera::main->Forward() * 10);
-            mesh->rotation = Camera::main->rotation;
+            mesh->position = Camera::main->Position() + (Camera::main->Forward() * 10);
+            mesh->rotation = Camera::main->Rotation();
             mesh->scale *= 0.1;
             mesh->SetColor(Color::red);
         }
         else if (glfwGetKey(window, GLFW_KEY_8) == GLFW_PRESS) {
             Mesh* mesh = LoadMeshFromOBJFile("Icosahedron.obj");
-            mesh->position = Camera::main->position + (Camera::main->Forward() * 10);
-            mesh->rotation = Camera::main->rotation;
+            mesh->position = Camera::main->Position() + (Camera::main->Forward() * 10);
+            mesh->rotation = Camera::main->Rotation();
             mesh->scale *= 0.1;
             mesh->SetColor(Color::purple);
         }
@@ -248,7 +250,7 @@ void OnKeyPressEvent(GLFWwindow* window, int key, int scancode, int action, int 
         }
         // Toggle Transform Hierarchy
         else if (glfwGetKey(window, GLFW_KEY_CAPS_LOCK) == GLFW_PRESS) {
-            Transform::parentHierarchyDefault = !Transform::parentHierarchyDefault;
+            //...
         }
         else if (key == GLFW_KEY_TAB)
         {
@@ -264,27 +266,27 @@ static void CameraControl(Camera* cam)
     //----------Camera Controls-------
     // FORWARD
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
-        moveDir += cam->Forward();
+        moveDir += cam->rotation * Direction::forward;
     }
     // BACK
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
-        moveDir += cam->Back();
+        moveDir += cam->rotation * Direction::back;
     }
     // LEFT
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
-        moveDir += cam->Left();
+        moveDir += cam->rotation * Direction::left;
     }
     // RIGHT
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
-        moveDir += cam->Right();
+        moveDir += cam->rotation * Direction::right;
     }
     // UP
     if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
-        moveDir += cam->Up();
+        moveDir += cam->rotation * Direction::up;
     }
     // DOWN
     if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS) {
-        moveDir += cam->Down();
+        moveDir += cam->rotation* Direction::down;
     }
 
     moveDir.Normalize();
@@ -316,7 +318,7 @@ static void CameraControl(Camera* cam)
     // Speed 
     if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
     {
-        accel = defaultAcceleration * 5;
+        accel = defaultAcceleration * 7;
     }
     else {
         accel = defaultAcceleration;
