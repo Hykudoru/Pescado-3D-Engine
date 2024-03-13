@@ -45,7 +45,7 @@ public:
     static float identity[3][3];
     static float zero[3][3];
 
-    void Set(float matrix3x3[3][3])
+    void Set(const float matrix3x3[3][3])
     {
         for (size_t r = 0; r < 3; r++)
         {
@@ -57,34 +57,34 @@ public:
     }
 
     Matrix3x3() {}
-    Matrix3x3(float matrix3x3[3][3]) { Set(matrix3x3); }
+    Matrix3x3(const float matrix3x3[3][3]) { Set(matrix3x3); }
 
-    static Matrix3x3 Transpose(const float matrix[][3])
+    static Matrix3x3 Transpose(const Matrix3x3& matrix)
     {
         Matrix3x3 result;
         for (int r = 0; r < 3; r++)
         {
             for (int c = 0; c < 3; c++)
             {
-                result.m[c][r] = matrix[r][c];
+                result.m[c][r] = matrix.m[r][c];
             }
         }
         return result;
     }
 
     // A*B
-    static Matrix3x3 Multiply(const float matrixA[][3], const float matrixB[][3])
+    static Matrix3x3 Multiply(const Matrix3x3& matrixA, const Matrix3x3& matrixB)
     {
         Matrix3x3 result = Matrix3x3();
         for (size_t r = 0; r < 3; r++)
         {
-            Vector3<float> rowVec = Vector3<float>(matrixA[r][0], matrixA[r][1], matrixA[r][2]);
+            Vector3<float> rowVec = Vector3<float>(matrixA.m[r][0], matrixA.m[r][1], matrixA.m[r][2]);
             for (size_t c = 0; c < 3; c++)
             {
                 Vector3<float> columnVec;
-                columnVec.x = matrixB[0][c];
-                columnVec.y = matrixB[1][c];
-                columnVec.z = matrixB[2][c];
+                columnVec.x = matrixB.m[0][c];
+                columnVec.y = matrixB.m[1][c];
+                columnVec.z = matrixB.m[2][c];
                 result.m[r][c] = DotProduct(rowVec, columnVec);
             }
         }
@@ -93,13 +93,13 @@ public:
     }
 
     // Same as matrixA = matrixA * matrixB
-    Matrix3x3& operator*=(Matrix3x3 matrixB)
+    Matrix3x3& operator*=(const Matrix3x3 matrixB)
     {
         *this = Multiply(this->m, matrixB.m);
         return *this;
     }
 
-    Matrix3x3& operator=(float matrix[3][3])
+    Matrix3x3& operator=(const float matrix[3][3])
     {
         //*this = Matrix3x3(matrix);
         this->Set(matrix);
@@ -182,6 +182,16 @@ Matrix3x3 operator*(const Matrix3x3& matrixA, const Matrix3x3& matrixB)
     Matrix3x3 matrix = Matrix3x3::Multiply(matrixA.m, matrixB.m);
     return matrix;
 }
+//Matrix * floatMatrix
+Matrix3x3 operator*(const Matrix3x3& matrixA, float matrixB[3][3])
+{
+    return Matrix3x3::Multiply(matrixA, matrixB);
+}
+//floatMatrix * Matrix
+Matrix3x3 operator*(float matrixA[3][3], const Matrix3x3& matrixB)
+{
+    return Matrix3x3::Multiply(matrixA, matrixB);
+}
 // M * p
 Vector3<float> operator*(const Matrix3x3& matrix, const Vector3<float>& colVec)
 {
@@ -229,9 +239,9 @@ public:
     static float zero[4][4];
 
     Matrix4x4() {}
-    Matrix4x4(float matrix[][4]) { Set(matrix); }
+    Matrix4x4(float matrix[4][4]) { Set(matrix); }
 
-    void Set(float matrix[][4])
+    void Set(const float matrix[4][4])
     {
         for (int r = 0; r < 4; r++)
         {
@@ -277,11 +287,70 @@ public:
         return *this;
     }
 
+    // Same as matrixA = matrixA * matrixB
+    Matrix4x4& operator*=(float matrixB[4][4])
+    {
+        *this = Multiply(this->m, matrixB);
+        return *this;
+    }
+
     Matrix4x4& operator=(float matrix[4][4])
     {
         this->Set(matrix);
         return *this;
     }
+
+
+    // Homogeneous Rotation Matrix about the X axis (in radians)
+    static Matrix4x4 RotX(float theta)
+    {
+        float Cos = cos(theta);
+        float Sin = sin(theta);
+
+        float standardRotX[4][4] =
+        {
+            {1, 0, 0, 0},
+            {0, Cos, -Sin, 0},
+            {0, Sin, Cos, 0},
+            {0, 0, 0, 1}
+        };
+
+        return standardRotX;
+    }
+
+    // Homogeneous Rotation Matrix about the Y axis (in radians)
+    static Matrix4x4 RotY(float theta)
+    {
+        float Cos = cos(theta);
+        float Sin = sin(theta);
+
+        float standardRotY[4][4] =
+        {
+            {Cos, 0, Sin, 0},
+            {0,   1,  0, 0 },
+            {-Sin,0, Cos, 0},
+            {0, 0, 0, 1}
+        };
+
+        return standardRotY;
+    }
+
+    // Homogeneous Rotation Matrix about the Z axis (in radians)
+    static Matrix4x4 RotZ(float theta)
+    {
+        float Cos = cos(theta);
+        float Sin = sin(theta);
+
+        float standardRotZ[4][4] = {
+            {Cos, -Sin,  0, 0},
+            {Sin,  Cos,  0, 0},
+            {0,     0,   1, 0},
+            {0,     0,   0, 1}
+        };
+
+        return standardRotZ;
+    }
+
 };
 float Matrix4x4::identity[4][4] = {
     {1, 0, 0, 0},
@@ -295,13 +364,23 @@ float Matrix4x4::zero[4][4] = {
     {0, 0, 0, 0},
     {0, 0, 0, 0}
 };
+
 // A * B
 Matrix4x4 operator*(const Matrix4x4& matrixA, const Matrix4x4& matrixB)
 {
     Matrix4x4 matrix = Matrix4x4::Multiply(matrixA, matrixB);
     return matrix;
 }
-
+//Matrix * floatMatrix
+Matrix4x4 operator*(const Matrix4x4& matrixA, float matrixB[4][4])
+{
+    return Matrix4x4::Multiply(matrixA, matrixB);
+}
+//floatMatrix * Matrix
+Matrix4x4 operator*(float matrixA[4][4], const Matrix4x4& matrixB)
+{
+    return Matrix4x4::Multiply(matrixA, matrixB);
+}
 // M * p
 Vector4<float> operator*(const Matrix4x4& matrix, const Vector4<float>& colVec)
 {

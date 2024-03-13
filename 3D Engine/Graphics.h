@@ -541,7 +541,8 @@ public:
 
     Matrix3x3 Rotation()
     {
-        if (parent) {
+        if (parent) {//TRS already checks for parent but checks again here because cheaper to return local position than creating the matrix
+
             Matrix4x4 matrix = TRS();// parent->RotationMatrix4x4()* RotationMatrix4x4();
             float globalRotation[3][3] = {
                 {matrix.m[0][0], matrix.m[0][1], matrix.m[0][2]},
@@ -550,14 +551,13 @@ public:
             };
             return globalRotation;
         }
-
         return rotation;
     }
 
     Vec3 Position()
     {
-        if (parent) {//TRS already checks for parent but checks again here because cheaper to return local position without matrix multiplication
-            Matrix4x4 matrix = TR();
+        if (parent) {//TRS already checks for parent but checks again here because cheaper to return local position than creating the matrix
+            Matrix4x4 matrix = TRS();
             return Vec3(matrix.m[0][3], matrix.m[1][3], matrix.m[2][3]);
         }
 
@@ -730,6 +730,16 @@ public:
         return trs;
     }
 
+    // S^-1 * R^-1 * T^-1
+    Matrix4x4 TRSInverse()
+    {
+        if (parent) {
+            return ScaleMatrix4x4Inverse() * Matrix4x4::Transpose(RotationMatrix4x4()) * TranslationMatrix4x4Inverse() * parent->TRSInverse();
+        }
+
+        return ScaleMatrix4x4Inverse() * Matrix4x4::Transpose(RotationMatrix4x4()) * TranslationMatrix4x4Inverse();
+    }
+
     // 1:Rotate, 2:Translate
     Matrix4x4 TR()
     {
@@ -747,7 +757,7 @@ public:
         return tr;
     }
 
-    // R^-1T^-1
+    // R^-1 * T^-1
     Matrix4x4 TRInverse()
     {
         if (parent) {
@@ -829,6 +839,9 @@ public:
             ManagedObjectPool<Mesh>::RemoveFromPool(this);
             return false;
         }
+    }
+    void SetColor(Color&& c) {
+        SetColor(c);
     }
 
     void SetColor(Color& c)

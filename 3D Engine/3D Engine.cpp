@@ -49,7 +49,7 @@ CubeMesh* child;
 CubeMesh* grandchild;
 CubeMesh* greatGrandchild; 
 Mesh* compass;
-Mesh* temp;
+Mesh* temp; Mesh* bender;
 void Init(GLFWwindow* window)
 {
     glfwSetCursorPosCallback(window, OnMouseMoveEvent);
@@ -64,22 +64,37 @@ void Init(GLFWwindow* window)
     glPointSize(2);
 
     Graphics::matrixMode = true;
+
+    Transform* cam2Origin = new Transform(1, Vec3(0, 50, 0), Vec3(ToRad(-90), 0, 0));
+    camera2->SetParent(cam2Origin, false);
+    camera2->position = Vec3::zero;
+    camera2->rotation = Matrix3x3::identity;
+
+    for (size_t i = 1; i < Camera::cameras.size(); i++)//starts at 1 to avoid projector camera
+    {
+        Mesh* cameraMesh = LoadMeshFromOBJFile("Camera.obj");
+        cameraMesh->SetParent(Camera::cameras[i], false);
+        cameraMesh->position += -Direction::forward;
+    }
+
     //GraphicSettings::debugAxes = true;
     compass = LoadMeshFromOBJFile("Compass.obj");
     compass->scale *= 0.1;
+    compass->ignoreLighting = true;
+
     sun = LoadMeshFromOBJFile("Sun.obj");
     sun->rotation = Matrix3x3::RotX(ToRad(45));
     sun->position = lightSource * 100000;
     sun->scale *= 5000;
     sun->ignoreLighting = true;
+
     Camera* sunCam = new Camera();
-    sunCam->SetParent(sun);
+    //sunCam->SetParent(sun, false);
+    sunCam->parent = sun;
+    sunCam->root = sun->root;
+    sunCam->scale = sun->ScaleMatrix4x4Inverse() * sunCam->scale;
     sunCam->position = Vec3::zero;
     sunCam->rotation = Matrix3x3::identity;
-    
-    Transform* camOrigin = new Transform(1, Vec3(0, 0, 0), Vec3(ToRad(-90), 0, 0));
-    camera2->SetParent(camOrigin);
-    camera2->rotation = Matrix3x3::identity;
 
     planet = new PhysicsObject(500.0, Direction::forward * 1200, Matrix3x3::identity, LoadMeshFromOBJFile("Planet.obj"), new SphereCollider());
     planet->mass = 100000;
@@ -91,8 +106,7 @@ void Init(GLFWwindow* window)
 
     giantText = LoadMeshFromOBJFile("Hello3DWorldText.obj");
     giantText->scale *= 2.5;
-    giantText->position = Vec3(0, 25, -490);// Vec3(50, 25, -490);
-   // textHelloWorld->color = &Color::green;
+    giantText->position = Vec3(0, 25, -490);
     
     spaceShip = LoadMeshFromOBJFile("SpaceShip_2.2.obj");
     spaceShip->position = Direction::left * 30 + Direction::forward * 10;
@@ -103,13 +117,7 @@ void Init(GLFWwindow* window)
 
     spaceShip3 = LoadMeshFromOBJFile("SpaceShip_5.obj");
     spaceShip3->position = Direction::right * 20 + Direction::up * 10;
-
-    Mesh* bender = LoadMeshFromOBJFile("Bender.obj");
-    bender->position += Direction::back * 3;
-
-    Mesh* computer = LoadMeshFromOBJFile("Computer-Lab-Module.obj");
-    computer->position += Direction::back * 5;
-
+   
     parent = new CubeMesh(3, Vec3(0, 10, 500), Vec3(0, 45, 0));
     child = new CubeMesh(3, Vec3(0, 0, 2), Vec3(0, 45, 0));
     grandchild = new CubeMesh(3, Vec3(0, 0, 2), Vec3(0, 45, 0));
@@ -122,23 +130,6 @@ void Init(GLFWwindow* window)
     grandchild->SetColor(Color::yellow);
     greatGrandchild->SetColor(Color::green);
 
-    temp = LoadMeshFromOBJFile("Sphere.obj");
-    //Mesh* guitar = LoadMeshFromOBJFile("Objects/Guitar.obj");
-    //guitar->position += (Camera::main->Forward() * 10) + Camera::main->Right();
-    //Mesh* chair = LoadMeshFromOBJFile("Objects/Chair.obj");
-    //chair->position += (Camera::main->Forward() * 10) + Camera::main->Left();
-
-    //Plane* plane = new Plane(1, Vec3(0, 0, 0), Vec3(0, 0, 0));
-
-    for (size_t i = 1; i < Camera::cameras.size(); i++)//starts at 1 to avoid projector camera
-    {
-       Mesh* cameraMesh = LoadMeshFromOBJFile("Camera.obj");
-       cameraMesh->SetParent(Camera::cameras[i], false);
-       cameraMesh->position += -Direction::forward;
-    }
-
-    //physicsObj->collider->isStatic = true;
-    
     for (int i = -10; i < 10; i++)
     {
         for (int j = -10; j < 10; j++)
@@ -147,6 +138,25 @@ void Init(GLFWwindow* window)
             block->scale *= 2;
             block->position = Direction::down*15 + Direction::left*i*10 + Direction::back * j*10;
         }
+    }
+
+    Transform* parent = new Transform(2, Direction::up * 50, Vec3(0, ToRad(-90), 0));
+    Transform* prev = nullptr;
+    for (size_t i = 0; i < 10; i++)
+    {
+        float scale = .8;
+        Transform *t = new CubeMesh(.8, Direction::forward*5, Vec3(0, ToRad(45), 0));
+        if (prev == nullptr) {
+            prev = t;
+            prev->SetParent(parent, false);
+        }
+        else {
+            t->SetParent(prev, false);
+        }
+        Mesh *c = new CubeMesh(2.0/(i*scale), t->Position() + t->Right());
+        c->SetColor((Color::red * (1.0 / i)));
+        t->position += t->rotation * Direction::right;
+        prev = t;
     }
     /*
     PhysicsObject* ground = new PhysicsObject(400, Direction::down * 200, Matrix3x3::identity, new PlaneMesh(), new PlaneCollider(Direction::up, true));
@@ -162,12 +172,13 @@ void Init(GLFWwindow* window)
     //physicsObj->collider->mesh->SetVisibility(true);
     //physicsObj->collider->isTrigger = true;
 
+    bender = LoadMeshFromOBJFile("Bender.obj");
+    bender->rotation = Matrix3x3::RotZ(ToRad(20));;
+    bender->position = Camera::main->Position() + (Camera::main->Forward() + Camera::main->Right() * 3);
 }
 
 void Update()
 {
-    compass->position = Camera::main->Position() + (Camera::main->Forward() + (Camera::main->Down()*.5)+(Camera::main->Right()*0.8));
-    temp->position = greatGrandchild->Position() + greatGrandchild->Right();
     if (CameraSettings::displayReticle)
     {
         Point::AddPoint(Point(Vec3(), Color::white, 5));
@@ -181,12 +192,14 @@ void Update()
         Vec3 centripitalAccel = directionTowardCenter * ((vSpeed * vSpeed) / r) * deltaTime;
         Vec3 v = CrossProduct(directionTowardCenter, Direction::up) * vSpeed;
         sun->position += v + centripitalAccel;
-        //static float t = 0;
-        //t += deltaTime;
-        //sun->position = Vec3(r * cos((2.0 * PI)*t/36), 0, r * sin(((2.0 * PI)*t/36)));
     }
 
     lightSource = sun->Position().Normalized();
+
+    if (compass)
+    {
+        compass->position = Camera::main->Position() + (Camera::main->Forward() + (Camera::main->Down() * .5) + (Camera::main->Right() * 0.8));
+    }
 
     if (planet) {
         float planetRotationSpeed = ((2 * PI) / 240) * deltaTime;
@@ -211,6 +224,12 @@ void Update()
         spaceShip3->rotation = Matrix3x3::RotY(shipRotationSpeed) * Matrix3x3::RotZ(shipRotationSpeed) * spaceShip3->rotation;// *spaceShip2->rotation;// MatrixMultiply(YPR(angle * ((screenWidth / 2)), angle * -((screenWidth / 2)), 0), Mesh.meshes[1].rotation);
         spaceShip3->position += spaceShip3->Forward() * 15 * deltaTime;
 
+    }
+
+    if (bender)
+    {
+        bender->position += Direction::left * deltaTime * 0.7;
+        bender->rotation *= Matrix3x3::RotY(5.0 * deltaTime);
     }
     /*
     static float t = 0;
