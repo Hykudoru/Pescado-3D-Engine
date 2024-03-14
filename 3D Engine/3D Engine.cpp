@@ -139,31 +139,32 @@ void Init(GLFWwindow* window)
             block->position = Direction::down*15 + Direction::left*i*10 + Direction::back * j*10;
         }
     }
-
-    Transform* parent = new Transform(2, Direction::up * 50, Vec3(0, ToRad(-90), 0));
+    
+    Transform* parent1 = new Transform(2, Direction::up * 50, Vec3(0, ToRad(-90), 0));
     Transform* prev = nullptr;
     for (size_t i = 0; i < 10; i++)
     {
-        float scale = .8;
+      float scale = .8;
         Transform *t = new CubeMesh(.8, Direction::forward*5, Vec3(0, ToRad(45), 0));
         if (prev == nullptr) {
             prev = t;
-            prev->SetParent(parent, false);
+            prev->SetParent(parent1, false);
         }
         else {
             t->SetParent(prev, false);
         }
-        Mesh *c = new CubeMesh(2.0/(i*scale), t->Position() + t->Right());
+        float s = 2.0 / (i+1 * scale);
+        Mesh *c = new CubeMesh(s, t->Position() + t->Right());
         c->SetColor((Color::red * (1.0 / i)));
         t->position += t->rotation * Direction::right;
         prev = t;
     }
     /*
-    PhysicsObject* ground = new PhysicsObject(400, Direction::down * 200, Matrix3x3::identity, new PlaneMesh(), new PlaneCollider(Direction::up, true));
-    PhysicsObject* leftWall = new PhysicsObject(300, Direction::left * 200, Matrix3x3::RotZ(ToRad(-90)), new PlaneMesh(), new PlaneCollider(Direction::up, true));
-    PhysicsObject* rightWall = new PhysicsObject(300, Direction::right * 200, Matrix3x3::RotZ(ToRad(90)), new PlaneMesh(), new PlaneCollider(Direction::up, true));
-    PhysicsObject* backWall = new PhysicsObject(300, Direction::forward * 200, Matrix3x3::RotX(ToRad(90)), new PlaneMesh(), new PlaneCollider(Direction::up, true));
-    PhysicsObject* frontWall = new PhysicsObject(new PlaneMesh(300, Direction::back * 200, Vec3(ToRad(-90), 0, 0)), new PlaneCollider(Direction::up, true));
+    PhysicsObject* ground = new PhysicsObject(100, Direction::down * 20, Matrix3x3::identity, new PlaneMesh(), new PlaneCollider(Direction::up, true));
+    PhysicsObject* leftWall = new PhysicsObject(100, Direction::left * 50, Matrix3x3::RotZ(ToRad(-90)), new PlaneMesh(), new PlaneCollider(Direction::right, true));
+    PhysicsObject* rightWall = new PhysicsObject(100, Direction::right * 50, Matrix3x3::RotZ(ToRad(90)), new PlaneMesh(), new PlaneCollider(Direction::left, true));
+    PhysicsObject* backWall = new PhysicsObject(100, Direction::forward * 50, Matrix3x3::RotX(ToRad(90)), new PlaneMesh(), new PlaneCollider(Direction::back, true));
+    PhysicsObject* frontWall = new PhysicsObject(100, Direction::back * 50, Matrix3x3::RotX(ToRad(-90)), new PlaneMesh(), new PlaneCollider(Direction::forward, true));
     */
     
     //physicsObj = new PhysicsObject(LoadMeshFromOBJFile("Sphere.obj"), new SphereCollider());

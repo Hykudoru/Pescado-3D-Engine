@@ -214,8 +214,6 @@ public:
         mesh->SetParent(this);
         mesh->SetVisibility(false);
     }
-
-    
 };
 
 class SphereCollider : public Collider, public ManagedObjectPool<SphereCollider>
@@ -250,8 +248,8 @@ public:
     Vec3 normal;
     PlaneCollider(Vec3 normal, bool isStatic = false, bool isTrigger = false) : Collider(isStatic, isTrigger), ManagedObjectPool<PlaneCollider>(this)
     {
-        this->normal = normal;
         mesh = new PlaneMesh();
+        this->normal = normal;
         mesh->SetColor(Color::red);
         mesh->SetParent(this);
         mesh->SetVisibility(false);
@@ -373,7 +371,7 @@ bool SpherePlaneColliding(SphereCollider& sphere, PlaneCollider& plane, SphereCo
 {
     Vec3 sphereCenter = sphere.Position();
     Vec3 v = sphereCenter - plane.Position();
-    Vec3 normal = plane.Rotation() * plane.normal;
+    Vec3 normal = plane.normal;
     Vec3 vPerp = normal * (DotProduct(v, normal));//ProjectOnPlane(v, plane.plane.normal);
     Vec3 closestPointOnPlane = sphereCenter - vPerp;
 
