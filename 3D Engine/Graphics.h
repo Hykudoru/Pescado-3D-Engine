@@ -16,12 +16,24 @@ struct Point;
 struct Line;
 struct  Triangle;
 class Transform;
-class Camera;
 class Mesh;
+class Camera;
 
-List<Point>* pointBuffer = new List<Point>();
-List<Line>* lineBuffer = new List<Line>();
-List<Triangle>* triBuffer = new List<Triangle>();
+struct Direction
+{
+    static Vec3 forward;
+    static Vec3 back;
+    static Vec3 right;
+    static Vec3 left;
+    static Vec3 up;
+    static Vec3 down;
+};
+Vec3 Direction::forward = Vec3(0, 0, -1);
+Vec3 Direction::back = Vec3(0, 0, 1);
+Vec3 Direction::right = Vec3(1, 0, 0);
+Vec3 Direction::left = Vec3(-1, 0, 0);
+Vec3 Direction::up = Vec3(0, 1, 0);
+Vec3 Direction::down = Vec3(0, -1, 0);
 
 struct Color
 {
@@ -200,6 +212,107 @@ struct Material
     }
 };
 
+class Transform
+{
+public:
+    Vec3 scale = Vec3(1, 1, 1);
+    Vec3 position = Vec3(0, 0, 0);
+    Matrix3x3 rotation = Matrix3x3::identity;
+    Transform* root = nullptr;
+    Transform* parent = nullptr;
+
+    Transform(float scale = 1, Vec3 position = Vec3(0, 0, 0), Vec3 rotationEuler = Vec3(0, 0, 0), Transform* parent = nullptr)
+    {
+        this->scale.x = scale;
+        this->scale.y = scale;
+        this->scale.z = scale;
+        this->position = position;
+        this->rotation = YPR(rotationEuler.x, rotationEuler.y, rotationEuler.z);
+        this->root = this;
+        SetParent(parent);
+    }
+
+    Vec3 Forward() { return Rotation() * Direction::forward; }
+    Vec3 Back() { return Rotation() * Direction::back; }
+    Vec3 Right() { return Rotation() * Direction::right; }
+    Vec3 Left() { return Rotation() * Direction::left; }
+    Vec3 Up() { return Rotation() * Direction::up; }
+    Vec3 Down() { return Rotation() * Direction::down; }
+
+    Matrix3x3 Rotation();
+
+    Vec3 Position();
+
+    Vec3 Scale();
+
+    void SetParent(Transform* newParent, bool changeOfBasisTransition = true);
+
+    Matrix4x4 ScaleMatrix4x4();
+
+    Matrix4x4 ScaleMatrix4x4Inverse();
+
+    Matrix4x4 RotationMatrix4x4();
+
+    Matrix4x4 TranslationMatrix4x4();
+
+    Matrix4x4 TranslationMatrix4x4Inverse();
+
+    // 1:Scale, 2:Rotate, 3:Translate
+    Matrix4x4 TRS();
+
+    // S^-1 * R^-1 * T^-1
+    Matrix4x4 TRSInverse();
+
+    // 1:Rotate, 2:Translate
+    Matrix4x4 TR();
+
+    // R^-1 * T^-1
+    Matrix4x4 TRInverse();
+};
+
+class Mesh : public Transform, public ManagedObjectPool<Mesh>
+{
+public:
+    static int worldTriangleDrawCount;
+    List<Vec3>* vertices;
+    List<int>* indices;
+    List<Triangle>* triangles;
+    Color color = Color::white;
+    bool ignoreLighting = false;
+    bool forceWireFrame = false;
+
+    Mesh(float scale = 1, Vec3 position = Vec3(0, 0, 0), Vec3 rotationEuler = Vec3(0, 0, 0))
+        : Transform(scale, position, rotationEuler), ManagedObjectPool<Mesh>(this)
+    {
+        triangles = new List<Triangle>{};
+        MapVertsToTriangles();
+        SetColor(color);
+    }
+
+    virtual ~Mesh()
+    {
+        delete vertices;
+        delete indices;
+        delete triangles;
+    }
+
+    bool SetVisibility(bool visible);
+    void SetColor(Color&& c);
+
+    void SetColor(Color& c);
+
+    virtual List<Triangle>* MapVertsToTriangles();
+
+    //Convert to world coordinates
+    List<Vec3> WorldVertices();
+
+    void TransformTriangles();
+};
+
+List<Point>* pointBuffer = new List<Point>();
+List<Line>* lineBuffer = new List<Line>();
+List<Triangle>* triBuffer = new List<Triangle>();
+
 struct Graphics
 {
     static bool frustumCulling;
@@ -292,21 +405,6 @@ bool Graphics::lighting = true;
 bool Graphics::vfx = false;
 bool Graphics::matrixMode = false;
 
-struct Direction
-{
-    static Vec3 forward;
-    static Vec3 back;
-    static Vec3 right;
-    static Vec3 left;
-    static Vec3 up;
-    static Vec3 down;
-};
-Vec3 Direction::forward = Vec3(0, 0, -1);
-Vec3 Direction::back = Vec3(0, 0, 1);
-Vec3 Direction::right = Vec3(1, 0, 0);
-Vec3 Direction::left = Vec3(-1, 0, 0);
-Vec3 Direction::up = Vec3(0, 1, 0);
-Vec3 Direction::down = Vec3(0, -1, 0);
 
 Vec3 lightSource = .25*Direction::up  + Direction::back * .5;
 static float worldScale = 1;
@@ -454,19 +552,20 @@ struct Triangle : Plane
 {
     Vec4 centroid = Vec4();
     Color color = Color::white;
+    bool forceWireFrame = false;
     Mesh* mesh = nullptr;
-
+    
     Triangle() : Plane()
     {
         centroid = Vec4();
         color = Color::white;
         mesh = nullptr;
     }
-    Triangle(Vec3 p1, Vec3 p2, Vec3 p3) : Plane(p1, p2, p3)
+    Triangle(Vec3 p1, Vec3 p2, Vec3 p3, Mesh* owner = nullptr) : Plane(p1, p2, p3)
     {
         color = Color::white;
         centroid = Centroid();
-        mesh = nullptr;
+        mesh = owner;
     }
 
     Vec4 Centroid()
@@ -504,7 +603,8 @@ struct Triangle : Plane
             Graphics::DrawTriangleFilled(p1, p2, p3);
         }
 
-        if (Graphics::displayWireFrames)
+        bool drawWireFrame = Graphics::displayWireFrames || forceWireFrame || (mesh != nullptr ? mesh->forceWireFrame : false);
+        if (drawWireFrame)
         {
             if (Graphics::fillTriangles)
             {
@@ -521,252 +621,223 @@ struct Triangle : Plane
 };
 
 //-------------------------------TRANSFORM---------------------------------------------
-class Transform
+Matrix3x3 Transform::Rotation()
 {
-protected:
+    if (parent) {//TRS already checks for parent but checks again here because cheaper to return local position than creating the matrix
 
-public:
-    Vec3 scale = Vec3(1, 1, 1);
-    Vec3 position = Vec3(0, 0, 0);
-    Matrix3x3 rotation = Matrix3x3::identity;
-    Transform* root = nullptr;
-    Transform* parent = nullptr;
+        Matrix4x4 matrix = TRS();// parent->RotationMatrix4x4()* RotationMatrix4x4();
+        float globalRotation[3][3] = {
+            {matrix.m[0][0], matrix.m[0][1], matrix.m[0][2]},
+            {matrix.m[1][0], matrix.m[1][1], matrix.m[1][2]},
+            {matrix.m[2][0], matrix.m[2][1], matrix.m[2][2]}
+        };
+        return globalRotation;
+    }
+    return rotation;
+}
 
-    Vec3 Forward() { return Rotation() * Direction::forward; }
-    Vec3 Back() { return Rotation() * Direction::back; }
-    Vec3 Right() { return Rotation() * Direction::right; }
-    Vec3 Left() { return Rotation() * Direction::left; }
-    Vec3 Up() { return Rotation() * Direction::up; }
-    Vec3 Down() { return Rotation() * Direction::down; }
+Vec3 Transform::Position()
+{
+    if (parent) {//TRS already checks for parent but checks again here because cheaper to return local position than creating the matrix
+        Matrix4x4 matrix = TRS();
+        return Vec3(matrix.m[0][3], matrix.m[1][3], matrix.m[2][3]);
+    }
 
-    Matrix3x3 Rotation()
+    return position;
+}
+
+Vec3 Transform::Scale()
+{
+    if (parent) {
+        Matrix4x4 matrix = this->parent->ScaleMatrix4x4() * ScaleMatrix4x4();
+        return matrix * Vec3(1.0, 1.0, 1.0);
+    }
+    return scale;
+}
+
+
+void Transform::SetParent(Transform* newParent, bool changeOfBasisTransition)
+{
+    if (newParent == NULL)
     {
-        if (parent) {//TRS already checks for parent but checks again here because cheaper to return local position than creating the matrix
+        if (changeOfBasisTransition)
+        {
+            // Results in seemless unparenting. Assigns (possibly parented) global values to the local values. 
+            // This way of unparenting will maintain the previous parented position and rotation but in the new reference frame.
+            // Also nothing changes if never parented.
+            Matrix4x4 tr = this->TR();
 
-            Matrix4x4 matrix = TRS();// parent->RotationMatrix4x4()* RotationMatrix4x4();
-            float globalRotation[3][3] = {
-                {matrix.m[0][0], matrix.m[0][1], matrix.m[0][2]},
-                {matrix.m[1][0], matrix.m[1][1], matrix.m[1][2]},
-                {matrix.m[2][0], matrix.m[2][1], matrix.m[2][2]}
+            Vec3 pos = Vec3(tr.m[0][3], tr.m[1][3], tr.m[2][3]);
+
+            float rot[3][3] = {
+                {tr.m[0][0], tr.m[0][1], tr.m[0][2]},
+                {tr.m[1][0], tr.m[1][1], tr.m[1][2]},
+                {tr.m[2][0], tr.m[2][1], tr.m[2][2]}
             };
-            return globalRotation;
+
+            this->position = pos;
+            this->rotation = rot;
+            //this->scale = this->Scale();
         }
-        return rotation;
-    }
-
-    Vec3 Position()
-    {
-        if (parent) {//TRS already checks for parent but checks again here because cheaper to return local position than creating the matrix
-            Matrix4x4 matrix = TRS();
-            return Vec3(matrix.m[0][3], matrix.m[1][3], matrix.m[2][3]);
-        }
-
-        return position;
-    }
-
-    Vec3 Scale()
-    {
-        if (parent) {
-            Matrix4x4 matrix = this->parent->ScaleMatrix4x4() * ScaleMatrix4x4();
-            return matrix * Vec3(1.0, 1.0, 1.0);
-        }
-        return scale;
-    }
-
-    Transform(float scale = 1, Vec3 position = Vec3(0, 0, 0), Vec3 rotationEuler = Vec3(0, 0, 0), Transform* parent = nullptr)
-    {
-        this->scale.x = scale;
-        this->scale.y = scale;
-        this->scale.z = scale;
-        this->position = position;
-        this->rotation = YPR(rotationEuler.x, rotationEuler.y, rotationEuler.z);
+        this->parent = NULL;
         this->root = this;
-        SetParent(parent);
     }
-
-    void SetParent(Transform* newParent, bool changeOfBasisTransition = true)
+    else if (newParent != this)
     {
-        if (newParent == NULL)
+        if (changeOfBasisTransition)
         {
-            if (changeOfBasisTransition)
-            {
-                // Results in seemless unparenting. Assigns (possibly parented) global values to the local values. 
-                // This way of unparenting will maintain the previous parented position and rotation but in the new reference frame.
-                // Also nothing changes if never parented.
-                Matrix4x4 tr = this->TR();
+            // If you immediatley parent a transform, everything is calculated relative to its immediate parent's reference frame. 
+            // This would result in a transformation if the original coordinates didn't change. 
+            // Instead what we want is a change of basis.
+            Matrix4x4 tr = newParent->TRInverse() * this->TR();
 
-                Vec3 pos = Vec3(tr.m[0][3], tr.m[1][3], tr.m[2][3]);
+            Vec3 pos = Vec3(tr.m[0][3], tr.m[1][3], tr.m[2][3]);
 
-                float rot[3][3] = {
-                    {tr.m[0][0], tr.m[0][1], tr.m[0][2]},
-                    {tr.m[1][0], tr.m[1][1], tr.m[1][2]},
-                    {tr.m[2][0], tr.m[2][1], tr.m[2][2]}
-                };
-
-                this->position = pos;
-                this->rotation = rot;
-                //this->scale = this->Scale();
-            }
-            this->parent = NULL;
-            this->root = this;
-        }
-        else if (newParent != this)
-        {
-            if (changeOfBasisTransition)
-            {
-                // If you immediatley parent a transform, everything is calculated relative to its immediate parent's reference frame. 
-                // This would result in a transformation if the original coordinates didn't change. 
-                // Instead what we want is a change of basis.
-                Matrix4x4 tr = newParent->TRInverse() * this->TR();
-
-                Vec3 pos = Vec3(tr.m[0][3], tr.m[1][3], tr.m[2][3]);
-
-                float rot[3][3] = {
-                    {tr.m[0][0], tr.m[0][1], tr.m[0][2]},
-                    {tr.m[1][0], tr.m[1][1], tr.m[1][2]},
-                    {tr.m[2][0], tr.m[2][1], tr.m[2][2]}
-                };
+            float rot[3][3] = {
+                {tr.m[0][0], tr.m[0][1], tr.m[0][2]},
+                {tr.m[1][0], tr.m[1][1], tr.m[1][2]},
+                {tr.m[2][0], tr.m[2][1], tr.m[2][2]}
+            };
 
 
-                /*Vec3 xAxis = Matrix4x4::Transpose(newParent->RotationMatrix4x4()) * this->Right();
-                Vec3 yAxis = Matrix4x4::Transpose(newParent->RotationMatrix4x4()) * this->Up();
-                Vec3 zAxis = Matrix4x4::Transpose(newParent->RotationMatrix4x4()) * this->Back();
-                float rot[3][3] = {
-                    { xAxis.x, yAxis.x, zAxis.x },
-                    { xAxis.y, yAxis.y, zAxis.y },
-                    { xAxis.z, yAxis.z, zAxis.z }
-                };*/
+            /*Vec3 xAxis = Matrix4x4::Transpose(newParent->RotationMatrix4x4()) * this->Right();
+            Vec3 yAxis = Matrix4x4::Transpose(newParent->RotationMatrix4x4()) * this->Up();
+            Vec3 zAxis = Matrix4x4::Transpose(newParent->RotationMatrix4x4()) * this->Back();
+            float rot[3][3] = {
+                { xAxis.x, yAxis.x, zAxis.x },
+                { xAxis.y, yAxis.y, zAxis.y },
+                { xAxis.z, yAxis.z, zAxis.z }
+            };*/
                 
-                this->position = pos;
-                this->rotation = rot;
-                //this->scale = this->Scale();
-            }
-
-            this->parent = newParent;
-            this->root = newParent->root;
-        }
-    }
-
-    Matrix4x4 ScaleMatrix4x4()
-    {
-        float matrix[4][4] =
-        {
-            {this->scale.x, 0, 0, 0},
-            {0, this->scale.y, 0, 0},
-            {0, 0, this->scale.z, 0},
-            {0, 0, 0, 1}
-        };
-
-        return Matrix4x4(matrix);
-    }
-
-    Matrix4x4 ScaleMatrix4x4Inverse()
-    {
-        float inverse[4][4] =
-        {
-            {1.0 / this->scale.x, 0, 0, 0},
-            {0, 1.0 / this->scale.y, 0, 0},
-            {0, 0, 1.0 / this->scale.z, 0},
-            {0, 0, 0, 1}
-        };
-
-        return Matrix4x4(inverse);
-    }
-
-    Matrix4x4 RotationMatrix4x4()
-    {
-        float matrix[4][4] =
-        {
-            {this->rotation.m[0][0], this->rotation.m[0][1], this->rotation.m[0][2], 0},
-            {this->rotation.m[1][0], this->rotation.m[1][1], this->rotation.m[1][2], 0},
-            {this->rotation.m[2][0], this->rotation.m[2][1], this->rotation.m[2][2], 0},
-            {0, 0, 0, 1}
-        };
-
-        return Matrix4x4(matrix);
-    }
-
-    Matrix4x4 TranslationMatrix4x4()
-    {
-        float matrix[4][4] =
-        {
-            {1, 0, 0, this->position.x},
-            {0, 1, 0, this->position.y},
-            {0, 0, 1, this->position.z},
-            {0, 0, 0, 1}
-        };
-
-        return Matrix4x4(matrix);
-    }
-
-    Matrix4x4 TranslationMatrix4x4Inverse()
-    {
-        float matrix[4][4] =
-        {
-            {1, 0, 0, -this->position.x},
-            {0, 1, 0, -this->position.y},
-            {0, 0, 1, -this->position.z},
-            {0, 0, 0, 1}
-        };
-
-        return Matrix4x4(matrix);
-    }
-
-    // 1:Scale, 2:Rotate, 3:Translate
-    Matrix4x4 TRS()
-    {
-        float trs[4][4] =
-        {
-            {this->rotation.m[0][0] * scale.x, this->rotation.m[0][1] * scale.y, this->rotation.m[0][2] * scale.z, position.x},
-            {this->rotation.m[1][0] * scale.x, this->rotation.m[1][1] * scale.y, this->rotation.m[1][2] * scale.z, position.y},
-            {this->rotation.m[2][0] * scale.x, this->rotation.m[2][1] * scale.y, this->rotation.m[2][2] * scale.z, position.z},
-            {0,                                         0,                                  0,                      1}
-        };
-
-        if (parent) {
-            return parent->TRS() * trs;
+            this->position = pos;
+            this->rotation = rot;
+            //this->scale = this->Scale();
         }
 
-        return trs;
+        this->parent = newParent;
+        this->root = newParent->root;
     }
+}
 
-    // S^-1 * R^-1 * T^-1
-    Matrix4x4 TRSInverse()
+Matrix4x4 Transform::ScaleMatrix4x4()
+{
+    float matrix[4][4] =
     {
-        if (parent) {
-            return ScaleMatrix4x4Inverse() * Matrix4x4::Transpose(RotationMatrix4x4()) * TranslationMatrix4x4Inverse() * parent->TRSInverse();
-        }
+        {this->scale.x, 0, 0, 0},
+        {0, this->scale.y, 0, 0},
+        {0, 0, this->scale.z, 0},
+        {0, 0, 0, 1}
+    };
 
-        return ScaleMatrix4x4Inverse() * Matrix4x4::Transpose(RotationMatrix4x4()) * TranslationMatrix4x4Inverse();
-    }
+    return Matrix4x4(matrix);
+}
 
-    // 1:Rotate, 2:Translate
-    Matrix4x4 TR()
+Matrix4x4 Transform::ScaleMatrix4x4Inverse()
+{
+    float inverse[4][4] =
     {
-        float tr[4][4] =
-        {
-            {this->rotation.m[0][0], this->rotation.m[0][1], this->rotation.m[0][2], position.x},
-            {this->rotation.m[1][0], this->rotation.m[1][1], this->rotation.m[1][2], position.y},
-            {this->rotation.m[2][0], this->rotation.m[2][1], this->rotation.m[2][2], position.z},
-            {0,                                         0,                                  0,                      1}
-        };
-        if (parent) {
-            return parent->TR() * tr;
-        }
+        {1.0 / this->scale.x, 0, 0, 0},
+        {0, 1.0 / this->scale.y, 0, 0},
+        {0, 0, 1.0 / this->scale.z, 0},
+        {0, 0, 0, 1}
+    };
 
-        return tr;
-    }
+    return Matrix4x4(inverse);
+}
 
-    // R^-1 * T^-1
-    Matrix4x4 TRInverse()
+Matrix4x4 Transform::RotationMatrix4x4()
+{
+    float matrix[4][4] =
     {
-        if (parent) {
-            return  Matrix4x4::Transpose(RotationMatrix4x4()) * TranslationMatrix4x4Inverse() * parent->TRInverse();
-        }
+        {this->rotation.m[0][0], this->rotation.m[0][1], this->rotation.m[0][2], 0},
+        {this->rotation.m[1][0], this->rotation.m[1][1], this->rotation.m[1][2], 0},
+        {this->rotation.m[2][0], this->rotation.m[2][1], this->rotation.m[2][2], 0},
+        {0, 0, 0, 1}
+    };
 
-        return Matrix4x4::Transpose(RotationMatrix4x4()) * TranslationMatrix4x4Inverse();
+    return Matrix4x4(matrix);
+}
+
+Matrix4x4 Transform::TranslationMatrix4x4()
+{
+    float matrix[4][4] =
+    {
+        {1, 0, 0, this->position.x},
+        {0, 1, 0, this->position.y},
+        {0, 0, 1, this->position.z},
+        {0, 0, 0, 1}
+    };
+
+    return Matrix4x4(matrix);
+}
+
+Matrix4x4 Transform::TranslationMatrix4x4Inverse()
+{
+    float matrix[4][4] =
+    {
+        {1, 0, 0, -this->position.x},
+        {0, 1, 0, -this->position.y},
+        {0, 0, 1, -this->position.z},
+        {0, 0, 0, 1}
+    };
+
+    return Matrix4x4(matrix);
+}
+
+// 1:Scale, 2:Rotate, 3:Translate
+Matrix4x4 Transform::TRS()
+{
+    float trs[4][4] =
+    {
+        {this->rotation.m[0][0] * scale.x, this->rotation.m[0][1] * scale.y, this->rotation.m[0][2] * scale.z, position.x},
+        {this->rotation.m[1][0] * scale.x, this->rotation.m[1][1] * scale.y, this->rotation.m[1][2] * scale.z, position.y},
+        {this->rotation.m[2][0] * scale.x, this->rotation.m[2][1] * scale.y, this->rotation.m[2][2] * scale.z, position.z},
+        {0,                                         0,                                  0,                      1}
+    };
+
+    if (parent) {
+        return parent->TRS() * trs;
     }
-};
+
+    return trs;
+}
+
+// S^-1 * R^-1 * T^-1
+Matrix4x4 Transform::TRSInverse()
+{
+    if (parent) {
+        return ScaleMatrix4x4Inverse() * Matrix4x4::Transpose(RotationMatrix4x4()) * TranslationMatrix4x4Inverse() * parent->TRSInverse();
+    }
+
+    return ScaleMatrix4x4Inverse() * Matrix4x4::Transpose(RotationMatrix4x4()) * TranslationMatrix4x4Inverse();
+}
+
+// 1:Rotate, 2:Translate
+Matrix4x4 Transform::TR()
+{
+    float tr[4][4] =
+    {
+        {this->rotation.m[0][0], this->rotation.m[0][1], this->rotation.m[0][2], position.x},
+        {this->rotation.m[1][0], this->rotation.m[1][1], this->rotation.m[1][2], position.y},
+        {this->rotation.m[2][0], this->rotation.m[2][1], this->rotation.m[2][2], position.z},
+        {0,                                         0,                                  0,                      1}
+    };
+    if (parent) {
+        return parent->TR() * tr;
+    }
+
+    return tr;
+}
+
+// R^-1 * T^-1
+Matrix4x4 Transform::TRInverse()
+{
+    if (parent) {
+        return  Matrix4x4::Transpose(RotationMatrix4x4()) * TranslationMatrix4x4Inverse() * parent->TRInverse();
+    }
+
+    return Matrix4x4::Transpose(RotationMatrix4x4()) * TranslationMatrix4x4Inverse();
+}
 
 //-----------------------------CAMERA-------------------------------------------------
 struct CameraSettings
@@ -802,236 +873,210 @@ Camera* camera2 = new Camera(Vec3(0, 50, 0), Vec3(-90 * PI / 180, 0, 0));
 Camera* Camera::main = camera1;
 
 //---------------------------------MESH---------------------------------------------
-//Matrix4x4 worldToViewMatrix;
-//Matrix4x4 projectionMatrix;
-class Mesh : public Transform, public ManagedObjectPool<Mesh>
+
+
+bool Mesh::SetVisibility(bool visible)
 {
-public:
-    static int worldTriangleDrawCount;
-    List<Vec3>* vertices;
-    List<int>* indices;
-    List<Triangle>* triangles;
-    Color color = Color::white;
-    bool ignoreLighting = false;
-
-    Mesh(float scale = 1, Vec3 position = Vec3(0, 0, 0), Vec3 rotationEuler = Vec3(0, 0, 0))
-        : Transform(scale, position, rotationEuler), ManagedObjectPool<Mesh>(this)
-    {
-        triangles = new List<Triangle>{};
-        MapVertsToTriangles();
-        SetColor(color);
+    if (visible) {
+        ManagedObjectPool<Mesh>::AddToPool(this);
+        return true;
     }
-
-    virtual ~Mesh()
-    {
-        delete vertices;
-        delete indices;
-        delete triangles;
+    else {
+        ManagedObjectPool<Mesh>::RemoveFromPool(this);
+        return false;
     }
+}
+void Mesh::SetColor(Color&& c) {
+    SetColor(c);
+}
 
-    bool SetVisibility(bool visible)
+void Mesh::SetColor(Color& c)
+{
+    if (triangles)
     {
-        if (visible) {
-            ManagedObjectPool<Mesh>::AddToPool(this);
-            return true;
-        }
-        else {
-            ManagedObjectPool<Mesh>::RemoveFromPool(this);
-            return false;
-        }
-    }
-    void SetColor(Color&& c) {
-        SetColor(c);
-    }
-
-    void SetColor(Color& c)
-    {
-        if (triangles)
+        for (int i = 0; i < triangles->size(); i++)
         {
-            for (int i = 0; i < triangles->size(); i++)
-            {
-                (*triangles)[i].color = c;
-            }
+            (*triangles)[i].color = c;
         }
     }
+}
 
-    virtual List<Triangle>* MapVertsToTriangles()
+List<Triangle>* Mesh::MapVertsToTriangles()
+{
+    if (vertices && indices)
     {
-        if (vertices && indices)
+        int t = 0;
+        for (size_t i = 0; i < indices->size(); i++)
         {
-            int t = 0;
-            for (size_t i = 0; i < indices->size(); i++)
-            {
-                int p1Index = (*indices)[i++];
-                int p2Index = (*indices)[i++];
-                int p3Index = (*indices)[i];
+            int p1Index = (*indices)[i++];
+            int p2Index = (*indices)[i++];
+            int p3Index = (*indices)[i];
 
-                (*triangles)[t].verts[0] = (*vertices)[p1Index];
-                (*triangles)[t].verts[1] = (*vertices)[p2Index];
-                (*triangles)[t].verts[2] = (*vertices)[p3Index];
+            (*triangles)[t].verts[0] = (*vertices)[p1Index];
+            (*triangles)[t].verts[1] = (*vertices)[p2Index];
+            (*triangles)[t].verts[2] = (*vertices)[p3Index];
 
-                t++;
-            }
+            t++;
         }
-        return triangles;
     }
+    return triangles;
+}
 
-    //Convert to world coordinates
-    List<Vec3> WorldVertices()
+//Convert to world coordinates
+List<Vec3> Mesh::WorldVertices()
+{
+    List<Vec3> verts = *vertices;
+    Matrix4x4 matrix = TRS();
+    for (size_t i = 0; i < verts.size(); i++)
     {
-        List<Vec3> verts = *vertices;
-        Matrix4x4 matrix = TRS();
-        for (size_t i = 0; i < verts.size(); i++)
-        {
-            verts[i] = (Vec3)(matrix * ((Vec4)verts[i]));
-        }
-
-        return verts;
+        verts[i] = (Vec3)(matrix * ((Vec4)verts[i]));
     }
 
-    void TransformTriangles()
+    return verts;
+}
+
+void Mesh::TransformTriangles()
+{
+    // Scale/Distance ratio culling
+    /* bool tooSmallToSee = scale.SqrMagnitude() / (position - Camera::main->position).SqrMagnitude() < 0.000000125;
+    if (tooSmallToSee) {
+        return;
+    }*/
+
+    Matrix4x4 modelToWorldMatrix = this->TRS();
+
+    //Transform Triangles
+    List<Triangle>* tris = MapVertsToTriangles();
+
+    for (int i = 0; i < tris->size(); i++)
     {
-        // Scale/Distance ratio culling
-       /* bool tooSmallToSee = scale.SqrMagnitude() / (position - Camera::main->position).SqrMagnitude() < 0.000000125;
-        if (tooSmallToSee) {
-            return;
-        }*/
-
-        Matrix4x4 modelToWorldMatrix = this->TRS();
-
-        //Transform Triangles
-        List<Triangle>* tris = MapVertsToTriangles();
-
-        for (int i = 0; i < tris->size(); i++)
+        Triangle tri = (*tris)[i];
+        tri.mesh = this;
+        Triangle worldSpaceTri = tri;
+        Triangle camSpaceTri = tri;
+        Triangle projectedTri = tri;
+        for (int j = 0; j < 3; j++)
         {
-            Triangle tri = (*tris)[i];
-            tri.mesh = this;
-            Triangle worldSpaceTri = tri;
-            Triangle camSpaceTri = tri;
-            Triangle projectedTri = tri;
-            for (int j = 0; j < 3; j++)
-            {
-                // Homogeneous coords (x, y, z, w=1)
-                Vec4 vert = tri.verts[j];
+            // Homogeneous coords (x, y, z, w=1)
+            Vec4 vert = tri.verts[j];
 
-                // =================== WORLD SPACE ===================
-                // Transform local coords to world-space coords.
-                Vec4 worldPoint = modelToWorldMatrix * vert;
-                worldSpaceTri.verts[j] = worldPoint;
+            // =================== WORLD SPACE ===================
+            // Transform local coords to world-space coords.
+            Vec4 worldPoint = modelToWorldMatrix * vert;
+            worldSpaceTri.verts[j] = worldPoint;
 
-                // ================ VIEW/CAM/EYE SPACE ================
-                // Transform world coordinates to view coordinates.
-                Vec4 cameraSpacePoint = worldToViewMatrix * worldPoint;
-                camSpaceTri.verts[j] = cameraSpacePoint;
+            // ================ VIEW/CAM/EYE SPACE ================
+            // Transform world coordinates to view coordinates.
+            Vec4 cameraSpacePoint = worldToViewMatrix * worldPoint;
+            camSpaceTri.verts[j] = cameraSpacePoint;
 
-                // ================ SCREEN SPACE ==================
-                // Project to screen space (image space)
-                Vec4 projectedPoint = projectionMatrix * cameraSpacePoint;
-                projectedTri.verts[j] = projectedPoint;
-            };
+            // ================ SCREEN SPACE ==================
+            // Project to screen space (image space)
+            Vec4 projectedPoint = projectionMatrix * cameraSpacePoint;
+            projectedTri.verts[j] = projectedPoint;
+        };
 
-            //------------------- Normal/Frustum Culling (view space)------------------------
-            Vec3 p1_c = camSpaceTri.verts[0];
-            Vec3 p2_c = camSpaceTri.verts[1];
-            Vec3 p3_c = camSpaceTri.verts[2];
-            camSpaceTri.Centroid();
+        //------------------- Normal/Frustum Culling (view space)------------------------
+        Vec3 p1_c = camSpaceTri.verts[0];
+        Vec3 p2_c = camSpaceTri.verts[1];
+        Vec3 p3_c = camSpaceTri.verts[2];
+        camSpaceTri.Centroid();
 
-            if (Graphics::frustumCulling)
-            {
-                bool tooCloseToCamera = (p1_c.z >= nearClippingPlane || p2_c.z >= nearClippingPlane || p3_c.z >= nearClippingPlane || camSpaceTri.centroid.z >= nearClippingPlane);
-                if (tooCloseToCamera) {
-                    continue;
-                }
-
-                bool tooFarFromCamera = (p1_c.z <= farClippingPlane || p2_c.z <= farClippingPlane || p3_c.z <= farClippingPlane || camSpaceTri.centroid.z <= farClippingPlane);
-                if (tooFarFromCamera) {
-                    continue;
-                }
-                /*
-                bool behindCamera = DotProduct((Vec3)camSpaceTri.centroid, Direction::forward) <= 0.0;
-                if (behindCamera) {
-                    continue; // Skip triangle if it's out of cam view.
-                }*/
-
-                Range xRange = ProjectVertsOntoAxis(projectedTri.verts, 3, Direction::right);
-                Range yRange = ProjectVertsOntoAxis(projectedTri.verts, 3, Direction::up);
-                if ((xRange.min > 1 || yRange.min > 1) || (xRange.max < -1 || yRange.max < -1)) {
-                    continue;
-                }
+        if (Graphics::frustumCulling)
+        {
+            bool tooCloseToCamera = (p1_c.z >= nearClippingPlane || p2_c.z >= nearClippingPlane || p3_c.z >= nearClippingPlane || camSpaceTri.centroid.z >= nearClippingPlane);
+            if (tooCloseToCamera) {
+                continue;
             }
 
-            // Calculate triangle suface Normal
-            camSpaceTri.Normal();//camSpaceTri.normal = worldToViewMatrix * modelToWorldMatrix * Vec4(camSpaceTri.normal, 0);
-
-            if (Graphics::invertNormals) {
-                camSpaceTri.normal = ((Vec3)camSpaceTri.normal) * -1.0;
+            bool tooFarFromCamera = (p1_c.z <= farClippingPlane || p2_c.z <= farClippingPlane || p3_c.z <= farClippingPlane || camSpaceTri.centroid.z <= farClippingPlane);
+            if (tooFarFromCamera) {
+                continue;
             }
+            /*
+            bool behindCamera = DotProduct((Vec3)camSpaceTri.centroid, Direction::forward) <= 0.0;
+            if (behindCamera) {
+                continue; // Skip triangle if it's out of cam view.
+            }*/
 
-            // Back-face Culling - Checks if the triangles backside is facing the camera.
-            // Condition makes this setting optional when drawing wireframes alone, but will force culling if triangles are filled.
-            if (Graphics::backFaceCulling || Graphics::fillTriangles)
-            {
-                Vec3 posRelativeToCam = camSpaceTri.centroid;// Since camera is (0,0,0) in view space, the displacement vector from camera to centroid IS the centroid itself.
-                bool faceInvisibleToCamera = DotProduct(posRelativeToCam, (Vec3)camSpaceTri.normal) >= 0;
-                if (faceInvisibleToCamera) {
-                    continue;// Skip triangle if it's out of cam view or it's part of the other side of the mesh.
-                }
+            Range xRange = ProjectVertsOntoAxis(projectedTri.verts, 3, Direction::right);
+            Range yRange = ProjectVertsOntoAxis(projectedTri.verts, 3, Direction::up);
+            if ((xRange.min > 1 || yRange.min > 1) || (xRange.max < -1 || yRange.max < -1)) {
+                continue;
             }
-
-            //------------------------ Lighting (world space)------------------------
-
-            if (Graphics::lighting && Graphics::fillTriangles)
-            {
-                if (!ignoreLighting)
-                {
-                    float amountFacingLight = DotProduct((Vec3)worldSpaceTri.Normal(), lightSource);
-                    Color colorLit = projectedTri.color * Clamp(amountFacingLight, 0.15, 1);
-                    projectedTri.color = colorLit;
-                }
-            }
-
-            if (Graphics::vfx)
-            {
-                Vec3 screenLeftSide = Vec3(-1, 0, 0);
-                Vec3 screenRightSide = Vec3(1, 0, 0);
-                Range range = ProjectVertsOntoAxis(projectedTri.verts, 3, screenRightSide);
-                bool leftHalfScreenX = range.min > 0 && range.max > 0;
-
-                if (leftHalfScreenX) {
-                    projectedTri.color = Color(0, 0, 255);// std::cout << "Inside" << std::endl;
-                }
-                else {
-                    projectedTri.color = Color::red;
-                }
-            }
-            // ---------- Debugging -----------
-            if (Graphics::debugNormals)
-            {
-                //---------Draw point at centroid and a line from centroid to normal (view space & projected space)-----------
-                Vec2 centroidToNormal_p = projectionMatrix * ((Vec3)camSpaceTri.centroid + camSpaceTri.normal);
-                Vec2 centroid_p = projectionMatrix * camSpaceTri.centroid;
-                Point::AddPoint(Point(centroid_p));
-                Line::AddLine(Line(centroid_p, centroidToNormal_p));
-            }
-
-            projectedTri.centroid = projectionMatrix * camSpaceTri.centroid;
-
-            // Nested Projection or Double Projection
-            if (CameraSettings::outsiderViewPerspective)
-            {
-                Matrix4x4 nestedProjectionMatrix = weakPerspectiveProjectionMatrix * Camera::projector->TRInverse();
-
-                for (size_t k = 0; k < 3; k++)
-                {
-                    projectedTri.verts[k] = nestedProjectionMatrix * projectedTri.verts[k];
-                }
-            }
-
-            //Add projected tri
-            triBuffer->emplace_back(projectedTri);
         }
+
+        // Calculate triangle suface Normal
+        camSpaceTri.Normal();//camSpaceTri.normal = worldToViewMatrix * modelToWorldMatrix * Vec4(camSpaceTri.normal, 0);
+
+        if (Graphics::invertNormals) {
+            camSpaceTri.normal = ((Vec3)camSpaceTri.normal) * -1.0;
+        }
+
+        // Back-face Culling - Checks if the triangles backside is facing the camera.
+        // Condition makes this setting optional when drawing wireframes alone, but will force culling if triangles are filled.
+        if (Graphics::backFaceCulling || Graphics::fillTriangles)
+        {
+            Vec3 posRelativeToCam = camSpaceTri.centroid;// Since camera is (0,0,0) in view space, the displacement vector from camera to centroid IS the centroid itself.
+            bool faceInvisibleToCamera = DotProduct(posRelativeToCam, (Vec3)camSpaceTri.normal) >= 0;
+            if (faceInvisibleToCamera) {
+                continue;// Skip triangle if it's out of cam view or it's part of the other side of the mesh.
+            }
+        }
+
+        //------------------------ Lighting (world space)------------------------
+
+        if (Graphics::lighting && Graphics::fillTriangles)
+        {
+            if (!ignoreLighting)
+            {
+                float amountFacingLight = DotProduct((Vec3)worldSpaceTri.Normal(), lightSource);
+                Color colorLit = projectedTri.color * Clamp(amountFacingLight, 0.15, 1);
+                projectedTri.color = colorLit;
+            }
+        }
+
+        if (Graphics::vfx)
+        {
+            Vec3 screenLeftSide = Vec3(-1, 0, 0);
+            Vec3 screenRightSide = Vec3(1, 0, 0);
+            Range range = ProjectVertsOntoAxis(projectedTri.verts, 3, screenRightSide);
+            bool leftHalfScreenX = range.min > 0 && range.max > 0;
+
+            if (leftHalfScreenX) {
+                projectedTri.color = Color(0, 0, 255);// std::cout << "Inside" << std::endl;
+            }
+            else {
+                projectedTri.color = Color::red;
+            }
+        }
+        // ---------- Debugging -----------
+        if (Graphics::debugNormals)
+        {
+            //---------Draw point at centroid and a line from centroid to normal (view space & projected space)-----------
+            Vec2 centroidToNormal_p = projectionMatrix * ((Vec3)camSpaceTri.centroid + camSpaceTri.normal);
+            Vec2 centroid_p = projectionMatrix * camSpaceTri.centroid;
+            Point::AddPoint(Point(centroid_p));
+            Line::AddLine(Line(centroid_p, centroidToNormal_p));
+        }
+
+        projectedTri.centroid = projectionMatrix * camSpaceTri.centroid;
+
+        // Nested Projection or Double Projection
+        if (CameraSettings::outsiderViewPerspective)
+        {
+            Matrix4x4 nestedProjectionMatrix = weakPerspectiveProjectionMatrix * Camera::projector->TRInverse();
+
+            for (size_t k = 0; k < 3; k++)
+            {
+                projectedTri.verts[k] = nestedProjectionMatrix * projectedTri.verts[k];
+            }
+        }
+
+        //Add projected tri
+        triBuffer->emplace_back(projectedTri);
     }
-};
+}
 //List<Mesh*> Mesh::objects = List<Mesh*>(1000);
 //int Mesh::meshCount = 0;
 int Mesh::worldTriangleDrawCount = 0;

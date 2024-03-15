@@ -653,12 +653,6 @@ void DetectCollisions()
                     if (sphere1->object->isKinematic || sphere2->object->isKinematic) {
                         continue;
                     }
-                    /*
-                    Although static objects themselves are not effected by momentum
-                    transfers, their velocity variable may still be updating from new collisions.
-                    Consequently, objects touching a static collider would be effected, so the
-                    velocity is zeroed out to prevent this.
-                    */
                     if (sphere1->isStatic)
                     {
                         CalculateStaticCollision(collisionInfo.lineOfImpact, sphere2->object->velocity, sphere2->coefficientRestitution);

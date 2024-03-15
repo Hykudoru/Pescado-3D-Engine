@@ -46,7 +46,8 @@ void OnMouseMoveEvent(GLFWwindow* window, double mouseX, double mouseY)
 float massFactor = 1;
 
 Transform* grabbing;
-Vec3 grabOffset;
+RaycastInfo<Mesh> grabInfo;
+Color grabbingOriginalTriColor; 
 Transform* grabbingsOriginalParent = NULL;
 
 std::function<PhysicsObject* ()> spawn = []() { return new PhysicsObject(LoadMeshFromOBJFile("Sphere.obj"), new SphereCollider()); };
@@ -83,14 +84,17 @@ void OnMouseButtonEvent(GLFWwindow* window, int button, int action, int mods)
             if (!grabbing)
             {
                 static int maxDist = 1000000;
-                RaycastInfo<Mesh> info;
-                if (Raycast<Mesh>(Camera::main->Position(), Camera::main->Position() + Camera::main->Forward() * maxDist, info))
+                if (Raycast<Mesh>(Camera::main->Position(), Camera::main->Position() + Camera::main->Forward() * maxDist, grabInfo))
                 {
                     cout << "RAYCAST HIT" << '\n';
                     Line::AddWorldLine(Line(Camera::main->Position(), Camera::main->Position() + Camera::main->Forward() * maxDist, Color::green, 3));
-                    Point::AddWorldPoint(Point(info.contactPoint, Color::green, 10));
-                    grabbing = info.objectHit->root;
-                    grabbingsOriginalParent = grabbing->parent;
+                    Point::AddWorldPoint(Point(grabInfo.contactPoint, Color::green, 10));
+                    grabbing = grabInfo.objectHit->root;
+                    grabbingOriginalTriColor = grabInfo.triangleHit->color;
+                    //grabInfo.objectHit->forceWireFrame = true;
+                    //grabInfo.triangleHit->forceWireFrame = true;
+                    grabInfo.triangleHit->color = Color::green;
+                    grabbingsOriginalParent = nullptr;
                     grabbing->SetParent(Camera::main);
                 }
             }
@@ -100,6 +104,8 @@ void OnMouseButtonEvent(GLFWwindow* window, int button, int action, int mods)
     {
         if (button == 1) {
             if (grabbing) {
+                grabInfo.triangleHit->forceWireFrame = false;
+                grabInfo.triangleHit->color = grabbingOriginalTriColor;
                 grabbing->SetParent(grabbingsOriginalParent);
                 grabbing = NULL;
                 grabbingsOriginalParent = NULL;

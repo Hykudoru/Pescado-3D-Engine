@@ -81,6 +81,7 @@ void Init(GLFWwindow* window)
     compass = LoadMeshFromOBJFile("Compass.obj");
     compass->scale *= 0.1;
     compass->ignoreLighting = true;
+    compass->forceWireFrame = true;
 
     sun = LoadMeshFromOBJFile("Sun.obj");
     sun->rotation = Matrix3x3::RotX(ToRad(45));
