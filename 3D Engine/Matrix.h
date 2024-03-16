@@ -93,9 +93,9 @@ public:
     }
 
     // Same as matrixA = matrixA * matrixB
-    Matrix3x3& operator*=(const Matrix3x3 matrixB)
+    Matrix3x3& operator*=(const Matrix3x3& matrixB)
     {
-        *this = Multiply(this->m, matrixB.m);
+        *this = Multiply(*this, matrixB);
         return *this;
     }
 
@@ -179,8 +179,7 @@ float Matrix3x3::zero[3][3] = {
 // A * B
 Matrix3x3 operator*(const Matrix3x3& matrixA, const Matrix3x3& matrixB)
 {
-    Matrix3x3 matrix = Matrix3x3::Multiply(matrixA.m, matrixB.m);
-    return matrix;
+   return Matrix3x3::Multiply(matrixA, matrixB);
 }
 //Matrix * floatMatrix
 Matrix3x3 operator*(const Matrix3x3& matrixA, float matrixB[3][3])
@@ -207,7 +206,7 @@ Vector3<float> operator*(const Matrix3x3& matrix, const Vector3<float>& colVec)
 }
 
 // Roll-Pitch-Yaw x-y'-z''(intrinsic rotation) or z-y-x (extrinsic rotation)
-Matrix3x3 RPY(float roll, float pitch, float yaw)
+Matrix3x3 RPY(const float& roll, const float& pitch, const float& yaw)
 {
     //Matrix3x3 rotation = Matrix3x3::Multiply(Matrix3x3::Multiply(Matrix3x3::RotX(roll).m, Matrix3x3::RotY(pitch).m).m, Matrix3x3::RotZ(yaw).m);//Multiply(rotation.m, RotZ(PI/2.0).m);
     Matrix3x3 rotation = (Matrix3x3::RotX(roll) * Matrix3x3::RotY(pitch)) * Matrix3x3::RotZ(yaw);//Multiply(rotation.m, RotZ(PI/2.0).m);
@@ -215,7 +214,7 @@ Matrix3x3 RPY(float roll, float pitch, float yaw)
 }
 
 // Yaw-Pitch-Roll z-y'-x''(intrinsic rotation) or x-y-z (extrinsic rotation)
-Matrix3x3 YPR(float roll, float pitch, float yaw)
+Matrix3x3 YPR(const float& roll, const float& pitch, const float& yaw)
 {
     //Matrix3x3 rotation = Matrix3x3::Multiply(Matrix3x3::Multiply(Matrix3x3::RotZ(yaw).m, Matrix3x3::RotY(pitch).m).m, Matrix3x3::RotX(roll).m);//Multiply(rotation.m, RotZ(PI/2.0).m);
     Matrix3x3 rotation = (Matrix3x3::RotZ(yaw) * Matrix3x3::RotY(pitch)) * Matrix3x3::RotX(roll);//Multiply(rotation.m, RotZ(PI/2.0).m);
@@ -290,7 +289,7 @@ public:
     // Same as matrixA = matrixA * matrixB
     Matrix4x4& operator*=(float matrixB[4][4])
     {
-        *this = Multiply(this->m, matrixB);
+        *this = Multiply(*this, matrixB);
         return *this;
     }
 
@@ -302,7 +301,7 @@ public:
 
 
     // Homogeneous Rotation Matrix about the X axis (in radians)
-    static Matrix4x4 RotX(float theta)
+    static Matrix4x4 RotX(const float& theta)
     {
         float Cos = cos(theta);
         float Sin = sin(theta);
@@ -319,7 +318,7 @@ public:
     }
 
     // Homogeneous Rotation Matrix about the Y axis (in radians)
-    static Matrix4x4 RotY(float theta)
+    static Matrix4x4 RotY(const float& theta)
     {
         float Cos = cos(theta);
         float Sin = sin(theta);
@@ -336,7 +335,7 @@ public:
     }
 
     // Homogeneous Rotation Matrix about the Z axis (in radians)
-    static Matrix4x4 RotZ(float theta)
+    static Matrix4x4 RotZ(const float& theta)
     {
         float Cos = cos(theta);
         float Sin = sin(theta);
@@ -368,8 +367,7 @@ float Matrix4x4::zero[4][4] = {
 // A * B
 Matrix4x4 operator*(const Matrix4x4& matrixA, const Matrix4x4& matrixB)
 {
-    Matrix4x4 matrix = Matrix4x4::Multiply(matrixA, matrixB);
-    return matrix;
+    return Matrix4x4::Multiply(matrixA, matrixB);
 }
 //Matrix * floatMatrix
 Matrix4x4 operator*(const Matrix4x4& matrixA, float matrixB[4][4])

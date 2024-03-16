@@ -181,6 +181,7 @@ public:
     T z;
     int size = 3;
     static Vector3<T> zero;
+    static Vector3<T> one;
 
     Vector3();
     Vector3(T xVal, T yVal, T zVal);
@@ -299,6 +300,8 @@ public:
 };
 template <typename T>
 Vector3<T> Vector3<T>::zero = { 0, 0, 0 };
+template <typename T>
+Vector3<T> Vector3<T>::one = { 1, 1, 1 };
 
 // Constructors
 template <typename T>
