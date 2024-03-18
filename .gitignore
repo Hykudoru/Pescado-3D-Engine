@@ -30,3 +30,6 @@
 *.exe
 *.out
 *.app
+*.pdb
+/3D Engine/x64
+/x64
