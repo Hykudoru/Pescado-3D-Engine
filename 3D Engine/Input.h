@@ -15,6 +15,13 @@ static double deltaMouseY;
 float mouseSensitivity = .1;
 bool mouseCameraControlEnabled = true;
 
+float massFactor = 1;
+
+Transform* grabbing;
+RaycastInfo<Mesh> grabInfo;
+Color grabbingOriginalTriColor; 
+Transform* grabbingsOriginalParent = NULL;
+float throwSpeed = 30;
 
 void OnMouseMoveEvent(GLFWwindow* window, double mouseX, double mouseY)
 {
@@ -43,12 +50,7 @@ void OnMouseMoveEvent(GLFWwindow* window, double mouseX, double mouseY)
         //Camera::main->rotation = Matrix3x3::RotX(rotateSpeed * -deltaMouseY) * Camera::main->rotation * Matrix3x3::RotY((0.00001 + rotateSpeed) * -deltaMouseX);
     }
 }
-float massFactor = 1;
 
-Transform* grabbing;
-RaycastInfo<Mesh> grabInfo;
-Color grabbingOriginalTriColor; 
-Transform* grabbingsOriginalParent = NULL;
 
 std::function<PhysicsObject* ()> spawn = []() { return new PhysicsObject(LoadMeshFromOBJFile("Sphere.obj"), new SphereCollider()); };
 
@@ -59,8 +61,8 @@ void OnMouseButtonEvent(GLFWwindow* window, int button, int action, int mods)
      auto Throw = [&](PhysicsObject &obj) mutable {
         obj.position = Camera::main->Position() + (Camera::main->Forward() * 10);
         obj.rotation = Camera::main->Rotation();
-        obj.velocity = velocity + Camera::main->Forward() * 25;
-        obj.mass = massFactor;
+        obj.velocity = velocity + Camera::main->Forward() * throwSpeed;
+        
         };
 
     if (action == GLFW_PRESS)
@@ -71,6 +73,8 @@ void OnMouseButtonEvent(GLFWwindow* window, int button, int action, int mods)
             Throw(*obj);
             obj->mass = massFactor;
             obj->mesh->SetColor(Color::orange);
+            obj->mass = massFactor;
+            obj->scale *= massFactor;
         }
         // Spawn Kinematic
         if (button == 2) {
@@ -78,6 +82,7 @@ void OnMouseButtonEvent(GLFWwindow* window, int button, int action, int mods)
             obj->position = Camera::main->Position() + (Camera::main->Forward() * 10);
             obj->rotation = Camera::main->Rotation();
             obj->isKinematic = true;
+            obj->scale *= massFactor;
             obj->mesh->SetColor(Color::blue);
         }
         else if (button == 1) {
@@ -86,15 +91,15 @@ void OnMouseButtonEvent(GLFWwindow* window, int button, int action, int mods)
                 static int maxDist = 1000000;
                 if (Raycast<Mesh>(Camera::main->Position(), Camera::main->Position() + Camera::main->Forward() * maxDist, grabInfo))
                 {
-                    cout << "RAYCAST HIT" << '\n';
+                    cout << "RAYCAST HIT" <<'\n';
                     Line::AddWorldLine(Line(Camera::main->Position(), Camera::main->Position() + Camera::main->Forward() * maxDist, Color::green, 3));
                     Point::AddWorldPoint(Point(grabInfo.contactPoint, Color::green, 10));
-                    grabbing = grabInfo.objectHit->root;
+                    grabbing = grabInfo.objectHit->root;//grabInfo.objectHit;
+                    grabbingsOriginalParent = grabbing->parent;
                     grabbingOriginalTriColor = grabInfo.triangleHit->color;
                     //grabInfo.objectHit->forceWireFrame = true;
                     //grabInfo.triangleHit->forceWireFrame = true;
                     grabInfo.triangleHit->color = Color::green;
-                    grabbingsOriginalParent = nullptr;
                     grabbing->SetParent(Camera::main);
                 }
             }
@@ -168,7 +173,13 @@ void OnKeyPressEvent(GLFWwindow* window, int key, int scancode, int action, int 
             mesh->scale *= 0.1;
             mesh->SetColor(Color::purple);
         }
-
+        else if (key == GLFW_KEY_DELETE) {
+            RaycastInfo<Collider> info;
+            if (Raycast(Camera::main->Position(), Camera::main->Position() + Camera::main->Forward() * 100000, info))
+            {
+                delete info.objectHit->object;
+            }
+        }
         //------------------Physics-------------------
 
         // Toggle Player's Momentum

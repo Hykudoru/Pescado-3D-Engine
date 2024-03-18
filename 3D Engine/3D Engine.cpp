@@ -93,7 +93,7 @@ void Init(GLFWwindow* window)
     //sunCam->SetParent(sun, false);
     sunCam->parent = sun;
     sunCam->root = sun->root;
-    sunCam->scale = sun->ScaleMatrix4x4Inverse() * sunCam->scale;
+    sunCam->scale = sun->LocalScale4x4Inverse() * sunCam->scale;
     sunCam->position = Vec3::zero;
     sunCam->rotation = Matrix3x3::identity;
 
@@ -120,9 +120,9 @@ void Init(GLFWwindow* window)
     spaceShip3->position = Direction::right * 20 + Direction::up * 10;
    
     parent = new CubeMesh(3, Vec3(0, 10, 500), Vec3(0, 45, 0));
-    child = new CubeMesh(3, Vec3(0, 0, 2), Vec3(0, 45, 0));
-    grandchild = new CubeMesh(3, Vec3(0, 0, 2), Vec3(0, 45, 0));
-    greatGrandchild = new CubeMesh(3, Vec3(0, 0, 2), Vec3(0, 45, 0));
+    child = new CubeMesh(.5, Vec3(0, 0, 2), Vec3(0, 45, 0));
+    grandchild = new CubeMesh(.5, Vec3(0, 0, 2), Vec3(0, 45, 0));
+    greatGrandchild = new CubeMesh(.5, Vec3(0, 0, 2), Vec3(0, 45, 0));
     child->SetParent(parent, false);
     grandchild->SetParent(child, false);
     greatGrandchild->SetParent(grandchild, false);
@@ -131,13 +131,16 @@ void Init(GLFWwindow* window)
     grandchild->SetColor(Color::yellow);
     greatGrandchild->SetColor(Color::green);
 
-    for (int i = -10; i < 10; i++)
+    for (int r = -5; r < 5; r++)
     {
-        for (int j = -10; j < 10; j++)
+        for (int c = -5; c < 5; c++)
         {
-            PhysicsObject* block = new PhysicsObject(new CubeMesh(), new BoxCollider(true));
-            block->scale *= 2;
-            block->position = Direction::down*15 + Direction::left*i*10 + Direction::back * j*10;
+            for (int d = -5; d < 5; d++)
+            {
+                PhysicsObject* block = new PhysicsObject(new CubeMesh(), new BoxCollider(true));
+                block->scale *= .1;
+                block->position = Direction::down * (15+(0.1*d)) + Direction::left * r * .1 + Direction::back * c * .1;
+            }
         }
     }
     
@@ -233,6 +236,7 @@ void Update()
         bender->position += Direction::left * deltaTime * 0.7;
         bender->rotation *= Matrix3x3::RotY(5.0 * deltaTime);
     }
+
     /*
     static float t = 0;
     t += deltaTime;

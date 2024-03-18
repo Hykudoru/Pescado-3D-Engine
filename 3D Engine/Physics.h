@@ -218,8 +218,9 @@ public:
 
 class SphereCollider : public Collider, public ManagedObjectPool<SphereCollider>
 {
-public:
     float radius = 1;
+public:
+    
     SphereCollider(bool isStatic = false, bool isTrigger = false) : Collider(isStatic, isTrigger), ManagedObjectPool<SphereCollider>(this)
     {
         mesh = LoadMeshFromOBJFile("Sphere.obj");
@@ -228,17 +229,9 @@ public:
         mesh->SetVisibility(false);
     }
 
-    void RecalculateBounds() override
+    float Radius()
     {
-        float r = root->Scale().x;
-        if (r < root->Scale().y) {
-            r = root->Scale().y;
-        }
-        if (r < root->Scale().z) {
-            r = root->Scale().z;
-        }
-
-        radius = r;
+        return Scale().x;
     }
 };
 
@@ -284,13 +277,13 @@ public:
         delete mesh;
     }
     /*
-    void Scale(float scale) override
+    void Scale(float scale)
     {
         this->scale = Vec3(scale, scale, scale);
         collider->RecalculateBounds();
     }
 
-    void Scale(Vec3 scale) override
+    void Scale(Vec3 scale)
     {
         this->scale = scale;
         collider->RecalculateBounds();
@@ -369,18 +362,19 @@ void CalculateStaticCollision(Vec3 lineOfImpact, Vec3& v1, float e = 1.0)
 
 bool SpherePlaneColliding(SphereCollider& sphere, PlaneCollider& plane, SphereCollisionInfo& collisionInfo, bool resolve = true)
 {
+    float radius = sphere.Radius();
     Vec3 sphereCenter = sphere.Position();
     Vec3 v = sphereCenter - plane.Position();
     Vec3 normal = plane.normal;
     Vec3 vPerp = normal * (DotProduct(v, normal));//ProjectOnPlane(v, plane.plane.normal);
     Vec3 closestPointOnPlane = sphereCenter - vPerp;
 
-    if ((closestPointOnPlane - sphereCenter).SqrMagnitude() < sphere.radius * sphere.radius)
+    if ((closestPointOnPlane - sphereCenter).SqrMagnitude() < radius * radius)
     {
         collisionInfo.colliding = true;
         if (resolve)
         {
-            Vec3 pointOnSphere = ClosestPointOnSphere(sphereCenter, sphere.radius, closestPointOnPlane);
+            Vec3 pointOnSphere = ClosestPointOnSphere(sphereCenter, radius, closestPointOnPlane);
             Vec3 offset = pointOnSphere - closestPointOnPlane;//overlapping
             sphere.root->position -= offset;
             collisionInfo.lineOfImpact = normal * -1.0;
@@ -401,12 +395,14 @@ bool SpherePlaneColliding(SphereCollider& sphere, PlaneCollider& plane, SphereCo
 
 bool SpheresColliding(SphereCollider& sphere1, SphereCollider& sphere2, SphereCollisionInfo& collisionInfo, bool resolve = true)
 {
+    float radius1 = sphere1.Radius();
+    float radius2 = sphere2.Radius();
     Vec3 sphere1Pos = sphere1.Position();
     Vec3 sphere2Pos = sphere2.Position();
-    Vec3 pointOnSphere1 = ClosestPointOnSphere(sphere1Pos, sphere1.radius, sphere2Pos);
-    Vec3 pointOnSphere2 = ClosestPointOnSphere(sphere2Pos, sphere2.radius, sphere1Pos);
+    Vec3 pointOnSphere1 = ClosestPointOnSphere(sphere1Pos, radius1, sphere2Pos);
+    Vec3 pointOnSphere2 = ClosestPointOnSphere(sphere2Pos, radius2, sphere1Pos);
     float squareMagToPointOnSphere2 = (pointOnSphere2 - sphere1Pos).SqrMagnitude();
-    collisionInfo.colliding = squareMagToPointOnSphere2 < sphere1.radius * sphere1.radius;
+    collisionInfo.colliding = squareMagToPointOnSphere2 < radius1 * radius1;
     if (collisionInfo.colliding)
     {
         Vec3 offset = (pointOnSphere1 - pointOnSphere2);

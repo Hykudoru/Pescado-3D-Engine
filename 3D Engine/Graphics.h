@@ -247,15 +247,15 @@ public:
 
     void SetParent(Transform* newParent, bool changeOfBasisTransition = true);
 
-    Matrix4x4 ScaleMatrix4x4();
+    Matrix4x4 LocalScale4x4();
 
-    Matrix4x4 ScaleMatrix4x4Inverse();
+    Matrix4x4 LocalScale4x4Inverse();
 
-    Matrix4x4 RotationMatrix4x4();
+    Matrix4x4 LocalRotation4x4();
 
-    Matrix4x4 TranslationMatrix4x4();
+    Matrix4x4 LocalTranslation4x4();
 
-    Matrix4x4 TranslationMatrix4x4Inverse();
+    Matrix4x4 LocalTranslation4x4Inverse();
 
     // 1:Scale, 2:Rotate, 3:Translate
     Matrix4x4 TRS();
@@ -649,36 +649,35 @@ Vec3 Transform::Position()
 Vec3 Transform::Scale()
 {
     if (parent) {
-        Matrix4x4 matrix = this->parent->ScaleMatrix4x4() * ScaleMatrix4x4();
-        return matrix * Vec3(1.0, 1.0, 1.0);
+        return this->parent->LocalScale4x4() * LocalScale4x4() * Vec3(1.0, 1.0, 1.0);
     }
     return scale;
 }
 
-
 void Transform::SetParent(Transform* newParent, bool changeOfBasisTransition)
 {
-    if (newParent == NULL)
+    static Matrix4x4 T;
+    if (newParent == nullptr)
     {
         if (changeOfBasisTransition)
         {
             // Results in seemless unparenting. Assigns (possibly parented) global values to the local values. 
             // This way of unparenting will maintain the previous parented position and rotation but in the new reference frame.
             // Also nothing changes if never parented.
-            Matrix4x4 tr = this->TR();
-
-            Vec3 pos = Vec3(tr.m[0][3], tr.m[1][3], tr.m[2][3]);
-
+            //if already had a parent
+            
+            T = this->TR();
+            
+           // this->scale = Scale();// Vec3(1, 1, 1);
             float rot[3][3] = {
-                {tr.m[0][0], tr.m[0][1], tr.m[0][2]},
-                {tr.m[1][0], tr.m[1][1], tr.m[1][2]},
-                {tr.m[2][0], tr.m[2][1], tr.m[2][2]}
+                {T.m[0][0], T.m[0][1], T.m[0][2]},
+                {T.m[1][0], T.m[1][1], T.m[1][2]},
+                {T.m[2][0], T.m[2][1], T.m[2][2]}
             };
-
-            this->position = pos;
             this->rotation = rot;
-            //this->scale = this->Scale();
+            this->position = Vec3(T.m[0][3], T.m[1][3], T.m[2][3]);
         }
+
         this->parent = NULL;
         this->root = this;
     }
@@ -689,29 +688,18 @@ void Transform::SetParent(Transform* newParent, bool changeOfBasisTransition)
             // If you immediatley parent a transform, everything is calculated relative to its immediate parent's reference frame. 
             // This would result in a transformation if the original coordinates didn't change. 
             // Instead what we want is a change of basis.
-            Matrix4x4 tr = newParent->TRInverse() * this->TR();
-
-            Vec3 pos = Vec3(tr.m[0][3], tr.m[1][3], tr.m[2][3]);
-
+            T = newParent->TRSInverse() * this->TRS();
+            
             float rot[3][3] = {
-                {tr.m[0][0], tr.m[0][1], tr.m[0][2]},
-                {tr.m[1][0], tr.m[1][1], tr.m[1][2]},
-                {tr.m[2][0], tr.m[2][1], tr.m[2][2]}
+                {T.m[0][0], T.m[0][1], T.m[0][2]},
+                {T.m[1][0], T.m[1][1], T.m[1][2]},
+                {T.m[2][0], T.m[2][1], T.m[2][2]}
             };
-
-
-            /*Vec3 xAxis = Matrix4x4::Transpose(newParent->RotationMatrix4x4()) * this->Right();
-            Vec3 yAxis = Matrix4x4::Transpose(newParent->RotationMatrix4x4()) * this->Up();
-            Vec3 zAxis = Matrix4x4::Transpose(newParent->RotationMatrix4x4()) * this->Back();
-            float rot[3][3] = {
-                { xAxis.x, yAxis.x, zAxis.x },
-                { xAxis.y, yAxis.y, zAxis.y },
-                { xAxis.z, yAxis.z, zAxis.z }
-            };*/
-                
-            this->position = pos;
+            
+            this->scale = Vec3(1, 1, 1);
             this->rotation = rot;
-            //this->scale = this->Scale();
+            this->position = Vec3(T.m[0][3], T.m[1][3], T.m[2][3]);
+            
         }
 
         this->parent = newParent;
@@ -719,7 +707,7 @@ void Transform::SetParent(Transform* newParent, bool changeOfBasisTransition)
     }
 }
 
-Matrix4x4 Transform::ScaleMatrix4x4()
+Matrix4x4 Transform::LocalScale4x4()
 {
     float matrix[4][4] =
     {
@@ -732,7 +720,7 @@ Matrix4x4 Transform::ScaleMatrix4x4()
     return Matrix4x4(matrix);
 }
 
-Matrix4x4 Transform::ScaleMatrix4x4Inverse()
+Matrix4x4 Transform::LocalScale4x4Inverse()
 {
     float inverse[4][4] =
     {
@@ -745,7 +733,7 @@ Matrix4x4 Transform::ScaleMatrix4x4Inverse()
     return Matrix4x4(inverse);
 }
 
-Matrix4x4 Transform::RotationMatrix4x4()
+Matrix4x4 Transform::LocalRotation4x4()
 {
     float matrix[4][4] =
     {
@@ -758,7 +746,7 @@ Matrix4x4 Transform::RotationMatrix4x4()
     return Matrix4x4(matrix);
 }
 
-Matrix4x4 Transform::TranslationMatrix4x4()
+Matrix4x4 Transform::LocalTranslation4x4()
 {
     float matrix[4][4] =
     {
@@ -771,7 +759,7 @@ Matrix4x4 Transform::TranslationMatrix4x4()
     return Matrix4x4(matrix);
 }
 
-Matrix4x4 Transform::TranslationMatrix4x4Inverse()
+Matrix4x4 Transform::LocalTranslation4x4Inverse()
 {
     float matrix[4][4] =
     {
@@ -806,10 +794,10 @@ Matrix4x4 Transform::TRS()
 Matrix4x4 Transform::TRSInverse()
 {
     if (parent) {
-        return ScaleMatrix4x4Inverse() * Matrix4x4::Transpose(RotationMatrix4x4()) * TranslationMatrix4x4Inverse() * parent->TRSInverse();
+        return LocalScale4x4Inverse() * Matrix4x4::Transpose(LocalRotation4x4()) * LocalTranslation4x4Inverse() * parent->TRSInverse();
     }
 
-    return ScaleMatrix4x4Inverse() * Matrix4x4::Transpose(RotationMatrix4x4()) * TranslationMatrix4x4Inverse();
+    return LocalScale4x4Inverse() * Matrix4x4::Transpose(LocalRotation4x4()) * LocalTranslation4x4Inverse();
 }
 
 // 1:Rotate, 2:Translate
@@ -833,10 +821,10 @@ Matrix4x4 Transform::TR()
 Matrix4x4 Transform::TRInverse()
 {
     if (parent) {
-        return  Matrix4x4::Transpose(RotationMatrix4x4()) * TranslationMatrix4x4Inverse() * parent->TRInverse();
+        return  Matrix4x4::Transpose(LocalRotation4x4()) * LocalTranslation4x4Inverse() * parent->TRInverse();
     }
 
-    return Matrix4x4::Transpose(RotationMatrix4x4()) * TranslationMatrix4x4Inverse();
+    return Matrix4x4::Transpose(LocalRotation4x4()) * LocalTranslation4x4Inverse();
 }
 
 //-----------------------------CAMERA-------------------------------------------------
@@ -1277,6 +1265,7 @@ void Draw()
     // The camera could now be considered as the origin (0,0,0) with the zero rotation (identity matrix). 
     worldToViewMatrix = Camera::main->TRInverse();
     projectionMatrix = ProjectionMatrix();
+    Matrix4x4 vpMatrix = projectionMatrix * worldToViewMatrix;
 
     // ---------- Transform -----------
     for (int i = 0; i < Mesh::count; i++)
@@ -1321,10 +1310,10 @@ void Draw()
             {
                 if (DotProduct(Mesh::objects[i]->Position() - Camera::main->Position(), Camera::main->Forward()) > 0)
                 {
-                    Matrix4x4 mvp = ProjectionMatrix() * Camera::main->TRInverse() * Mesh::objects[i]->TRS();
+                    Matrix4x4 mvp = vpMatrix * Mesh::objects[i]->TRS();
 
                     Vec2 center_p = mvp * Vec4(0, 0, 0, 1);
-                    Vec2 xAxis_p = mvp * Vec4(0.5, 0, 0, 1);
+                    Vec2 xAxis_p = mvp * Vec4(0.5, 0, 0, 1); 
                     Vec2 yAxis_p = mvp * Vec4(0, 0.5, 0, 1);
                     Vec2 zAxis_p = mvp * Vec4(0, 0, 0.5, 1);
                     Vec2 forward_p = mvp * (Direction::forward);
