@@ -37,11 +37,6 @@ bool dampenersActive = true;
 Vec3 moveDir = Vec3(0, 0, 0);
 Vec3 velocity = Vec3(0, 0, 0);
 
-extern PhysicsObject* planet;
-extern Mesh* spaceShip;
-extern Mesh* spaceShip2;
-extern Mesh* spaceShip3;
-
 class Physics
 {
 public:
@@ -306,7 +301,6 @@ public:
         {
             delete this->mesh;
             this->mesh = mesh;
-            //this->mesh->object = this;
             this->mesh->SetParent(collider, false);
         }
     }
@@ -439,8 +433,8 @@ bool OBBSATColliding(BoxCollider& box1, BoxCollider& box2, BoxCollisionInfo& col
 
     List<Vec3> physObj1Verts = box1.WorldBounds();
     List<Vec3> physObj2Verts = box2.WorldBounds();
-    List<Vec3> physObj1Normals = List<Vec3>{ box1.Right(), box1.Up(), box1.Forward() };// mesh1.WorldXYZNormals();
-    List<Vec3> physObj2Normals = List<Vec3>{ box2.Right(), box2.Up(), box2.Forward() }; //mesh2.WorldXYZNormals();
+    List<Vec3> physObj1Normals = List<Vec3>{ box1.root->rotation * Direction::right, box1.root->rotation * Direction::up, box1.root->rotation * Direction::forward };// mesh1.WorldXYZNormals();
+    List<Vec3> physObj2Normals = List<Vec3>{ box2.root->rotation * Direction::right, box2.root->rotation * Direction::up, box2.root->rotation * Direction::forward }; //mesh2.WorldXYZNormals();
 
     // Note: Collision detection stops if at any time a gap is found.
     // Note: Cache the minimum distance projection and axis for later use to resolve the collision if needed.
