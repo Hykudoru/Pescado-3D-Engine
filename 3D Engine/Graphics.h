@@ -221,7 +221,7 @@ public:
     Transform* root = nullptr;
     Transform* parent = nullptr;
 
-    Transform(float scale = 1, Vec3 position = Vec3(0, 0, 0), Vec3 rotationEuler = Vec3(0, 0, 0), Transform* parent = nullptr)
+    Transform(const float& scale = 1, const Vec3& position = Vec3(0, 0, 0), const Vec3& rotationEuler = Vec3(0, 0, 0))
     {
         this->scale.x = scale;
         this->scale.y = scale;
@@ -229,7 +229,14 @@ public:
         this->position = position;
         this->rotation = YPR(rotationEuler.x, rotationEuler.y, rotationEuler.z);
         this->root = this;
-        SetParent(parent);
+    }
+
+    Transform(const Vec3& scale, const Vec3& position = Vec3(0, 0, 0), const Matrix3x3& rotation = Matrix3x3::identity)
+    {
+        this->scale = scale;
+        this->position = position;
+        this->rotation = rotation;
+        this->root = this;
     }
 
     Vec3 Forward() { return Rotation() * Direction::forward; }
@@ -280,9 +287,19 @@ public:
     Color color = Color::white;
     bool ignoreLighting = false;
     bool forceWireFrame = false;
+//Mesh(const Mesh& other) = delete;//disables copying
+ 
 
-    Mesh(float scale = 1, Vec3 position = Vec3(0, 0, 0), Vec3 rotationEuler = Vec3(0, 0, 0))
+    Mesh(const float& scale = 1, const Vec3& position = Vec3(0, 0, 0), const Vec3& rotationEuler = Vec3(0, 0, 0))
         : Transform(scale, position, rotationEuler), ManagedObjectPool<Mesh>(this)
+    {
+        triangles = new List<Triangle>{};
+        MapVertsToTriangles();
+        SetColor(color);
+    }
+    
+    Mesh(const Vec3& scale, const Vec3& position = Vec3(0, 0, 0), const Matrix3x3& rotation = Matrix3x3::identity)
+        : Transform(scale, position, rotation), ManagedObjectPool<Mesh>(this)
     {
         triangles = new List<Triangle>{};
         MapVertsToTriangles();
@@ -625,7 +642,7 @@ Matrix3x3 Transform::Rotation()
 {
     if (parent) {//TRS already checks for parent but checks again here because cheaper to return local position than creating the matrix
 
-        Matrix4x4 matrix = TRS();// parent->RotationMatrix4x4()* RotationMatrix4x4();
+        Matrix4x4 matrix = TRS();// parent->LocalRotation4x4()* LocalRotation4x4();
         float globalRotation[3][3] = {
             {matrix.m[0][0], matrix.m[0][1], matrix.m[0][2]},
             {matrix.m[1][0], matrix.m[1][1], matrix.m[1][2]},
@@ -674,6 +691,7 @@ void Transform::SetParent(Transform* newParent, bool changeOfBasisTransition)
                 {T.m[1][0], T.m[1][1], T.m[1][2]},
                 {T.m[2][0], T.m[2][1], T.m[2][2]}
             };
+            this->scale = Scale();
             this->rotation = rot;
             this->position = Vec3(T.m[0][3], T.m[1][3], T.m[2][3]);
         }
@@ -696,7 +714,6 @@ void Transform::SetParent(Transform* newParent, bool changeOfBasisTransition)
                 {T.m[2][0], T.m[2][1], T.m[2][2]}
             };
             
-            this->scale = Vec3(1, 1, 1);
             this->rotation = rot;
             this->position = Vec3(T.m[0][3], T.m[1][3], T.m[2][3]);
             
@@ -846,7 +863,7 @@ public:
 
     std::string name;
 
-    Camera(Vec3 position = Vec3(0, 0, 0), Vec3 rotationEuler = Vec3(0, 0, 0))
+    Camera(const const Vec3& position = Vec3(0, 0, 0), const Vec3& rotationEuler = Vec3(0, 0, 0))
         : Transform(1, position, rotationEuler)
     {
         cameras.emplace(cameras.begin() + cameraCount++, this);
@@ -861,7 +878,6 @@ Camera* camera2 = new Camera(Vec3(0, 50, 0), Vec3(-90 * PI / 180, 0, 0));
 Camera* Camera::main = camera1;
 
 //---------------------------------MESH---------------------------------------------
-
 
 bool Mesh::SetVisibility(bool visible)
 {
@@ -1073,7 +1089,7 @@ int Mesh::worldTriangleDrawCount = 0;
 class CubeMesh : public Mesh
 {
 public:
-    CubeMesh(float scale = 1, Vec3 position = Vec3(0, 0, 0), Vec3 rotationEuler = Vec3(0, 0, 0))
+    CubeMesh(const float& scale = 1, const Vec3& position = Vec3(0, 0, 0), const Vec3& rotationEuler = Vec3(0, 0, 0))
         :Mesh(scale, position, rotationEuler)
     {
         // Local Space (Object Space)
@@ -1119,7 +1135,7 @@ public:
 class PlaneMesh : public Mesh
 {
 public:
-    PlaneMesh(float scale = 1, Vec3 position = Vec3(0, 0, 0), Vec3 rotationEuler = Vec3(0, 0, 0))
+    PlaneMesh(const float& scale = 1, const Vec3& position = Vec3(0, 0, 0), const Vec3& rotationEuler = Vec3(0, 0, 0))
         :Mesh(scale, position, rotationEuler)
     {
         this->vertices = new List<Vec3>{

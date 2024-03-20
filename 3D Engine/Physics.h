@@ -790,14 +790,15 @@ struct RaycastInfo
 {
     T* objectHit = nullptr;
     Triangle* triangleHit = nullptr;
+    Triangle triangleHit_w = Triangle();
     Vec3 contactPoint = Vec3::zero;
-
     RaycastInfo() {};
-    RaycastInfo(T* objHit, Triangle* triHit, Vec3 contactPoint)
+    RaycastInfo(T* objHit, Triangle* triHit, Vec3& contactPoint, Triangle& worldSpaceTri)
     {
         this->objectHit = objHit;
         this->triangleHit = triHit;
         this->contactPoint = contactPoint;
+        this->triangleHit_w = worldSpaceTri;
     }
 };
 
@@ -810,7 +811,7 @@ bool Raycast(Ray& ray, RaycastInfo<T>& raycastInfo, const std::function<void(Ray
     float closestSqrDistHit = ray.distance * ray.distance;
     for (size_t i = 0; i < ManagedObjectPool<T>::objects.size(); i++)
     {
-        auto triangles = ManagedObjectPool<T>::objects[i]->MapVertsToTriangles();
+        List<Triangle>* triangles = ManagedObjectPool<T>::objects[i]->MapVertsToTriangles();
         for (size_t j = 0; j < triangles->size(); j++)
         {
             Triangle worldSpaceTri = (*triangles)[j];
@@ -838,9 +839,11 @@ bool Raycast(Ray& ray, RaycastInfo<T>& raycastInfo, const std::function<void(Ray
                         if (sqrDist <= closestSqrDistHit)
                         {
                             closestSqrDistHit = sqrDist;
+
                             raycastInfo.objectHit = ManagedObjectPool<T>::objects[i];
                             raycastInfo.contactPoint = pointOfIntersection;
-                            raycastInfo.triangleHit = viewSpaceTri;
+                            raycastInfo.triangleHit = &(*triangles)[j];
+                            raycastInfo.triangleHit_w = worldSpaceTri;
 
                             if (callback) {
                                 callback(raycastInfo);
@@ -866,7 +869,6 @@ bool Raycast(Ray& ray, RaycastInfo<T>& raycastInfo, const std::function<void(Ray
             }
         }
     }
-
     return raycastInfo.objectHit != nullptr;
 }
 
