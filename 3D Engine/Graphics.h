@@ -638,17 +638,65 @@ struct Triangle : Plane
 };
 
 //-------------------------------TRANSFORM---------------------------------------------
+
+Vec3 ExtractPosition(const Matrix4x4& trs)
+{
+    return { trs.m[0][3], trs.m[1][3], trs.m[2][3] };
+}
+
+Vec3 ExtractScale(const Matrix4x4& trs) {
+    Vec3 c1 = { trs.m[0][0], trs.m[1][0], trs.m[2][0] };
+    Vec3 c2 = { trs.m[0][1], trs.m[1][1], trs.m[2][1] };
+    Vec3 c3 = { trs.m[0][2], trs.m[1][2], trs.m[2][2] };
+    return { c1.Magnitude(), c2.Magnitude(), c3.Magnitude() };
+}
+
+// Pass scale parameter if already known since finding the rotation matrix for a TRS matrix 
+// requires the scale vector, which finding can be expensive.
+Matrix3x3 ExtractRotation(const Matrix4x4 trs, Vec3* scale = NULL)
+{
+    static Vec3 v = Vec3::zero;
+    Vec3 *s = &v;
+    if (scale == NULL) {
+        *s = ExtractScale(trs);
+    }
+    else {
+        s = scale;
+    }
+
+    float rot[3][3] = {
+        {trs.m[0][0] / s->x, trs.m[1][0] / s->y, trs.m[2][0] / s->z},
+        {trs.m[0][1] / s->x, trs.m[1][1] / s->y, trs.m[2][1] / s->z},
+        {trs.m[0][2] / s->x, trs.m[1][2] / s->y, trs.m[2][2] / s->z},
+    };
+
+    return rot;
+}
+
+struct TRSInfo
+{
+    Vec3 scale;
+    Vec3 position;
+    Matrix3x3 rotation;
+
+    TRSInfo(const Vec3& s, const Vec3& pos, const Matrix3x3& rot)
+    {
+        scale = s;
+        position = pos;
+        rotation = rot;
+    }
+};
+
+TRSInfo ExtractTRS(Matrix4x4& trs)
+{
+    Vec3 scale = ExtractScale(trs);
+    return TRSInfo(scale, ExtractPosition(trs), ExtractRotation(trs, &scale));
+}
+
 Matrix3x3 Transform::Rotation()
 {
     if (parent) {//TRS already checks for parent but checks again here because cheaper to return local position than creating the matrix
-
-        Matrix4x4 matrix = TRS();// parent->LocalRotation4x4()* LocalRotation4x4();
-        float globalRotation[3][3] = {
-            {matrix.m[0][0], matrix.m[0][1], matrix.m[0][2]},
-            {matrix.m[1][0], matrix.m[1][1], matrix.m[1][2]},
-            {matrix.m[2][0], matrix.m[2][1], matrix.m[2][2]}
-        };
-        return globalRotation;
+        return ExtractRotation(TRS());
     }
     return rotation;
 }
@@ -656,8 +704,7 @@ Matrix3x3 Transform::Rotation()
 Vec3 Transform::Position()
 {
     if (parent) {//TRS already checks for parent but checks again here because cheaper to return local position than creating the matrix
-        Matrix4x4 matrix = TRS();
-        return Vec3(matrix.m[0][3], matrix.m[1][3], matrix.m[2][3]);
+        return ExtractPosition(TRS());
     }
 
     return position;
@@ -666,7 +713,7 @@ Vec3 Transform::Position()
 Vec3 Transform::Scale()
 {
     if (parent) {
-        return this->parent->LocalScale4x4() * LocalScale4x4() * Vec3(1.0, 1.0, 1.0);
+        return ExtractScale(TRS());
     }
     return scale;
 }
@@ -706,14 +753,13 @@ void Transform::SetParent(Transform* newParent, bool changeOfBasisTransition)
             // If you immediatley parent a transform, everything is calculated relative to its immediate parent's reference frame. 
             // This would result in a transformation if the original coordinates didn't change. 
             // Instead what we want is a change of basis.
-            T = newParent->TRSInverse() * this->TRS();
+            T = newParent->TRInverse() * this->TR();
             
             float rot[3][3] = {
                 {T.m[0][0], T.m[0][1], T.m[0][2]},
                 {T.m[1][0], T.m[1][1], T.m[1][2]},
                 {T.m[2][0], T.m[2][1], T.m[2][2]}
             };
-            
             this->rotation = rot;
             this->position = Vec3(T.m[0][3], T.m[1][3], T.m[2][3]);
             

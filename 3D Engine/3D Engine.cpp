@@ -49,7 +49,8 @@ CubeMesh* child;
 CubeMesh* grandchild;
 CubeMesh* greatGrandchild; 
 Mesh* compass;
-Mesh* temp; Mesh* bender;
+//PhysicsObject temp = PhysicsObject(new CubeMesh(), new BoxCollider()); 
+Mesh* bender;
 void Init(GLFWwindow* window)
 {
     glfwSetCursorPosCallback(window, OnMouseMoveEvent);
@@ -100,7 +101,7 @@ void Init(GLFWwindow* window)
     planet = new PhysicsObject(500.0, Direction::forward * 1200, Matrix3x3::identity, LoadMeshFromOBJFile("Planet.obj"), new SphereCollider());
     planet->mass = 100000;
 
-    moon = LoadMeshFromOBJFile("Moon.obj");
+    moon = LoadMeshFromOBJFile("Moon-Lowpoly.obj");
     //moon->position += Direction::forward * 500;
     moon->scale *= 70;
     moon->position = planet->Position() + 1.3*(500*-Direction::forward + 400*Direction::left) + 100*Direction::up;
@@ -178,7 +179,7 @@ void Init(GLFWwindow* window)
     //physicsObj->collider->isTrigger = true;
 
     bender = LoadMeshFromOBJFile("Bender.obj");
-    bender->rotation = Matrix3x3::RotZ(ToRad(20));;
+    bender->rotation = Matrix3x3::RotZ(ToRad(20));
     bender->position = Camera::main->Position() + (Camera::main->Forward() + Camera::main->Right() * 3);
 }
 
@@ -189,17 +190,20 @@ void Update()
         Point::AddPoint(Point(Vec3(), Color::white, 5));
     }
 
-    if (grabbing != sun)
+    if (sun)
     {
-        float r = sun->position.Magnitude();
-        float vSpeed = (((2.0 * PI * r)) / 365.0) * deltaTime;
-        Vec3 directionTowardCenter = -sun->position.Normalized();
-        Vec3 centripitalAccel = directionTowardCenter * ((vSpeed * vSpeed) / r) * deltaTime;
-        Vec3 v = CrossProduct(directionTowardCenter, Direction::up) * vSpeed;
-        sun->position += v + centripitalAccel;
-    }
+        if (grabbing != sun)
+        {
+            float r = sun->position.Magnitude();
+            float vSpeed = (((2.0 * PI * r)) / 365.0) * deltaTime;
+            Vec3 directionTowardCenter = -sun->position.Normalized();
+            Vec3 centripitalAccel = directionTowardCenter * ((vSpeed * vSpeed) / r) * deltaTime;
+            Vec3 v = CrossProduct(directionTowardCenter, Direction::up) * vSpeed;
+            sun->position += v + centripitalAccel;
+        }
 
-    lightSource = sun->Position().Normalized();
+        lightSource = sun->Position().Normalized();
+    }
 
     if (compass)
     {
@@ -237,6 +241,7 @@ void Update()
         bender->rotation *= Matrix3x3::RotY(5.0 * deltaTime);
     }
 
+    
     /*
     static float t = 0;
     t += deltaTime;

@@ -79,13 +79,15 @@ void OnMouseButtonEvent(GLFWwindow* window, int button, int action, int mods)
         // Spawn Kinematic
         if (button == 2) {
             PhysicsObject* obj = spawn();// new PhysicsObject(new CubeMesh(), new BoxCollider());//LoadMeshFromOBJFile("Objects/Sphere.obj");
+            obj->isKinematic = true;
+
             static int maxDist = 1000000;
             RaycastInfo<Collider> info;
             if (Raycast(Camera::main->Position(), Camera::main->Position() + Camera::main->Forward() * maxDist, info))
             {
                 info.objectHit->mesh->SetVisibility(true);
                 Vec3 scale = info.objectHit->Scale();
-                Matrix3x3 rot = info.objectHit->Rotation();
+                Matrix3x3 rot = info.objectHit->root->rotation;
                 Vec3 pos = info.objectHit->Position() + info.triangleHit_w.Normal() * scale.x;// *2.0;
                 
                 obj->scale = scale;
@@ -94,10 +96,8 @@ void OnMouseButtonEvent(GLFWwindow* window, int button, int action, int mods)
                 obj->mesh->SetColor(Color::yellow);
             }   
             else {
-
                 obj->position = Camera::main->Position() + (Camera::main->Forward() * 10);
                 obj->rotation = Camera::main->Rotation();
-                obj->isKinematic = true;
                 obj->scale *= massFactor;
                 obj->mesh->SetColor(Color::blue);
             }
@@ -178,11 +178,11 @@ void OnKeyPressEvent(GLFWwindow* window, int key, int scancode, int action, int 
             spawn = []() { return new PhysicsObject(new CubeMesh(), new BoxCollider()); }; //= spawnCube;
         }
         else if (glfwGetKey(window, GLFW_KEY_7) == GLFW_PRESS) {
-            Mesh* mesh = LoadMeshFromOBJFile("Diamond.obj");
-            mesh->position = Camera::main->Position() + (Camera::main->Forward() * 10);
-            mesh->rotation = Camera::main->Rotation();
-            mesh->scale *= 0.1;
-            mesh->SetColor(Color::red);
+            spawn = []() {
+                auto obj = new PhysicsObject(LoadMeshFromOBJFile("Diamond.obj"), new BoxCollider(false));
+                obj->scale *= 0.1;
+                return obj;
+                };
         }
         else if (glfwGetKey(window, GLFW_KEY_8) == GLFW_PRESS) {
             Mesh* mesh = LoadMeshFromOBJFile("Icosahedron.obj");
@@ -191,7 +191,7 @@ void OnKeyPressEvent(GLFWwindow* window, int key, int scancode, int action, int 
             mesh->scale *= 0.1;
             mesh->SetColor(Color::purple);
         }
-        else if (glfwGetKey(window, GLFW_KEY_9) == GLFW_PRESS)
+        else if (glfwGetKey(window, GLFW_KEY_ENTER) == GLFW_PRESS)
         {
             auto obj = spawn();
             obj->position = Camera::main->Position() + (Camera::main->Forward() * 10);

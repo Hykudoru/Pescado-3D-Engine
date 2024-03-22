@@ -879,8 +879,6 @@ bool Raycast(Vec3 from, Vec3 to, RaycastInfo<T>& raycastInfo, const std::functio
     return Raycast(ray, raycastInfo);
 }
 
-//extern Transform* grabbing;
-extern Vec3 grabOffset;
 static void Physics()
 {
     Camera* cam;
