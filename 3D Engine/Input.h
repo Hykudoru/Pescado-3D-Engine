@@ -43,9 +43,9 @@ void OnMouseMoveEvent(GLFWwindow* window, double mouseX, double mouseY)
         double yAngle = numeric_limits<float>::epsilon() + rad * mouseSensitivity * -deltaMouseX;// * deltaTime; // 0.0000001 so no gimbal lock
         
         if (CameraSettings::outsiderViewPerspective) {
-            Camera::projector->rotation *= YPR(xAngle, yAngle, 0);
+            Camera::projector->localRotation *= YPR(xAngle, yAngle, 0);
         } else {
-            Camera::main->rotation *= YPR(xAngle, yAngle, 0);
+            Camera::main->localRotation *= YPR(xAngle, yAngle, 0);
         }
         //Camera::main->rotation = Matrix3x3::RotX(rotateSpeed * -deltaMouseY) * Camera::main->rotation * Matrix3x3::RotY((0.00001 + rotateSpeed) * -deltaMouseX);
     }
@@ -59,8 +59,8 @@ void OnMouseButtonEvent(GLFWwindow* window, int button, int action, int mods)
     std::cout << "Mouse button:" << button << std::endl;
 
      auto Throw = [&](PhysicsObject &obj) mutable {
-        obj.position = Camera::main->Position() + (Camera::main->Forward() * 10);
-        obj.rotation = Camera::main->Rotation();
+        obj.localPosition = Camera::main->Position() + (Camera::main->Forward() * 10);
+        obj.localRotation = Camera::main->Rotation();
         obj.velocity = velocity + Camera::main->Forward() * throwSpeed;
         
         };
@@ -74,7 +74,7 @@ void OnMouseButtonEvent(GLFWwindow* window, int button, int action, int mods)
             obj->mass = massFactor;
             obj->mesh->SetColor(Color::orange);
             obj->mass = massFactor;
-            obj->scale *= massFactor;
+            obj->localScale *= massFactor;
         }
         // Spawn Kinematic
         if (button == 2) {
@@ -87,18 +87,18 @@ void OnMouseButtonEvent(GLFWwindow* window, int button, int action, int mods)
             {
                 info.objectHit->mesh->SetVisibility(true);
                 Vec3 scale = info.objectHit->Scale();
-                Matrix3x3 rot = info.objectHit->root->rotation;
+                Matrix3x3 rot = ExtractRotation(info.objectHit->parent->TRSInverse()*info.objectHit->LocalRotation4x4());
                 Vec3 pos = info.objectHit->Position() + info.triangleHit_w.Normal() * scale.x;// *2.0;
                 
-                obj->scale = scale;
-                obj->rotation = rot;
-                obj->position = pos;
+                obj->localScale = scale;
+                obj->localRotation = rot;
+                obj->localPosition = pos;
                 obj->mesh->SetColor(Color::yellow);
             }   
             else {
-                obj->position = Camera::main->Position() + (Camera::main->Forward() * 10);
-                obj->rotation = Camera::main->Rotation();
-                obj->scale *= massFactor;
+                obj->localPosition = Camera::main->Position() + (Camera::main->Forward() * 10);
+                obj->localRotation = Camera::main->Rotation();
+                obj->localScale *= massFactor;
                 obj->mesh->SetColor(Color::blue);
             }
         }
@@ -152,8 +152,8 @@ void OnKeyPressEvent(GLFWwindow* window, int key, int scancode, int action, int 
 
         // Reset Camera
         if (key == GLFW_KEY_0 || key == GLFW_KEY_BACKSPACE) {
-            Camera::main->rotation = Matrix3x3::identity;
-            Camera::main->position = Vec3();
+            Camera::main->localRotation = Matrix3x3::identity;
+            Camera::main->localPosition = Vec3();
         }
         // Switch between Cameras
         else if (key == GLFW_KEY_F2) {
@@ -164,8 +164,8 @@ void OnKeyPressEvent(GLFWwindow* window, int key, int scancode, int action, int 
         }
         else if (key == GLFW_KEY_F3) {
             CameraSettings::outsiderViewPerspective = !CameraSettings::outsiderViewPerspective;
-            Camera::projector->rotation = Matrix3x3::identity;
-            Camera::projector->position = Vec3();
+            Camera::projector->localRotation = Matrix3x3::identity;
+            Camera::projector->localPosition = Vec3();
         }
 
         // Spawn
@@ -180,24 +180,24 @@ void OnKeyPressEvent(GLFWwindow* window, int key, int scancode, int action, int 
         else if (glfwGetKey(window, GLFW_KEY_7) == GLFW_PRESS) {
             spawn = []() {
                 auto obj = new PhysicsObject(LoadMeshFromOBJFile("Diamond.obj"), new BoxCollider(false));
-                obj->scale *= 0.1;
+                obj->localScale *= 0.1;
                 return obj;
                 };
         }
         else if (glfwGetKey(window, GLFW_KEY_8) == GLFW_PRESS) {
             Mesh* mesh = LoadMeshFromOBJFile("Icosahedron.obj");
-            mesh->position = Camera::main->Position() + (Camera::main->Forward() * 10);
-            mesh->rotation = Camera::main->Rotation();
-            mesh->scale *= 0.1;
+            mesh->localPosition = Camera::main->Position() + (Camera::main->Forward() * 10);
+            mesh->localRotation = Camera::main->Rotation();
+            mesh->localScale *= 0.1;
             mesh->SetColor(Color::purple);
         }
         else if (glfwGetKey(window, GLFW_KEY_ENTER) == GLFW_PRESS)
         {
             auto obj = spawn();
-            obj->position = Camera::main->Position() + (Camera::main->Forward() * 10);
-            obj->rotation = Camera::main->Rotation();
+            obj->localPosition = Camera::main->Position() + (Camera::main->Forward() * 10);
+            obj->localRotation = Camera::main->Rotation();
             obj->isKinematic = true;
-            obj->scale *= massFactor;
+            obj->localScale *= massFactor;
             obj->mesh->SetColor(Color::blue);
         }
         else if (key == GLFW_KEY_DELETE) {
@@ -278,19 +278,19 @@ void OnKeyPressEvent(GLFWwindow* window, int key, int scancode, int action, int 
         }
         else if (key == GLFW_KEY_F6)
         {
-            parent->rotation *= Matrix3x3::RotY(ToRad(10));
+            parent->localRotation *= Matrix3x3::RotY(ToRad(10));
         }
         else if (key == GLFW_KEY_F7)
         {
-            child->rotation *= Matrix3x3::RotY(ToRad(10));
+            child->localRotation *= Matrix3x3::RotY(ToRad(10));
         }
         else if (key == GLFW_KEY_F8)
         {
-            grandchild->rotation *= Matrix3x3::RotY(ToRad(10));
+            grandchild->localRotation *= Matrix3x3::RotY(ToRad(10));
         }
         else if (key == GLFW_KEY_F9)
         {
-            greatGrandchild->rotation *= Matrix3x3::RotY(ToRad(10));
+            greatGrandchild->localRotation *= Matrix3x3::RotY(ToRad(10));
         }
         // Toggle Transform Hierarchy
         else if (glfwGetKey(window, GLFW_KEY_CAPS_LOCK) == GLFW_PRESS) {
@@ -310,54 +310,54 @@ static void CameraControl(Camera* cam)
     //----------Camera Controls-------
     // FORWARD
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
-        moveDir += cam->rotation * Direction::forward;
+        moveDir += cam->localRotation * Direction::forward;
     }
     // BACK
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
-        moveDir += cam->rotation* Direction::back;
+        moveDir += cam->localRotation* Direction::back;
     }
     // LEFT
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
-        moveDir += cam->rotation * Direction::left;
+        moveDir += cam->localRotation * Direction::left;
     }
     // RIGHT
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
-        moveDir += cam->rotation * Direction::right;
+        moveDir += cam->localRotation * Direction::right;
     }
     // UP
     if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
-        moveDir += cam->rotation * Direction::up;
+        moveDir += cam->localRotation * Direction::up;
     }
     // DOWN
     if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS) {
-        moveDir += cam->rotation* Direction::down;
+        moveDir += cam->localRotation* Direction::down;
     }
 
     moveDir.Normalize();
 
     // ROTATE CCW
     if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) {
-        cam->rotation *= Matrix3x3::RotZ(rotateSpeed * deltaTime);
+        cam->localRotation *= Matrix3x3::RotZ(rotateSpeed * deltaTime);
     }
     // ROTATE CW
     if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS) {
-        cam->rotation *= Matrix3x3::RotZ(-rotateSpeed * deltaTime);
+        cam->localRotation *= Matrix3x3::RotZ(-rotateSpeed * deltaTime);
     }
     // LOOK UP
     if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
-        cam->rotation *= Matrix3x3::RotX(rotateSpeed * deltaTime);
+        cam->localRotation *= Matrix3x3::RotX(rotateSpeed * deltaTime);
     }
     // LOOK DOWN
     if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
-        cam->rotation *= Matrix3x3::RotX(-rotateSpeed * deltaTime);
+        cam->localRotation *= Matrix3x3::RotX(-rotateSpeed * deltaTime);
     }
     // TURN LEFT
     if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
-        cam->rotation *= Matrix3x3::RotY(rotateSpeed * deltaTime);
+        cam->localRotation *= Matrix3x3::RotY(rotateSpeed * deltaTime);
     }
     // TURN RIGHT
     if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
-        cam->rotation *= Matrix3x3::RotY(-rotateSpeed * deltaTime);
+        cam->localRotation *= Matrix3x3::RotY(-rotateSpeed * deltaTime);
     }
     // Speed 
     if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)

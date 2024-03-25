@@ -215,27 +215,27 @@ struct Material
 class Transform
 {
 public:
-    Vec3 scale = Vec3(1, 1, 1);
-    Vec3 position = Vec3(0, 0, 0);
-    Matrix3x3 rotation = Matrix3x3::identity;
+    Vec3 localScale = Vec3(1, 1, 1);
+    Vec3 localPosition = Vec3(0, 0, 0);
+    Matrix3x3 localRotation = Matrix3x3::identity;
     Transform* root = nullptr;
     Transform* parent = nullptr;
 
     Transform(const float& scale = 1, const Vec3& position = Vec3(0, 0, 0), const Vec3& rotationEuler = Vec3(0, 0, 0))
     {
-        this->scale.x = scale;
-        this->scale.y = scale;
-        this->scale.z = scale;
-        this->position = position;
-        this->rotation = YPR(rotationEuler.x, rotationEuler.y, rotationEuler.z);
+        this->localScale.x = scale;
+        this->localScale.y = scale;
+        this->localScale.z = scale;
+        this->localPosition = position;
+        this->localRotation = YPR(rotationEuler.x, rotationEuler.y, rotationEuler.z);
         this->root = this;
     }
 
     Transform(const Vec3& scale, const Vec3& position = Vec3(0, 0, 0), const Matrix3x3& rotation = Matrix3x3::identity)
     {
-        this->scale = scale;
-        this->position = position;
-        this->rotation = rotation;
+        this->localScale = scale;
+        this->localPosition = position;
+        this->localRotation = rotation;
         this->root = this;
     }
 
@@ -698,7 +698,7 @@ Matrix3x3 Transform::Rotation()
     if (parent) {//TRS already checks for parent but checks again here because cheaper to return local position than creating the matrix
         return ExtractRotation(TRS());
     }
-    return rotation;
+    return localRotation;
 }
 
 Vec3 Transform::Position()
@@ -707,7 +707,7 @@ Vec3 Transform::Position()
         return ExtractPosition(TRS());
     }
 
-    return position;
+    return localPosition;
 }
 
 Vec3 Transform::Scale()
@@ -715,7 +715,7 @@ Vec3 Transform::Scale()
     if (parent) {
         return ExtractScale(TRS());
     }
-    return scale;
+    return localScale;
 }
 
 void Transform::SetParent(Transform* newParent, bool changeOfBasisTransition)
@@ -738,9 +738,8 @@ void Transform::SetParent(Transform* newParent, bool changeOfBasisTransition)
                 {T.m[1][0], T.m[1][1], T.m[1][2]},
                 {T.m[2][0], T.m[2][1], T.m[2][2]}
             };
-            this->scale = Scale();
-            this->rotation = rot;
-            this->position = Vec3(T.m[0][3], T.m[1][3], T.m[2][3]);
+            this->localRotation = rot;
+            this->localPosition = Vec3(T.m[0][3], T.m[1][3], T.m[2][3]);
         }
 
         this->parent = NULL;
@@ -760,8 +759,9 @@ void Transform::SetParent(Transform* newParent, bool changeOfBasisTransition)
                 {T.m[1][0], T.m[1][1], T.m[1][2]},
                 {T.m[2][0], T.m[2][1], T.m[2][2]}
             };
-            this->rotation = rot;
-            this->position = Vec3(T.m[0][3], T.m[1][3], T.m[2][3]);
+            this->localScale = this->Scale();
+            this->localRotation = rot;
+            this->localPosition = Vec3(T.m[0][3], T.m[1][3], T.m[2][3]);
             
         }
 
@@ -774,9 +774,9 @@ Matrix4x4 Transform::LocalScale4x4()
 {
     float matrix[4][4] =
     {
-        {this->scale.x, 0, 0, 0},
-        {0, this->scale.y, 0, 0},
-        {0, 0, this->scale.z, 0},
+        {this->localScale.x, 0, 0, 0},
+        {0, this->localScale.y, 0, 0},
+        {0, 0, this->localScale.z, 0},
         {0, 0, 0, 1}
     };
 
@@ -787,9 +787,9 @@ Matrix4x4 Transform::LocalScale4x4Inverse()
 {
     float inverse[4][4] =
     {
-        {1.0 / this->scale.x, 0, 0, 0},
-        {0, 1.0 / this->scale.y, 0, 0},
-        {0, 0, 1.0 / this->scale.z, 0},
+        {1.0 / this->localScale.x, 0, 0, 0},
+        {0, 1.0 / this->localScale.y, 0, 0},
+        {0, 0, 1.0 / this->localScale.z, 0},
         {0, 0, 0, 1}
     };
 
@@ -800,9 +800,9 @@ Matrix4x4 Transform::LocalRotation4x4()
 {
     float matrix[4][4] =
     {
-        {this->rotation.m[0][0], this->rotation.m[0][1], this->rotation.m[0][2], 0},
-        {this->rotation.m[1][0], this->rotation.m[1][1], this->rotation.m[1][2], 0},
-        {this->rotation.m[2][0], this->rotation.m[2][1], this->rotation.m[2][2], 0},
+        {this->localRotation.m[0][0], this->localRotation.m[0][1], this->localRotation.m[0][2], 0},
+        {this->localRotation.m[1][0], this->localRotation.m[1][1], this->localRotation.m[1][2], 0},
+        {this->localRotation.m[2][0], this->localRotation.m[2][1], this->localRotation.m[2][2], 0},
         {0, 0, 0, 1}
     };
 
@@ -813,9 +813,9 @@ Matrix4x4 Transform::LocalTranslation4x4()
 {
     float matrix[4][4] =
     {
-        {1, 0, 0, this->position.x},
-        {0, 1, 0, this->position.y},
-        {0, 0, 1, this->position.z},
+        {1, 0, 0, this->localPosition.x},
+        {0, 1, 0, this->localPosition.y},
+        {0, 0, 1, this->localPosition.z},
         {0, 0, 0, 1}
     };
 
@@ -826,9 +826,9 @@ Matrix4x4 Transform::LocalTranslation4x4Inverse()
 {
     float matrix[4][4] =
     {
-        {1, 0, 0, -this->position.x},
-        {0, 1, 0, -this->position.y},
-        {0, 0, 1, -this->position.z},
+        {1, 0, 0, -this->localPosition.x},
+        {0, 1, 0, -this->localPosition.y},
+        {0, 0, 1, -this->localPosition.z},
         {0, 0, 0, 1}
     };
 
@@ -840,9 +840,9 @@ Matrix4x4 Transform::TRS()
 {
     float trs[4][4] =
     {
-        {this->rotation.m[0][0] * scale.x, this->rotation.m[0][1] * scale.y, this->rotation.m[0][2] * scale.z, position.x},
-        {this->rotation.m[1][0] * scale.x, this->rotation.m[1][1] * scale.y, this->rotation.m[1][2] * scale.z, position.y},
-        {this->rotation.m[2][0] * scale.x, this->rotation.m[2][1] * scale.y, this->rotation.m[2][2] * scale.z, position.z},
+        {this->localRotation.m[0][0] * localScale.x, this->localRotation.m[0][1] * localScale.y, this->localRotation.m[0][2] * localScale.z, localPosition.x},
+        {this->localRotation.m[1][0] * localScale.x, this->localRotation.m[1][1] * localScale.y, this->localRotation.m[1][2] * localScale.z, localPosition.y},
+        {this->localRotation.m[2][0] * localScale.x, this->localRotation.m[2][1] * localScale.y, this->localRotation.m[2][2] * localScale.z, localPosition.z},
         {0,                                         0,                                  0,                      1}
     };
 
@@ -868,9 +868,9 @@ Matrix4x4 Transform::TR()
 {
     float tr[4][4] =
     {
-        {this->rotation.m[0][0], this->rotation.m[0][1], this->rotation.m[0][2], position.x},
-        {this->rotation.m[1][0], this->rotation.m[1][1], this->rotation.m[1][2], position.y},
-        {this->rotation.m[2][0], this->rotation.m[2][1], this->rotation.m[2][2], position.z},
+        {this->localRotation.m[0][0], this->localRotation.m[0][1], this->localRotation.m[0][2], localPosition.x},
+        {this->localRotation.m[1][0], this->localRotation.m[1][1], this->localRotation.m[1][2], localPosition.y},
+        {this->localRotation.m[2][0], this->localRotation.m[2][1], this->localRotation.m[2][2], localPosition.z},
         {0,                                         0,                                  0,                      1}
     };
     if (parent) {
@@ -928,11 +928,11 @@ Camera* Camera::main = camera1;
 bool Mesh::SetVisibility(bool visible)
 {
     if (visible) {
-        ManagedObjectPool<Mesh>::AddToPool(this);
+        ManagedObjectPool<Mesh>::addToPool(this);
         return true;
     }
     else {
-        ManagedObjectPool<Mesh>::RemoveFromPool(this);
+        ManagedObjectPool<Mesh>::removeFromPool(this);
         return false;
     }
 }
@@ -1335,10 +1335,10 @@ void Draw()
         if (Graphics::frustumCulling)
         {
             // Scale/Distance ratio culling
-            float sqrDist = (Mesh::objects[i]->root->position - Camera::main->Position()).SqrMagnitude();
+            float sqrDist = (Mesh::objects[i]->root->localPosition - Camera::main->Position()).SqrMagnitude();
             if (sqrDist != 0.0)
             {
-                bool meshTooSmallToSee = Mesh::objects[i]->root->scale.SqrMagnitude() / sqrDist < 0.0000000000001;
+                bool meshTooSmallToSee = Mesh::objects[i]->root->localScale.SqrMagnitude() / sqrDist < 0.0000000000001;
                 if (meshTooSmallToSee) {
                     continue;
                 }

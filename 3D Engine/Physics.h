@@ -259,9 +259,9 @@ public:
     PhysicsObject(float scale, Vec3 position, Matrix3x3 rotation, Mesh* mesh, Collider* collider) : ManagedObjectPool<PhysicsObject>(this)
     {
         //this->scale = Vec3(scale, scale, scale);
-        this->position = position;
-        this->rotation = rotation;
-        this->scale = Vec3(scale, scale, scale);
+        this->localPosition = position;
+        this->localRotation = rotation;
+        this->localScale = Vec3(scale, scale, scale);
         SetCollider(collider);
         SetMesh(mesh);
     }
@@ -370,7 +370,7 @@ bool SpherePlaneColliding(SphereCollider& sphere, PlaneCollider& plane, SphereCo
         {
             Vec3 pointOnSphere = ClosestPointOnSphere(sphereCenter, radius, closestPointOnPlane);
             Vec3 offset = pointOnSphere - closestPointOnPlane;//overlapping
-            sphere.root->position -= offset;
+            sphere.root->localPosition -= offset;
             collisionInfo.lineOfImpact = normal * -1.0;
         }
     }
@@ -403,8 +403,8 @@ bool SpheresColliding(SphereCollider& sphere1, SphereCollider& sphere2, SphereCo
         collisionInfo.lineOfImpact = offset;
         if (resolve) {
             offset *= 0.5;
-            sphere1.root->position -= offset;
-            sphere2.root->position += offset;
+            sphere1.root->localPosition -= offset;
+            sphere2.root->localPosition += offset;
             collisionInfo.pointOfContact = (pointOnSphere1 + pointOnSphere2) * 0.5;
         }
     }
@@ -433,8 +433,8 @@ bool OBBSATColliding(BoxCollider& box1, BoxCollider& box2, BoxCollisionInfo& col
 
     List<Vec3> physObj1Verts = box1.WorldBounds();
     List<Vec3> physObj2Verts = box2.WorldBounds();
-    List<Vec3> physObj1Normals = List<Vec3>{ box1.root->rotation * Direction::right, box1.root->rotation * Direction::up, box1.root->rotation * Direction::forward };// mesh1.WorldXYZNormals();
-    List<Vec3> physObj2Normals = List<Vec3>{ box2.root->rotation * Direction::right, box2.root->rotation * Direction::up, box2.root->rotation * Direction::forward }; //mesh2.WorldXYZNormals();
+    List<Vec3> physObj1Normals = List<Vec3>{ box1.root->localRotation * Direction::right, box1.root->localRotation * Direction::up, box1.root->localRotation * Direction::forward };// mesh1.WorldXYZNormals();
+    List<Vec3> physObj2Normals = List<Vec3>{ box2.root->localRotation * Direction::right, box2.root->localRotation * Direction::up, box2.root->localRotation * Direction::forward }; //mesh2.WorldXYZNormals();
 
     // Note: Collision detection stops if at any time a gap is found.
     // Note: Cache the minimum distance projection and axis for later use to resolve the collision if needed.
@@ -540,15 +540,15 @@ bool OBBSATColliding(BoxCollider& box1, BoxCollider& box2, BoxCollisionInfo& col
         if (neitherStatic)
         {
             offset *= 0.5;
-            box1.root->position -= (offset * 1.01);
-            box2.root->position += (offset * 1.01);
+            box1.root->localPosition -= (offset * 1.01);
+            box2.root->localPosition += (offset * 1.01);
         }
         //Only one is movable at this stage
         else if (box1.isStatic) {
-            box2.root->position += offset;
+            box2.root->localPosition += offset;
         }
         else {
-            box1.root->position -= offset;
+            box1.root->localPosition -= offset;
         }
     }
 
@@ -735,8 +735,8 @@ public:
         Vec3 disp = (end - start);
         distance = disp.Magnitude();
         direction = disp.Normalized();
-        transform.rotation = OrthogonalMatrixLookAt(direction);
-        transform.position = start;
+        transform.localRotation = OrthogonalMatrixLookAt(direction);
+        transform.localPosition = start;
         endPosition = start + direction * distance;
     }
 
@@ -892,7 +892,7 @@ static void Physics()
     //---------- Physics Update ------------
     if (isKinematic)
     {
-        cam->position += moveDir * accel * deltaTime;
+        cam->localPosition += moveDir * accel * deltaTime;
     }
     else
     {
@@ -906,7 +906,7 @@ static void Physics()
         if (velocity.SqrMagnitude() < 0.0001) {
             velocity = Vec3::zero;
         }
-        cam->position += velocity * deltaTime;
+        cam->localPosition += velocity * deltaTime;
     }
 
     if (Physics::dynamics)
@@ -919,7 +919,7 @@ static void Physics()
                 if (Physics::gravity) {
                     obj->velocity += gravity * deltaTime;
                 }
-                obj->position += obj->velocity * deltaTime;
+                obj->localPosition += obj->velocity * deltaTime;
             }
         }
     }

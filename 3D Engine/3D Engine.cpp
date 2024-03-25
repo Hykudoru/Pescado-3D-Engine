@@ -21,7 +21,7 @@ void Debug()
     DEBUGGING = false;
     static double coutTimer = 0;
     coutTimer += deltaTime;
-    if (coutTimer > 0.25 && coutTimer < 0.25 + deltaTime)
+    if (coutTimer > 0.5 && coutTimer < 0.5 + deltaTime)
     {
         DEBUGGING = true;
         coutTimer = 0;
@@ -68,57 +68,57 @@ void Init(GLFWwindow* window)
 
     Transform* cam2Origin = new Transform(1, Vec3(0, 50, 0), Vec3(ToRad(-90), 0, 0));
     camera2->SetParent(cam2Origin, false);
-    camera2->position = Vec3::zero;
-    camera2->rotation = Matrix3x3::identity;
+    camera2->localPosition = Vec3::zero;
+    camera2->localRotation = Matrix3x3::identity;
 
     for (size_t i = 1; i < Camera::cameras.size(); i++)//starts at 1 to avoid projector camera
     {
         Mesh* cameraMesh = LoadMeshFromOBJFile("Camera.obj");
         cameraMesh->SetParent(Camera::cameras[i], false);
-        cameraMesh->position += -Direction::forward;
+        cameraMesh->localPosition += -Direction::forward;
     }
 
     //GraphicSettings::debugAxes = true;
     compass = LoadMeshFromOBJFile("Compass.obj");
-    compass->scale *= 0.1;
+    compass->localScale *= 0.1;
     compass->ignoreLighting = true;
     compass->forceWireFrame = true;
 
     sun = LoadMeshFromOBJFile("Sun.obj");
-    sun->rotation = Matrix3x3::RotX(ToRad(45));
-    sun->position = lightSource * 100000;
-    sun->scale *= 5000;
+    sun->localRotation = Matrix3x3::RotX(ToRad(45));
+    sun->localPosition = lightSource * 100000;
+    sun->localScale *= 5000;
     sun->ignoreLighting = true;
 
     Camera* sunCam = new Camera();
     //sunCam->SetParent(sun, false);
     sunCam->parent = sun;
     sunCam->root = sun->root;
-    sunCam->scale = sun->LocalScale4x4Inverse() * sunCam->scale;
-    sunCam->position = Vec3::zero;
-    sunCam->rotation = Matrix3x3::identity;
+    sunCam->localScale = sun->LocalScale4x4Inverse() * sunCam->localScale;
+    sunCam->localPosition = Vec3::zero;
+    sunCam->localRotation = Matrix3x3::identity;
 
     planet = new PhysicsObject(500.0, Direction::forward * 1200, Matrix3x3::identity, LoadMeshFromOBJFile("Planet.obj"), new SphereCollider());
     planet->mass = 100000;
 
     moon = LoadMeshFromOBJFile("Moon-Lowpoly.obj");
-    //moon->position += Direction::forward * 500;
-    moon->scale *= 70;
-    moon->position = planet->Position() + 1.3*(500*-Direction::forward + 400*Direction::left) + 100*Direction::up;
+    //moon->localPosition += Direction::forward * 500;
+    moon->localScale *= 70;
+    moon->localPosition = planet->Position() + 1.3*(500*-Direction::forward + 400*Direction::left) + 100*Direction::up;
 
     giantText = LoadMeshFromOBJFile("Hello3DWorldText.obj");
-    giantText->scale *= 2.5;
-    giantText->position = Vec3(0, 25, -490);
+    giantText->localScale *= 2.5;
+    giantText->localPosition = Vec3(0, 25, -490);
     
     spaceShip = LoadMeshFromOBJFile("SpaceShip_2.2.obj");
-    spaceShip->position = Direction::left * 30 + Direction::forward * 10;
+    spaceShip->localPosition = Direction::left * 30 + Direction::forward * 10;
 
     spaceShip2 = LoadMeshFromOBJFile("SpaceShip_3.obj");
-    spaceShip2->position = Direction::right * 40 + Direction::forward * 100;
-    spaceShip2->rotation = Matrix3x3::RotY(PI);
+    spaceShip2->localPosition = Direction::right * 40 + Direction::forward * 100;
+    spaceShip2->localRotation = Matrix3x3::RotY(PI);
 
     spaceShip3 = LoadMeshFromOBJFile("SpaceShip_5.obj");
-    spaceShip3->position = Direction::right * 20 + Direction::up * 10;
+    spaceShip3->localPosition = Direction::right * 20 + Direction::up * 10;
    
     parent = new CubeMesh(3, Vec3(0, 10, 500), Vec3(0, 45, 0));
     child = new CubeMesh(.5, Vec3(0, 0, 2), Vec3(0, 45, 0));
@@ -139,8 +139,8 @@ void Init(GLFWwindow* window)
             for (int d = -5; d < 5; d++)
             {
                 PhysicsObject* block = new PhysicsObject(new CubeMesh(), new BoxCollider(true));
-                block->scale *= .1;
-                block->position = Direction::down * (15+(0.1*d)) + Direction::left * r * .1 + Direction::back * c * .1;
+                block->localScale *= .1;
+                block->localPosition = Direction::down * (15+(0.1*d)) + Direction::left * r * .1 + Direction::back * c * .1;
             }
         }
     }
@@ -161,7 +161,7 @@ void Init(GLFWwindow* window)
         float s = 2.0 / (i+1 * scale);
         Mesh *c = new CubeMesh(s, t->Position() + t->Right());
         c->SetColor((Color::red * (1.0 / i)));
-        t->position += t->rotation * Direction::right;
+        t->localPosition += t->localRotation * Direction::right;
         prev = t;
     }
     /*
@@ -179,8 +179,8 @@ void Init(GLFWwindow* window)
     //physicsObj->collider->isTrigger = true;
 
     bender = LoadMeshFromOBJFile("Bender.obj");
-    bender->rotation = Matrix3x3::RotZ(ToRad(20));
-    bender->position = Camera::main->Position() + (Camera::main->Forward() + Camera::main->Right() * 3);
+    bender->localRotation = Matrix3x3::RotZ(ToRad(20));
+    bender->localPosition = Camera::main->Position() + (Camera::main->Forward() + Camera::main->Right() * 3);
 }
 
 void Update()
@@ -194,12 +194,12 @@ void Update()
     {
         if (grabbing != sun)
         {
-            float r = sun->position.Magnitude();
+            float r = sun->localPosition.Magnitude();
             float vSpeed = (((2.0 * PI * r)) / 365.0) * deltaTime;
-            Vec3 directionTowardCenter = -sun->position.Normalized();
+            Vec3 directionTowardCenter = -sun->localPosition.Normalized();
             Vec3 centripitalAccel = directionTowardCenter * ((vSpeed * vSpeed) / r) * deltaTime;
             Vec3 v = CrossProduct(directionTowardCenter, Direction::up) * vSpeed;
-            sun->position += v + centripitalAccel;
+            sun->localPosition += v + centripitalAccel;
         }
 
         lightSource = sun->Position().Normalized();
@@ -207,38 +207,38 @@ void Update()
 
     if (compass)
     {
-        compass->position = Camera::main->Position() + (Camera::main->Forward() + (Camera::main->Down() * .5) + (Camera::main->Right() * 0.8));
+        compass->localPosition = Camera::main->Position() + (Camera::main->Forward() + (Camera::main->Down() * .5) + (Camera::main->Right() * 0.8));
     }
 
     if (planet) {
         float planetRotationSpeed = ((2 * PI) / 240) * deltaTime;
-        planet->rotation = Matrix3x3::RotX(-planetRotationSpeed) * Matrix3x3::RotY(planetRotationSpeed + 0.000001) * planet->rotation;// MatrixMultiply(YPR(angle * ((screenWidth / 2)), angle * -((screenWidth / 2)), 0), Mesh.meshes[1].rotation);
+        planet->localRotation = Matrix3x3::RotX(-planetRotationSpeed) * Matrix3x3::RotY(planetRotationSpeed + 0.000001) * planet->localRotation;// MatrixMultiply(YPR(angle * ((screenWidth / 2)), angle * -((screenWidth / 2)), 0), Mesh.meshes[1].rotation);
     }
 
     if (spaceShip)
     {
         float shipRotationSpeed = (10 * PI / 180) * deltaTime;
-        spaceShip->rotation = Matrix3x3::RotY(-shipRotationSpeed) * spaceShip->rotation;// MatrixMultiply(YPR(angle * ((screenWidth / 2)), angle * -((screenWidth / 2)), 0), Mesh.meshes[1].rotation);
-        spaceShip->position += spaceShip->Forward() * 20 * deltaTime;
+        spaceShip->localRotation = Matrix3x3::RotY(-shipRotationSpeed) * spaceShip->localRotation;// MatrixMultiply(YPR(angle * ((screenWidth / 2)), angle * -((screenWidth / 2)), 0), Mesh.meshes[1].rotation);
+        spaceShip->localPosition += spaceShip->Forward() * 20 * deltaTime;
     }
     if (spaceShip2)
     {
         float shipRotationSpeed = (5 * PI / 180) * deltaTime;
-        spaceShip2->rotation = Matrix3x3::RotZ(shipRotationSpeed) * Matrix3x3::RotY(-shipRotationSpeed) * spaceShip2->rotation;// *spaceShip2->rotation;// MatrixMultiply(YPR(angle * ((screenWidth / 2)), angle * -((screenWidth / 2)), 0), Mesh.meshes[1].rotation);
-        spaceShip2->position += spaceShip2->Forward() * 10 * deltaTime;
+        spaceShip2->localRotation = Matrix3x3::RotZ(shipRotationSpeed) * Matrix3x3::RotY(-shipRotationSpeed) * spaceShip2->localRotation;// *spaceShip2->rotation;// MatrixMultiply(YPR(angle * ((screenWidth / 2)), angle * -((screenWidth / 2)), 0), Mesh.meshes[1].rotation);
+        spaceShip2->localPosition += spaceShip2->Forward() * 10 * deltaTime;
     }
     if (spaceShip3)
     {
         float shipRotationSpeed = (20 * PI / 180) * deltaTime;
-        spaceShip3->rotation = Matrix3x3::RotY(shipRotationSpeed) * Matrix3x3::RotZ(shipRotationSpeed) * spaceShip3->rotation;// *spaceShip2->rotation;// MatrixMultiply(YPR(angle * ((screenWidth / 2)), angle * -((screenWidth / 2)), 0), Mesh.meshes[1].rotation);
-        spaceShip3->position += spaceShip3->Forward() * 15 * deltaTime;
+        spaceShip3->localRotation = Matrix3x3::RotY(shipRotationSpeed) * Matrix3x3::RotZ(shipRotationSpeed) * spaceShip3->localRotation;// *spaceShip2->rotation;// MatrixMultiply(YPR(angle * ((screenWidth / 2)), angle * -((screenWidth / 2)), 0), Mesh.meshes[1].rotation);
+        spaceShip3->localPosition += spaceShip3->Forward() * 15 * deltaTime;
 
     }
 
     if (bender)
     {
-        bender->position += Direction::left * deltaTime * 0.7;
-        bender->rotation *= Matrix3x3::RotY(5.0 * deltaTime);
+        bender->localPosition += Direction::left * deltaTime * 0.7;
+        bender->localRotation *= Matrix3x3::RotY(5.0 * deltaTime);
     }
 
     
