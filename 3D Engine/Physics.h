@@ -91,6 +91,7 @@ public:
         Vec3(0.5, -0.5, -0.5)
     };
 };
+
 /*
 template <typename T>
 class Node : public Transform
@@ -121,6 +122,7 @@ public:
         }
     }
 };
+
 template <typename T>
 
 class OctTree
@@ -185,8 +187,6 @@ public:
     {
         delete mesh;
     }
-
-    virtual void RecalculateBounds() {}
 
     List<Triangle>* MapVertsToTriangles()
     {
@@ -271,18 +271,6 @@ public:
         delete collider;
         delete mesh;
     }
-    /*
-    void Scale(float scale)
-    {
-        this->scale = Vec3(scale, scale, scale);
-        collider->RecalculateBounds();
-    }
-
-    void Scale(Vec3 scale)
-    {
-        this->scale = scale;
-        collider->RecalculateBounds();
-    }*/
 
     void SetCollider(Collider* collider)
     {
