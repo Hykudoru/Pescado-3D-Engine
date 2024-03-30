@@ -953,25 +953,20 @@ void Mesh::SetColor(Color& c)
 
 List<Triangle>* Mesh::MapVertsToTriangles()
 {
-    static bool mapped = false;
-    if (!mapped)
+    if (vertices && indices)
     {
-        if (vertices && indices)
+        int t = 0;
+        for (size_t i = 0; i < indices->size(); i++)
         {
-            int t = 0;
-            for (size_t i = 0; i < indices->size(); i++)
-            {
-                int p1Index = (*indices)[i++];
-                int p2Index = (*indices)[i++];
-                int p3Index = (*indices)[i];
+            int p1Index = (*indices)[i++];
+            int p2Index = (*indices)[i++];
+            int p3Index = (*indices)[i];
 
-                (*triangles)[t].verts[0] = (*vertices)[p1Index];
-                (*triangles)[t].verts[1] = (*vertices)[p2Index];
-                (*triangles)[t].verts[2] = (*vertices)[p3Index];
+            (*triangles)[t].verts[0] = (*vertices)[p1Index];
+            (*triangles)[t].verts[1] = (*vertices)[p2Index];
+            (*triangles)[t].verts[2] = (*vertices)[p3Index];
 
-                t++;
-            }
-            mapped = true;
+            t++;
         }
     }
 
