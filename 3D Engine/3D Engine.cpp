@@ -78,7 +78,7 @@ void Init(GLFWwindow* window)
         cameraMesh->localPosition += -Direction::forward;
     }
 
-    //GraphicSettings::debugAxes = true;
+    //GraphicSettings::debugAxes = true;/*
     compass = LoadMeshFromOBJFile("Compass.obj");
     compass->localScale *= 0.1;
     compass->ignoreLighting = true;
@@ -132,6 +132,9 @@ void Init(GLFWwindow* window)
     grandchild->SetColor(Color::yellow);
     greatGrandchild->SetColor(Color::green);
 
+    PhysicsObject* test = new PhysicsObject(new CubeMesh(), new BoxCollider(true));
+    test->localScale = { 1, 2, 1 };
+    test->localPosition = Direction::forward * 5;
     for (int r = -5; r < 5; r++)
     {
         for (int c = -5; c < 5; c++)

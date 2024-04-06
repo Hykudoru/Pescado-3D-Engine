@@ -965,7 +965,7 @@ List<Triangle>* Mesh::MapVertsToTriangles()
             (*triangles)[t].verts[0] = (*vertices)[p1Index];
             (*triangles)[t].verts[1] = (*vertices)[p2Index];
             (*triangles)[t].verts[2] = (*vertices)[p3Index];
-
+            
             t++;
         }
     }
@@ -1349,24 +1349,21 @@ void Draw()
             if (meshBehindCamera) {
                 continue;
             }
-
+*/
             if (Mesh::objects[i]->vertices)
             {
                 List<Vec3> verts = *(Mesh::objects[i]->vertices);
                 for (size_t j = 0; j < verts.size(); j++)
                 {
-                    verts[j] = ProjectionMatrix() * Camera::main->TRInverse() * Mesh::objects[i]->TRS() * verts[j];
+                    verts[j] = vpMatrix * Mesh::objects[i]->TRS() * verts[j];
                 }
-
-                Range range = ProjectVertsOntoAxis(verts.data(), verts.size(), Direction::left);
-                if ((range.min > 1 && range.max > 1) || (range.min < -2 && range.max < -2)) {
+                Range xRange = ProjectVertsOntoAxis(verts.data(), verts.size(), Direction::right);
+                Range yRange = ProjectVertsOntoAxis(verts.data(), verts.size(), Direction::up);
+                if ( ((xRange.min > 1.0 && xRange.max > 1.0) || (xRange.min < -1.0 && xRange.max < -1.0)) || ((yRange.min > 1.0 && yRange.max > 1.0) || (yRange.min < -1.0 && yRange.max < -1.0)) )
+                {
                     continue;
                 }
-                range = ProjectVertsOntoAxis(verts.data(), verts.size(), Direction::down);
-                if ((range.min > 1 && range.max > 1) || (range.min < -2 && range.max < -2)) {
-                    continue;
-                }
-            }*/
+            }
 
             // ---------- Debug -----------
             if (Graphics::debugAxes)

@@ -196,7 +196,7 @@ Vec3 ProjectOnPlane(Vec3 v, Vec3 n)
     return v - b;
 }
 
-Range ProjectVertsOntoAxis(const Vec3 verts[], const int& count, Vec3& axis)
+Range ProjectVertsOntoAxis(Vec3* verts, const int& count, Vec3& axis)
 {
     float dist = DotProduct(verts[0], axis);
     float min = dist;
