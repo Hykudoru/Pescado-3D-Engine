@@ -277,6 +277,23 @@ public:
     Matrix4x4 TRInverse();
 };
 
+class BoundingBox : public Transform, public ManagedObjectPool<BoundingBox>
+{
+    void tryCreatingBounds(Mesh* mesh);
+public:
+    Vec3* vertices;
+
+    Mesh* mesh;
+    BoundingBox(Mesh* mesh) : ManagedObjectPool<BoundingBox>(this)
+    {
+        tryCreatingBounds(mesh);
+    }
+
+    Vec3* WorldBounds();
+
+    void Draw();
+};
+
 class Mesh : public Transform, public ManagedObjectPool<Mesh>
 {
 public:
@@ -296,6 +313,7 @@ public:
         triangles = new List<Triangle>{};
         MapVertsToTriangles();
         SetColor(color);
+        new BoundingBox(this);
     }
     
     Mesh(const Vec3& scale, const Vec3& position = Vec3(0, 0, 0), const Matrix3x3& rotation = Matrix3x3::identity)
@@ -304,6 +322,7 @@ public:
         triangles = new List<Triangle>{};
         MapVertsToTriangles();
         SetColor(color);
+        new BoundingBox(this);
     }
 
     virtual ~Mesh()
@@ -928,11 +947,11 @@ Camera* Camera::main = camera1;
 bool Mesh::SetVisibility(bool visible)
 {
     if (visible) {
-        ManagedObjectPool<Mesh>::addToPool(this);
+        ManagedObjectPool<Mesh>::AddToPool(this);
         return true;
     }
     else {
-        ManagedObjectPool<Mesh>::removeFromPool(this);
+        ManagedObjectPool<Mesh>::RemoveFromPool(this);
         return false;
     }
 }
@@ -1196,6 +1215,83 @@ public:
         this->triangles->emplace_back(Triangle((*vertices)[0], (*vertices)[2], (*vertices)[3]));
     }
 };
+
+void BoundingBox::tryCreatingBounds(Mesh* mesh)
+{
+    this->mesh = mesh;
+    if (!mesh->vertices)
+    {
+        return;
+    }
+    else if (!vertices)
+    {
+        vertices = new Vec3[8];
+    }
+
+    Range xRange = ProjectVertsOntoAxis(mesh->vertices->data(), mesh->vertices->size(), Direction::right);
+    Range yRange = ProjectVertsOntoAxis(mesh->vertices->data(), mesh->vertices->size(), Direction::up);
+    Range zRange = ProjectVertsOntoAxis(mesh->vertices->data(), mesh->vertices->size(), Direction::forward);
+
+    Vec3 min(xRange.min, yRange.min, zRange.min);
+    Vec3 max(xRange.max, yRange.max, zRange.max);
+    Vec3 center = (min + max) * 0.5f;
+
+    //south
+    vertices[0] = { min.x, min.y, -max.z };  //Vec3(-0.5, -0.5, 0.5),
+    vertices[1] = { min.x, max.y, -max.z };  //Vec3(-0.5, 0.5, 0.5),
+    vertices[2] = { max.x, max.y, -max.z };  //Vec3(0.5, 0.5, 0.5),
+    vertices[3] = { max.x, min.y, -max.z };  // Vec3(0.5, -0.5, 0.5),
+    //north
+    vertices[4] = { min.x, min.y, -min.z };  //Vec3(-0.5, -0.5, -0.5),
+    vertices[5] = { min.x, max.y, -min.z };  //Vec3(-0.5, 0.5, -0.5),
+    vertices[6] = { max.x, max.y, -min.z };  //Vec3(0.5, 0.5, -0.5),
+    vertices[7] = { max.x, min.y, -min.z };  // Vec3(0.5, -0.5, -0.5),
+}
+
+Vec3* BoundingBox::WorldBounds()
+{
+    if (!vertices)
+    {
+        tryCreatingBounds(mesh);
+        if (!vertices)
+        {
+            return nullptr;
+        }
+    }
+
+    static Vec3 verts[8] = {};
+    auto trs4x4 = mesh->TRS();
+    for (size_t i = 0; i < 8; i++)
+    {
+        verts[i] = trs4x4 * vertices[i];
+    }
+
+    return verts;
+}
+void BoundingBox::Draw()
+{
+    if (!vertices)
+    {
+        tryCreatingBounds(mesh);
+        if (!vertices)
+        {
+            return;
+        }
+    }
+    auto trs4x4 = mesh->TRS();
+    Line::AddWorldLine(Line(trs4x4 * vertices[0], trs4x4 * vertices[1], Color::red));
+    Line::AddWorldLine(Line(trs4x4 * vertices[1], trs4x4 * vertices[2], Color::red));
+    Line::AddWorldLine(Line(trs4x4 * vertices[2], trs4x4 * vertices[3], Color::red));
+    Line::AddWorldLine(Line(trs4x4 * vertices[3], trs4x4 * vertices[0], Color::red));
+    Line::AddWorldLine(Line(trs4x4 * vertices[4], trs4x4 * vertices[5], Color::red));
+    Line::AddWorldLine(Line(trs4x4 * vertices[5], trs4x4 * vertices[6], Color::red));
+    Line::AddWorldLine(Line(trs4x4 * vertices[6], trs4x4 * vertices[7], Color::red));
+    Line::AddWorldLine(Line(trs4x4 * vertices[7], trs4x4 * vertices[4], Color::red));
+    Line::AddWorldLine(Line(trs4x4 * vertices[0], trs4x4 * vertices[4], Color::red));
+    Line::AddWorldLine(Line(trs4x4 * vertices[1], trs4x4 * vertices[5], Color::red));
+    Line::AddWorldLine(Line(trs4x4 * vertices[2], trs4x4 * vertices[6], Color::red));
+    Line::AddWorldLine(Line(trs4x4 * vertices[3], trs4x4 * vertices[7], Color::red));
+}
 
 //------------------------------HELPER FUNCTIONS------------------------------------------------
 
@@ -1510,7 +1606,6 @@ void Draw()
             Line::AddLine(Line(from_p, to_p, Color::green, 4));
     }*/
     //---------------------------------------------------------------------------------------------------*/
-
 
     // ---------- Draw -----------
     for (int i = 0; i < triBuffer->size(); i++)
