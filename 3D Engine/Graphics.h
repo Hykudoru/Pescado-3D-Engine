@@ -279,11 +279,13 @@ public:
 
 class BoundingBox : public Transform, public ManagedObjectPool<BoundingBox>
 {
-    void tryCreatingBounds(Mesh* mesh);
+    void tryCreatingBounds(Mesh* mesh, Vec3& xAxis = Direction::right, Vec3& yAxis = Direction::up, Vec3& zAxis = Direction::forward);
 public:
     Vec3* vertices;
-
+    Vec3 min;
+    Vec3 max;
     Mesh* mesh;
+
     BoundingBox(Mesh* mesh) : ManagedObjectPool<BoundingBox>(this)
     {
         tryCreatingBounds(mesh);
@@ -357,6 +359,7 @@ struct Graphics
     static bool debugNormals;
     static bool debugVertices;
     static bool debugAxes;
+    static bool debugBounds;
     static bool debugBoxCollisions;
     static bool debugSphereCollisions;
     static bool debugPlaneCollisions;
@@ -431,6 +434,7 @@ bool Graphics::invertNormals = false;
 bool Graphics::debugNormals = false;
 bool Graphics::debugVertices = false;
 bool Graphics::debugAxes = false;
+bool Graphics::debugBounds = false;
 bool Graphics::debugBoxCollisions = false;
 bool Graphics::debugSphereCollisions = false;
 bool Graphics::debugPlaneCollisions = false;
@@ -1216,7 +1220,7 @@ public:
     }
 };
 
-void BoundingBox::tryCreatingBounds(Mesh* mesh)
+void BoundingBox::tryCreatingBounds(Mesh* mesh, Vec3& xAxis, Vec3& yAxis, Vec3& zAxis)
 {
     this->mesh = mesh;
     if (!mesh->vertices)
@@ -1228,24 +1232,23 @@ void BoundingBox::tryCreatingBounds(Mesh* mesh)
         vertices = new Vec3[8];
     }
 
-    Range xRange = ProjectVertsOntoAxis(mesh->vertices->data(), mesh->vertices->size(), Direction::right);
-    Range yRange = ProjectVertsOntoAxis(mesh->vertices->data(), mesh->vertices->size(), Direction::up);
-    Range zRange = ProjectVertsOntoAxis(mesh->vertices->data(), mesh->vertices->size(), Direction::forward);
+    Range xRange = ProjectVertsOntoAxis(mesh->vertices->data(), mesh->vertices->size(), xAxis);
+    Range yRange = ProjectVertsOntoAxis(mesh->vertices->data(), mesh->vertices->size(), yAxis);
+    Range zRange = ProjectVertsOntoAxis(mesh->vertices->data(), mesh->vertices->size(), zAxis);
 
-    Vec3 min(xRange.min, yRange.min, zRange.min);
-    Vec3 max(xRange.max, yRange.max, zRange.max);
-    Vec3 center = (min + max) * 0.5f;
-
+    min = Vec3(xRange.min, yRange.min, -zRange.min);
+    max = Vec3(xRange.max, yRange.max, -zRange.max);
+    
     //south
-    vertices[0] = { min.x, min.y, -max.z };  //Vec3(-0.5, -0.5, 0.5),
-    vertices[1] = { min.x, max.y, -max.z };  //Vec3(-0.5, 0.5, 0.5),
-    vertices[2] = { max.x, max.y, -max.z };  //Vec3(0.5, 0.5, 0.5),
-    vertices[3] = { max.x, min.y, -max.z };  // Vec3(0.5, -0.5, 0.5),
+    vertices[0] = { min.x, min.y, max.z };  //Vec3(-0.5, -0.5, 0.5),
+    vertices[1] = { min.x, max.y, max.z };  //Vec3(-0.5, 0.5, 0.5),
+    vertices[2] = { max.x, max.y, max.z };  //Vec3(0.5, 0.5, 0.5),
+    vertices[3] = { max.x, min.y, max.z };  // Vec3(0.5, -0.5, 0.5),
     //north
-    vertices[4] = { min.x, min.y, -min.z };  //Vec3(-0.5, -0.5, -0.5),
-    vertices[5] = { min.x, max.y, -min.z };  //Vec3(-0.5, 0.5, -0.5),
-    vertices[6] = { max.x, max.y, -min.z };  //Vec3(0.5, 0.5, -0.5),
-    vertices[7] = { max.x, min.y, -min.z };  // Vec3(0.5, -0.5, -0.5),
+    vertices[4] = { min.x, min.y, min.z };  //Vec3(-0.5, -0.5, -0.5),
+    vertices[5] = { min.x, max.y, min.z };  //Vec3(-0.5, 0.5, -0.5),
+    vertices[6] = { max.x, max.y, min.z };  //Vec3(0.5, 0.5, -0.5),
+    vertices[7] = { max.x, min.y, min.z };  // Vec3(0.5, -0.5, -0.5),
 }
 
 Vec3* BoundingBox::WorldBounds()
@@ -1258,8 +1261,8 @@ Vec3* BoundingBox::WorldBounds()
             return nullptr;
         }
     }
-
     static Vec3 verts[8] = {};
+
     auto trs4x4 = mesh->TRS();
     for (size_t i = 0; i < 8; i++)
     {
@@ -1278,19 +1281,21 @@ void BoundingBox::Draw()
             return;
         }
     }
-    auto trs4x4 = mesh->TRS();
-    Line::AddWorldLine(Line(trs4x4 * vertices[0], trs4x4 * vertices[1], Color::red));
-    Line::AddWorldLine(Line(trs4x4 * vertices[1], trs4x4 * vertices[2], Color::red));
-    Line::AddWorldLine(Line(trs4x4 * vertices[2], trs4x4 * vertices[3], Color::red));
-    Line::AddWorldLine(Line(trs4x4 * vertices[3], trs4x4 * vertices[0], Color::red));
-    Line::AddWorldLine(Line(trs4x4 * vertices[4], trs4x4 * vertices[5], Color::red));
-    Line::AddWorldLine(Line(trs4x4 * vertices[5], trs4x4 * vertices[6], Color::red));
-    Line::AddWorldLine(Line(trs4x4 * vertices[6], trs4x4 * vertices[7], Color::red));
-    Line::AddWorldLine(Line(trs4x4 * vertices[7], trs4x4 * vertices[4], Color::red));
-    Line::AddWorldLine(Line(trs4x4 * vertices[0], trs4x4 * vertices[4], Color::red));
-    Line::AddWorldLine(Line(trs4x4 * vertices[1], trs4x4 * vertices[5], Color::red));
-    Line::AddWorldLine(Line(trs4x4 * vertices[2], trs4x4 * vertices[6], Color::red));
-    Line::AddWorldLine(Line(trs4x4 * vertices[3], trs4x4 * vertices[7], Color::red));
+    auto vertices_w = WorldBounds();
+    Point::AddWorldPoint(Point(mesh->TRS()*min, Color::red, 10));
+    Point::AddWorldPoint(Point(mesh->TRS() * max, Color::red, 10));
+    Line::AddWorldLine(Line(vertices_w[0], vertices_w[1], Color::red));
+    Line::AddWorldLine(Line(vertices_w[1], vertices_w[2], Color::red));
+    Line::AddWorldLine(Line(vertices_w[2], vertices_w[3], Color::red));
+    Line::AddWorldLine(Line(vertices_w[3], vertices_w[0], Color::red));
+    Line::AddWorldLine(Line(vertices_w[4], vertices_w[5], Color::red));
+    Line::AddWorldLine(Line(vertices_w[5], vertices_w[6], Color::red));
+    Line::AddWorldLine(Line(vertices_w[6], vertices_w[7], Color::red));
+    Line::AddWorldLine(Line(vertices_w[7], vertices_w[4], Color::red));
+    Line::AddWorldLine(Line(vertices_w[0], vertices_w[4], Color::red));
+    Line::AddWorldLine(Line(vertices_w[1], vertices_w[5], Color::red));
+    Line::AddWorldLine(Line(vertices_w[2], vertices_w[6], Color::red));
+    Line::AddWorldLine(Line(vertices_w[3], vertices_w[7], Color::red));
 }
 
 //------------------------------HELPER FUNCTIONS------------------------------------------------
@@ -1448,10 +1453,11 @@ void Draw()
 */
             if (Mesh::objects[i]->vertices)
             {
+                Matrix4x4 trs4x4 = Mesh::objects[i]->TRS();
                 List<Vec3> verts = *(Mesh::objects[i]->vertices);
                 for (size_t j = 0; j < verts.size(); j++)
                 {
-                    verts[j] = vpMatrix * Mesh::objects[i]->TRS() * verts[j];
+                    verts[j] = vpMatrix * trs4x4 * verts[j];
                 }
                 Range xRange = ProjectVertsOntoAxis(verts.data(), verts.size(), Direction::right);
                 Range yRange = ProjectVertsOntoAxis(verts.data(), verts.size(), Direction::up);

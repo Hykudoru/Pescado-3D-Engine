@@ -1000,10 +1000,12 @@ static void Physics()
         std::cout << "Velocity: <" << velocity.x << ", " << velocity.y << ", " << velocity.z << ">" << endl;
     }
 
-
-    for (size_t i = 0; i < ManagedObjectPool<BoundingBox>::objects.size(); i++)
+    if (Graphics::debugBounds)
     {
-        ManagedObjectPool<BoundingBox>::objects[i]->Draw();
+        for (size_t i = 0; i < ManagedObjectPool<BoundingBox>::objects.size(); i++)
+        {
+            ManagedObjectPool<BoundingBox>::objects[i]->Draw();
+        }
     }
 }
 #endif

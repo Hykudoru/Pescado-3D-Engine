@@ -276,6 +276,10 @@ void OnKeyPressEvent(GLFWwindow* window, int key, int scancode, int action, int 
         {
             Graphics::matrixMode = !Graphics::matrixMode;
         }
+        else if (key == GLFW_KEY_B)
+        {
+            Graphics::debugBounds = !Graphics::debugBounds;
+        }
         else if (key == GLFW_KEY_F6)
         {
             parent->localRotation *= Matrix3x3::RotY(ToRad(10));
