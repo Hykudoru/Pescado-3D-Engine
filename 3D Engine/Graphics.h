@@ -279,7 +279,8 @@ public:
 
 class BoundingBox : public Transform, public ManagedObjectPool<BoundingBox>
 {
-    void tryCreatingBounds(Mesh* mesh, Vec3& xAxis = Direction::right, Vec3& yAxis = Direction::up, Vec3& zAxis = Direction::forward);
+    void tryCreatingBounds(Mesh* mesh);
+
 public:
     Vec3* vertices;
     Vec3 min;
@@ -307,7 +308,7 @@ public:
     bool ignoreLighting = false;
     bool forceWireFrame = false;
 //Mesh(const Mesh& other) = delete;//disables copying
- 
+    BoundingBox* bounds;
 
     Mesh(const float& scale = 1, const Vec3& position = Vec3(0, 0, 0), const Vec3& rotationEuler = Vec3(0, 0, 0))
         : Transform(scale, position, rotationEuler), ManagedObjectPool<Mesh>(this)
@@ -315,7 +316,7 @@ public:
         triangles = new List<Triangle>{};
         MapVertsToTriangles();
         SetColor(color);
-        new BoundingBox(this);
+        bounds = new BoundingBox(this);
     }
     
     Mesh(const Vec3& scale, const Vec3& position = Vec3(0, 0, 0), const Matrix3x3& rotation = Matrix3x3::identity)
@@ -324,7 +325,7 @@ public:
         triangles = new List<Triangle>{};
         MapVertsToTriangles();
         SetColor(color);
-        new BoundingBox(this);
+        bounds = new BoundingBox(this);
     }
 
     virtual ~Mesh()
@@ -332,6 +333,7 @@ public:
         delete vertices;
         delete indices;
         delete triangles;
+        delete bounds;
     }
 
     bool SetVisibility(bool visible);
@@ -924,11 +926,25 @@ bool CameraSettings::displayReticle = true;
 
 class Camera : public Transform
 {
+    Mesh* mesh;
 public:
     static Camera* main;
     static Camera* projector;
     static List<Camera*> cameras;
     static int cameraCount;
+
+    void SetMesh(Mesh* mesh)
+    {
+        this->mesh = mesh;
+        this->mesh->SetParent(this, false);
+        this->mesh->localPosition += -Direction::forward;
+    }
+
+    Mesh* GetMesh()
+    {
+        return this->mesh;
+    }
+    
 
     std::string name;
 
@@ -936,7 +952,21 @@ public:
         : Transform(1, position, rotationEuler)
     {
         cameras.emplace(cameras.begin() + cameraCount++, this);
-        name = "Camera " + cameraCount;
+        this->name = "Camera " + cameraCount;
+    }
+    
+    static bool InsideViewScreen(Vec3* verts_proj, int size)
+    {
+        Range xRange = ProjectVertsOntoAxis(verts_proj, size, Direction::right);
+        if ((xRange.min > 1.0f || xRange.max < -1.0f)) {
+            return false;
+        }
+        Range yRange = ProjectVertsOntoAxis(verts_proj, size, Direction::up);
+        if ((yRange.min > 1.0f || yRange.max < -1.0f)) {
+                return false;
+        }
+
+        return true;
     }
 };
 List<Camera*> Camera::cameras = List<Camera*>();
@@ -1072,10 +1102,7 @@ void Mesh::TransformTriangles()
             if (behindCamera) {
                 continue; // Skip triangle if it's out of cam view.
             }*/
-
-            Range xRange = ProjectVertsOntoAxis(projectedTri.verts, 3, Direction::right);
-            Range yRange = ProjectVertsOntoAxis(projectedTri.verts, 3, Direction::up);
-            if ((xRange.min > 1 || yRange.min > 1) || (xRange.max < -1 || yRange.max < -1)) {
+            if (!Camera::InsideViewScreen(projectedTri.verts, 3)) {
                 continue;
             }
         }
@@ -1084,7 +1111,7 @@ void Mesh::TransformTriangles()
         camSpaceTri.Normal();//camSpaceTri.normal = worldToViewMatrix * modelToWorldMatrix * Vec4(camSpaceTri.normal, 0);
 
         if (Graphics::invertNormals) {
-            camSpaceTri.normal = ((Vec3)camSpaceTri.normal) * -1.0;
+            camSpaceTri.normal = ((Vec3)camSpaceTri.normal) * -1.0f;
         }
 
         // Back-face Culling - Checks if the triangles backside is facing the camera.
@@ -1128,7 +1155,8 @@ void Mesh::TransformTriangles()
         if (Graphics::debugNormals)
         {
             //---------Draw point at centroid and a line from centroid to normal (view space & projected space)-----------
-            Vec2 centroidToNormal_p = projectionMatrix * ((Vec3)camSpaceTri.centroid + camSpaceTri.normal);
+            float normalScalar = (0.011f * ((Vec3)camSpaceTri.centroid).Magnitude());//Scaled depending on distance from camera
+            Vec2 centroidToNormal_p = projectionMatrix * ((Vec3)camSpaceTri.centroid + camSpaceTri.normal * normalScalar);
             Vec2 centroid_p = projectionMatrix * camSpaceTri.centroid;
             Point::AddPoint(Point(centroid_p));
             Line::AddLine(Line(centroid_p, centroidToNormal_p));
@@ -1220,7 +1248,7 @@ public:
     }
 };
 
-void BoundingBox::tryCreatingBounds(Mesh* mesh, Vec3& xAxis, Vec3& yAxis, Vec3& zAxis)
+void BoundingBox::tryCreatingBounds(Mesh* mesh)
 {
     this->mesh = mesh;
     if (!mesh->vertices)
@@ -1232,9 +1260,9 @@ void BoundingBox::tryCreatingBounds(Mesh* mesh, Vec3& xAxis, Vec3& yAxis, Vec3& 
         vertices = new Vec3[8];
     }
 
-    Range xRange = ProjectVertsOntoAxis(mesh->vertices->data(), mesh->vertices->size(), xAxis);
-    Range yRange = ProjectVertsOntoAxis(mesh->vertices->data(), mesh->vertices->size(), yAxis);
-    Range zRange = ProjectVertsOntoAxis(mesh->vertices->data(), mesh->vertices->size(), zAxis);
+    Range xRange = ProjectVertsOntoAxis(mesh->vertices->data(), mesh->vertices->size(), Direction::right);
+    Range yRange = ProjectVertsOntoAxis(mesh->vertices->data(), mesh->vertices->size(), Direction::up);
+    Range zRange = ProjectVertsOntoAxis(mesh->vertices->data(), mesh->vertices->size(), Direction::forward);
 
     min = Vec3(xRange.min, yRange.min, -zRange.min);
     max = Vec3(xRange.max, yRange.max, -zRange.max);
@@ -1281,21 +1309,24 @@ void BoundingBox::Draw()
             return;
         }
     }
-    auto vertices_w = WorldBounds();
-    Point::AddWorldPoint(Point(mesh->TRS()*min, Color::red, 10));
-    Point::AddWorldPoint(Point(mesh->TRS() * max, Color::red, 10));
-    Line::AddWorldLine(Line(vertices_w[0], vertices_w[1], Color::red));
-    Line::AddWorldLine(Line(vertices_w[1], vertices_w[2], Color::red));
-    Line::AddWorldLine(Line(vertices_w[2], vertices_w[3], Color::red));
-    Line::AddWorldLine(Line(vertices_w[3], vertices_w[0], Color::red));
-    Line::AddWorldLine(Line(vertices_w[4], vertices_w[5], Color::red));
-    Line::AddWorldLine(Line(vertices_w[5], vertices_w[6], Color::red));
-    Line::AddWorldLine(Line(vertices_w[6], vertices_w[7], Color::red));
-    Line::AddWorldLine(Line(vertices_w[7], vertices_w[4], Color::red));
-    Line::AddWorldLine(Line(vertices_w[0], vertices_w[4], Color::red));
-    Line::AddWorldLine(Line(vertices_w[1], vertices_w[5], Color::red));
-    Line::AddWorldLine(Line(vertices_w[2], vertices_w[6], Color::red));
-    Line::AddWorldLine(Line(vertices_w[3], vertices_w[7], Color::red));
+    if (mesh != Camera::main->GetMesh() && DotProduct(mesh->Position() - Camera::main->Position(), Camera::main->Forward()) > 0)
+    {
+        auto vertices_w = WorldBounds();
+        Point::AddWorldPoint(Point(mesh->TRS() * min, Color::red, 10));
+        Point::AddWorldPoint(Point(mesh->TRS() * max, Color::red, 10));
+        Line::AddWorldLine(Line(vertices_w[0], vertices_w[1], Color::red));
+        Line::AddWorldLine(Line(vertices_w[1], vertices_w[2], Color::red));
+        Line::AddWorldLine(Line(vertices_w[2], vertices_w[3], Color::red));
+        Line::AddWorldLine(Line(vertices_w[3], vertices_w[0], Color::red));
+        Line::AddWorldLine(Line(vertices_w[4], vertices_w[5], Color::red));
+        Line::AddWorldLine(Line(vertices_w[5], vertices_w[6], Color::red));
+        Line::AddWorldLine(Line(vertices_w[6], vertices_w[7], Color::red));
+        Line::AddWorldLine(Line(vertices_w[7], vertices_w[4], Color::red));
+        Line::AddWorldLine(Line(vertices_w[0], vertices_w[4], Color::red));
+        Line::AddWorldLine(Line(vertices_w[1], vertices_w[5], Color::red));
+        Line::AddWorldLine(Line(vertices_w[2], vertices_w[6], Color::red));
+        Line::AddWorldLine(Line(vertices_w[3], vertices_w[7], Color::red));
+    }
 }
 
 //------------------------------HELPER FUNCTIONS------------------------------------------------
@@ -1434,45 +1465,53 @@ void Draw()
     // ---------- Transform -----------
     for (int i = 0; i < Mesh::count; i++)
     {
+        Mesh* mesh = Mesh::objects[i];
+        BoundingBox* bounds = mesh->bounds;
+        
         if (Graphics::frustumCulling)
         {
             // Scale/Distance ratio culling
-            float sqrDist = (Mesh::objects[i]->root->localPosition - Camera::main->Position()).SqrMagnitude();
+            /*float sqrDist = (mesh->root->localPosition - Camera::main->Position()).SqrMagnitude();
             if (sqrDist != 0.0)
             {
-                bool meshTooSmallToSee = Mesh::objects[i]->root->localScale.SqrMagnitude() / sqrDist < 0.0000000000001;
+                bool meshTooSmallToSee = mesh->root->localScale.SqrMagnitude() / sqrDist < 0.0000000000001;
                 if (meshTooSmallToSee) {
                     continue;
                 }
-            }
+            }*/
             /*
             bool meshBehindCamera = DotProduct((Mesh::objects[i]->Position() - Camera::main->position), Camera::main->Forward()) <= 0.0;
             if (meshBehindCamera) {
                 continue;
             }
 */
-            if (Mesh::objects[i]->vertices)
+            if (bounds->vertices)
             {
-                Matrix4x4 trs4x4 = Mesh::objects[i]->TRS();
-                List<Vec3> verts = *(Mesh::objects[i]->vertices);
-                for (size_t j = 0; j < verts.size(); j++)
+                Matrix4x4 trs4x4 = vpMatrix * mesh->TRS();
+                int count = 8;// sizeof(bounds->vertices) / sizeof(Vec3);
+                List<Vec3> verts = List<Vec3>(count);
+                for (size_t i = 0; i < count; i++)
                 {
-                    verts[j] = vpMatrix * trs4x4 * verts[j];
+                    verts[i] = trs4x4 * bounds->vertices[i];
                 }
-                Range xRange = ProjectVertsOntoAxis(verts.data(), verts.size(), Direction::right);
-                Range yRange = ProjectVertsOntoAxis(verts.data(), verts.size(), Direction::up);
-                if ( ((xRange.min > 1.0 && xRange.max > 1.0) || (xRange.min < -1.0 && xRange.max < -1.0)) || ((yRange.min > 1.0 && yRange.max > 1.0) || (yRange.min < -1.0 && yRange.max < -1.0)) )
+                
+                if (!Camera::InsideViewScreen(verts.data(), count))
                 {
                     continue;
                 }
             }
-
             // ---------- Debug -----------
+            
+            if (Graphics::debugBounds)
+            {
+                bounds->Draw();
+            }
+
             if (Graphics::debugAxes)
             {
-                if (DotProduct(Mesh::objects[i]->Position() - Camera::main->Position(), Camera::main->Forward()) > 0)
+                if (DotProduct(mesh->Position() - Camera::main->Position(), Camera::main->Forward()) > 0)
                 {
-                    Matrix4x4 mvp = vpMatrix * Mesh::objects[i]->TRS();
+                    Matrix4x4 mvp = vpMatrix * mesh->TRS();
 
                     Vec2 center_p = mvp * Vec4(0, 0, 0, 1);
                     Vec2 xAxis_p = mvp * Vec4(0.5, 0, 0, 1); 
@@ -1487,9 +1526,11 @@ void Draw()
                     Line::AddLine(Line(center_p, mvp * (Direction::forward), Color::turquoise, 3));
                 }
             }
+
+            
         }
 
-        Mesh::objects[i]->TransformTriangles();
+        mesh->TransformTriangles();
     }
 
     Mesh::worldTriangleDrawCount = triBuffer->size();

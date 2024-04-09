@@ -75,8 +75,7 @@ void Init(GLFWwindow* window)
     for (size_t i = 1; i < Camera::cameras.size(); i++)//starts at 1 to avoid projector camera
     {
         Mesh* cameraMesh = LoadMeshFromOBJFile("Camera.obj");
-        cameraMesh->SetParent(Camera::cameras[i], false);
-        cameraMesh->localPosition += -Direction::forward;
+        Camera::cameras[i]->SetMesh(cameraMesh);
     }
 
     //GraphicSettings::debugAxes = true;/*

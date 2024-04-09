@@ -999,13 +999,5 @@ static void Physics()
         std::cout << "Position: (" << Camera::main->Position().x << ", " << Camera::main->Position().y << ", " << Camera::main->Position().z << ")" << endl;
         std::cout << "Velocity: <" << velocity.x << ", " << velocity.y << ", " << velocity.z << ">" << endl;
     }
-
-    if (Graphics::debugBounds)
-    {
-        for (size_t i = 0; i < ManagedObjectPool<BoundingBox>::objects.size(); i++)
-        {
-            ManagedObjectPool<BoundingBox>::objects[i]->Draw();
-        }
-    }
 }
 #endif
