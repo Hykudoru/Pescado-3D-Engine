@@ -12,6 +12,7 @@
 #include <Input.h>
 using namespace std;
 GLFWwindow* window;
+//OctTree* octTree;
 
 // Checking if DEBUGGING true in other scripts before using cout also ensures readable slow incremental output.
 bool DEBUGGING = false;
@@ -74,8 +75,7 @@ void Init(GLFWwindow* window)
     for (size_t i = 1; i < Camera::cameras.size(); i++)//starts at 1 to avoid projector camera
     {
         Mesh* cameraMesh = LoadMeshFromOBJFile("Camera.obj");
-        cameraMesh->SetParent(Camera::cameras[i], false);
-        cameraMesh->localPosition += -Direction::forward;
+        Camera::cameras[i]->SetMesh(cameraMesh);
     }
 
     //GraphicSettings::debugAxes = true;/*
@@ -135,11 +135,11 @@ void Init(GLFWwindow* window)
     PhysicsObject* test = new PhysicsObject(new CubeMesh(), new BoxCollider(true));
     test->localScale = { 1, 2, 1 };
     test->localPosition = Direction::forward * 5;
-    for (int r = -5; r < 5; r++)
+    for (int r = -1; r < 1; r++)
     {
-        for (int c = -5; c < 5; c++)
+        for (int c = -1; c < 1; c++)
         {
-            for (int d = -5; d < 5; d++)
+            for (int d = -1; d < 1; d++)
             {
                 PhysicsObject* block = new PhysicsObject(new CubeMesh(), new BoxCollider(true));
                 block->localScale *= .1;
@@ -184,6 +184,8 @@ void Init(GLFWwindow* window)
     bender = LoadMeshFromOBJFile("Bender.obj");
     bender->localRotation = Matrix3x3::RotZ(ToRad(20));
     bender->localPosition = Camera::main->Position() + (Camera::main->Forward() + Camera::main->Right() * 3);
+
+    //octTree = new OctTree();
 }
 
 void Update()
@@ -244,7 +246,6 @@ void Update()
         bender->localRotation *= Matrix3x3::RotY(5.0 * deltaTime);
     }
 
-    
     /*
     static float t = 0;
     t += deltaTime;
@@ -279,6 +280,7 @@ void Update()
             //*v += (RandomDirection() * -ii * (0.001 * t * abs(sin(t * .1))));
         }
     }*/
+    
 }
 
 int main(void)

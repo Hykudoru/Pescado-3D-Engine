@@ -75,84 +75,6 @@ void Time()
     }
 }
 
-struct BoundingBox : public Transform
-{
-public:
-    Vec3 vertices[8] = {
-        //south
-        Vec3(-0.5, -0.5, 0.5),
-        Vec3(-0.5, 0.5, 0.5),
-        Vec3(0.5, 0.5, 0.5),
-        Vec3(0.5, -0.5, 0.5),
-        //north
-        Vec3(-0.5, -0.5, -0.5),
-        Vec3(-0.5, 0.5, -0.5),
-        Vec3(0.5, 0.5, -0.5),
-        Vec3(0.5, -0.5, -0.5)
-    };
-};
-
-/*
-template <typename T>
-class Node : public Transform
-{
-public:
-    int level = 0;
-    Node<T> *root = nullptr;
-    Node<T> *parent = nullptr;
-    List<Node<T>> nodes;
-    Node<T>()
-    {
-        if (!root)
-        {
-            root = this;
-        }
-    }
-    Node<T>(int num)
-    {
-        if (!root)
-        {
-            root = this;
-        }
-
-        nodes = List<Node<T>>(num);
-        for (int i = 0; i < num; i++)
-        {
-            nodes[i] = Node<T>();
-        }
-    }
-};
-
-template <typename T>
-
-class OctTree
-{
-public:
-    int depth = 4;
-    Node<BoundingBox> node = Node<BoundingBox>(8);
-    OctTree()
-    {
-        node.Scale(10);
-        for (size_t i = 0; i < 8; i++)
-        {
-            Node<BoundingBox>* n = &(node.nodes)[i];
-            n->SetParent(node);
-
-            for (int ii = -8; ii < 8; ii++)
-            {
-                PhysicsObject* block = new PhysicsObject(new CubeMesh(), new BoxCollider(true));
-                block->Scale(2);
-                block->position = Direction::down * 15 + Direction::left * i * 10 + Direction::back * j * 10;
-            }
-        }
-            //positioning
-            //test
-        }
-    }
-};*/
-
-class PhysicsObject;
-
 class Component : public Transform
 {
 public:
@@ -542,7 +464,114 @@ bool OBBSATColliding(BoxCollider& box1, BoxCollider& box2, BoxCollisionInfo& col
 
     return collisionInfo.colliding;
 }
+/*
+template <typename T>
+class Node : public Transform
+{
+private:
+    List<Node<T>>* children = nullptr;
+public:
+    int level = 0;
+    Node<T>* root = nullptr;
+    Node<T>* parent = nullptr;
+    Node<T>* leaf = nullptr;
 
+    Node<T>(Node<T>* parent = nullptr)
+    {
+        if (!this->root)
+        {
+            this->root = this;
+        }
+        if (parent)
+        {
+            this->parent = parent;
+            this->root = parent->root;
+        }
+    }
+
+    List<Node<T>>* Children()
+    {
+        if (!children)
+        {
+            children = new List<Node<T>>();
+        }
+        return children;
+    }
+};
+
+class OctTree
+{
+public:
+    int depthLevel = 4;
+    Node<BoxCollider>* rootNode = new Node<BoxCollider>();
+    OctTree()
+    {
+        rootNode->localScale = Vec3::one * 10000;
+        rootNode->level = 0;
+        CreateSubNodesFor(rootNode);
+        for (size_t i = 0; i < 8; i++)
+        {
+            ManagedObjectPool<BoxCollider>::RemoveFromPool((BoxCollider*)&(rootNode->Children()->at(i)));
+        }
+
+
+
+        for (size_t i = 0; i < ManagedObjectPool<BoxCollider>::objects.size(); i++)
+        {
+            auto obj = ManagedObjectPool<BoxCollider>::objects[i];
+            if (!obj->isStatic)
+            {
+                continue;
+            }
+
+            ManagedObjectPool<BoxCollider>::RemoveFromPool(obj);
+            //Check
+            for (size_t ii = 0; ii < 8; ii++)
+            {
+                Node<BoxCollider>* child = &(rootNode->Children()->at(ii));
+               
+                BoxCollisionInfo collisionInfo;
+                Vec3 point = child->TRSInverse() * obj->Position();
+                Vec3 dimensions = child->localScale;
+                if ((point.x > dimensions.x || point.x < -dimensions.x) 
+                    || (point.y > dimensions.y || point.y < -dimensions.y)
+                    || (point.z > dimensions.z || point.z < -dimensions.z))
+                {
+                        break;
+                }
+                else {
+                    child->Children()->emplace_back(obj);
+                    
+                    cout << "Contains" << endl;
+                }
+            }
+        }
+    }
+
+    static void CreateSubNodesFor(Node<BoxCollider>* current)
+    {
+        int c = 0;
+        for (int width = -1; width < 1; width++)
+        {
+            for (int height = -1; height < 1; height++)
+            {
+                for (int depth = -1; depth < 1; depth++)
+                {
+                    BoxCollider* block = new BoxCollider(true, true);
+                    block->mesh->SetVisibility(true);
+                    block->localScale *= .5f;
+                    block->localPosition = Direction::right * width * .5f + Direction::up * height * .5f + Direction::forward * depth * .5f;
+                    block->SetParent(current, false);
+
+                    Node<BoxCollider>* newChild = new Node<BoxCollider>(current);
+                    newChild->localScale *= .5f;
+                    newChild->level = current->level + 1;
+                    current->Children()->emplace_back(newChild);
+                }
+            }
+        }
+    }
+};*/
 void DetectCollisions()
 {
     // How nested loop algorithm works: 
@@ -944,9 +973,12 @@ static void Physics()
     if (DEBUGGING)
     {
         std::cout << "--------PHYSICS-------" << endl;
+        
+        string onoff = Physics::dynamics ? "On" : "Off";
+        std::cout << "Physics: " << onoff << " (press p)" << endl;
 
-        string onoff = Physics::collisionDetection ? "On" : "Off";
-        std::cout << "Collisions: " << onoff << " (press P)" << endl;
+        onoff = Physics::collisionDetection ? "On" : "Off";
+        std::cout << "Collisions: " << onoff << " (press \\)" << endl;
 
         onoff = Physics::gravity ? "On" : "Off";
         std::cout << "Gravity: " << onoff << " (press G)" << endl;

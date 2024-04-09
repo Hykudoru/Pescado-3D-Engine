@@ -35,8 +35,8 @@ public:
             }
         }
     }
-protected:
-    static void addToPool(T* obj)
+
+    static void AddToPool(T* obj)
     {
         for (size_t i = 0; i < ManagedObjectPool<T>::objects.size(); i++)
         {
@@ -49,7 +49,7 @@ protected:
         count = ManagedObjectPool<T>::objects.size();//count++;
     }
 
-    static void removeFromPool(T* obj)
+    static void RemoveFromPool(T* obj)
     {
         for (size_t i = 0; i < ManagedObjectPool<T>::objects.size(); i++)
         {

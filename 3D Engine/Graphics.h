@@ -277,6 +277,26 @@ public:
     Matrix4x4 TRInverse();
 };
 
+class BoundingBox : public Transform, public ManagedObjectPool<BoundingBox>
+{
+    void tryCreatingBounds(Mesh* mesh);
+
+public:
+    Vec3* vertices;
+    Vec3 min;
+    Vec3 max;
+    Mesh* mesh;
+
+    BoundingBox(Mesh* mesh) : ManagedObjectPool<BoundingBox>(this)
+    {
+        tryCreatingBounds(mesh);
+    }
+
+    Vec3* WorldBounds();
+
+    void Draw();
+};
+
 class Mesh : public Transform, public ManagedObjectPool<Mesh>
 {
 public:
@@ -288,7 +308,7 @@ public:
     bool ignoreLighting = false;
     bool forceWireFrame = false;
 //Mesh(const Mesh& other) = delete;//disables copying
- 
+    BoundingBox* bounds;
 
     Mesh(const float& scale = 1, const Vec3& position = Vec3(0, 0, 0), const Vec3& rotationEuler = Vec3(0, 0, 0))
         : Transform(scale, position, rotationEuler), ManagedObjectPool<Mesh>(this)
@@ -296,6 +316,7 @@ public:
         triangles = new List<Triangle>{};
         MapVertsToTriangles();
         SetColor(color);
+        bounds = new BoundingBox(this);
     }
     
     Mesh(const Vec3& scale, const Vec3& position = Vec3(0, 0, 0), const Matrix3x3& rotation = Matrix3x3::identity)
@@ -304,6 +325,7 @@ public:
         triangles = new List<Triangle>{};
         MapVertsToTriangles();
         SetColor(color);
+        bounds = new BoundingBox(this);
     }
 
     virtual ~Mesh()
@@ -311,6 +333,7 @@ public:
         delete vertices;
         delete indices;
         delete triangles;
+        delete bounds;
     }
 
     bool SetVisibility(bool visible);
@@ -338,6 +361,7 @@ struct Graphics
     static bool debugNormals;
     static bool debugVertices;
     static bool debugAxes;
+    static bool debugBounds;
     static bool debugBoxCollisions;
     static bool debugSphereCollisions;
     static bool debugPlaneCollisions;
@@ -412,6 +436,7 @@ bool Graphics::invertNormals = false;
 bool Graphics::debugNormals = false;
 bool Graphics::debugVertices = false;
 bool Graphics::debugAxes = false;
+bool Graphics::debugBounds = false;
 bool Graphics::debugBoxCollisions = false;
 bool Graphics::debugSphereCollisions = false;
 bool Graphics::debugPlaneCollisions = false;
@@ -901,11 +926,25 @@ bool CameraSettings::displayReticle = true;
 
 class Camera : public Transform
 {
+    Mesh* mesh;
 public:
     static Camera* main;
     static Camera* projector;
     static List<Camera*> cameras;
     static int cameraCount;
+
+    void SetMesh(Mesh* mesh)
+    {
+        this->mesh = mesh;
+        this->mesh->SetParent(this, false);
+        this->mesh->localPosition += -Direction::forward;
+    }
+
+    Mesh* GetMesh()
+    {
+        return this->mesh;
+    }
+    
 
     std::string name;
 
@@ -913,7 +952,21 @@ public:
         : Transform(1, position, rotationEuler)
     {
         cameras.emplace(cameras.begin() + cameraCount++, this);
-        name = "Camera " + cameraCount;
+        this->name = "Camera " + cameraCount;
+    }
+    
+    static bool InsideViewScreen(Vec3* verts_proj, int size)
+    {
+        Range xRange = ProjectVertsOntoAxis(verts_proj, size, Direction::right);
+        if ((xRange.min > 1.0f || xRange.max < -1.0f)) {
+            return false;
+        }
+        Range yRange = ProjectVertsOntoAxis(verts_proj, size, Direction::up);
+        if ((yRange.min > 1.0f || yRange.max < -1.0f)) {
+                return false;
+        }
+
+        return true;
     }
 };
 List<Camera*> Camera::cameras = List<Camera*>();
@@ -928,11 +981,11 @@ Camera* Camera::main = camera1;
 bool Mesh::SetVisibility(bool visible)
 {
     if (visible) {
-        ManagedObjectPool<Mesh>::addToPool(this);
+        ManagedObjectPool<Mesh>::AddToPool(this);
         return true;
     }
     else {
-        ManagedObjectPool<Mesh>::removeFromPool(this);
+        ManagedObjectPool<Mesh>::RemoveFromPool(this);
         return false;
     }
 }
@@ -1049,10 +1102,7 @@ void Mesh::TransformTriangles()
             if (behindCamera) {
                 continue; // Skip triangle if it's out of cam view.
             }*/
-
-            Range xRange = ProjectVertsOntoAxis(projectedTri.verts, 3, Direction::right);
-            Range yRange = ProjectVertsOntoAxis(projectedTri.verts, 3, Direction::up);
-            if ((xRange.min > 1 || yRange.min > 1) || (xRange.max < -1 || yRange.max < -1)) {
+            if (!Camera::InsideViewScreen(projectedTri.verts, 3)) {
                 continue;
             }
         }
@@ -1061,7 +1111,7 @@ void Mesh::TransformTriangles()
         camSpaceTri.Normal();//camSpaceTri.normal = worldToViewMatrix * modelToWorldMatrix * Vec4(camSpaceTri.normal, 0);
 
         if (Graphics::invertNormals) {
-            camSpaceTri.normal = ((Vec3)camSpaceTri.normal) * -1.0;
+            camSpaceTri.normal = ((Vec3)camSpaceTri.normal) * -1.0f;
         }
 
         // Back-face Culling - Checks if the triangles backside is facing the camera.
@@ -1105,7 +1155,8 @@ void Mesh::TransformTriangles()
         if (Graphics::debugNormals)
         {
             //---------Draw point at centroid and a line from centroid to normal (view space & projected space)-----------
-            Vec2 centroidToNormal_p = projectionMatrix * ((Vec3)camSpaceTri.centroid + camSpaceTri.normal);
+            float normalScalar = (0.011f * ((Vec3)camSpaceTri.centroid).Magnitude());//Scaled depending on distance from camera
+            Vec2 centroidToNormal_p = projectionMatrix * ((Vec3)camSpaceTri.centroid + camSpaceTri.normal * normalScalar);
             Vec2 centroid_p = projectionMatrix * camSpaceTri.centroid;
             Point::AddPoint(Point(centroid_p));
             Line::AddLine(Line(centroid_p, centroidToNormal_p));
@@ -1196,6 +1247,87 @@ public:
         this->triangles->emplace_back(Triangle((*vertices)[0], (*vertices)[2], (*vertices)[3]));
     }
 };
+
+void BoundingBox::tryCreatingBounds(Mesh* mesh)
+{
+    this->mesh = mesh;
+    if (!mesh->vertices)
+    {
+        return;
+    }
+    else if (!vertices)
+    {
+        vertices = new Vec3[8];
+    }
+
+    Range xRange = ProjectVertsOntoAxis(mesh->vertices->data(), mesh->vertices->size(), Direction::right);
+    Range yRange = ProjectVertsOntoAxis(mesh->vertices->data(), mesh->vertices->size(), Direction::up);
+    Range zRange = ProjectVertsOntoAxis(mesh->vertices->data(), mesh->vertices->size(), Direction::forward);
+
+    min = Vec3(xRange.min, yRange.min, -zRange.min);
+    max = Vec3(xRange.max, yRange.max, -zRange.max);
+    
+    //south
+    vertices[0] = { min.x, min.y, max.z };  //Vec3(-0.5, -0.5, 0.5),
+    vertices[1] = { min.x, max.y, max.z };  //Vec3(-0.5, 0.5, 0.5),
+    vertices[2] = { max.x, max.y, max.z };  //Vec3(0.5, 0.5, 0.5),
+    vertices[3] = { max.x, min.y, max.z };  // Vec3(0.5, -0.5, 0.5),
+    //north
+    vertices[4] = { min.x, min.y, min.z };  //Vec3(-0.5, -0.5, -0.5),
+    vertices[5] = { min.x, max.y, min.z };  //Vec3(-0.5, 0.5, -0.5),
+    vertices[6] = { max.x, max.y, min.z };  //Vec3(0.5, 0.5, -0.5),
+    vertices[7] = { max.x, min.y, min.z };  // Vec3(0.5, -0.5, -0.5),
+}
+
+Vec3* BoundingBox::WorldBounds()
+{
+    if (!vertices)
+    {
+        tryCreatingBounds(mesh);
+        if (!vertices)
+        {
+            return nullptr;
+        }
+    }
+    static Vec3 verts[8] = {};
+
+    auto trs4x4 = mesh->TRS();
+    for (size_t i = 0; i < 8; i++)
+    {
+        verts[i] = trs4x4 * vertices[i];
+    }
+
+    return verts;
+}
+void BoundingBox::Draw()
+{
+    if (!vertices)
+    {
+        tryCreatingBounds(mesh);
+        if (!vertices)
+        {
+            return;
+        }
+    }
+    if (mesh != Camera::main->GetMesh() && DotProduct(mesh->Position() - Camera::main->Position(), Camera::main->Forward()) > 0)
+    {
+        auto vertices_w = WorldBounds();
+        Point::AddWorldPoint(Point(mesh->TRS() * min, Color::red, 10));
+        Point::AddWorldPoint(Point(mesh->TRS() * max, Color::red, 10));
+        Line::AddWorldLine(Line(vertices_w[0], vertices_w[1], Color::red));
+        Line::AddWorldLine(Line(vertices_w[1], vertices_w[2], Color::red));
+        Line::AddWorldLine(Line(vertices_w[2], vertices_w[3], Color::red));
+        Line::AddWorldLine(Line(vertices_w[3], vertices_w[0], Color::red));
+        Line::AddWorldLine(Line(vertices_w[4], vertices_w[5], Color::red));
+        Line::AddWorldLine(Line(vertices_w[5], vertices_w[6], Color::red));
+        Line::AddWorldLine(Line(vertices_w[6], vertices_w[7], Color::red));
+        Line::AddWorldLine(Line(vertices_w[7], vertices_w[4], Color::red));
+        Line::AddWorldLine(Line(vertices_w[0], vertices_w[4], Color::red));
+        Line::AddWorldLine(Line(vertices_w[1], vertices_w[5], Color::red));
+        Line::AddWorldLine(Line(vertices_w[2], vertices_w[6], Color::red));
+        Line::AddWorldLine(Line(vertices_w[3], vertices_w[7], Color::red));
+    }
+}
 
 //------------------------------HELPER FUNCTIONS------------------------------------------------
 
@@ -1333,44 +1465,53 @@ void Draw()
     // ---------- Transform -----------
     for (int i = 0; i < Mesh::count; i++)
     {
+        Mesh* mesh = Mesh::objects[i];
+        BoundingBox* bounds = mesh->bounds;
+        
         if (Graphics::frustumCulling)
         {
             // Scale/Distance ratio culling
-            float sqrDist = (Mesh::objects[i]->root->localPosition - Camera::main->Position()).SqrMagnitude();
+            /*float sqrDist = (mesh->root->localPosition - Camera::main->Position()).SqrMagnitude();
             if (sqrDist != 0.0)
             {
-                bool meshTooSmallToSee = Mesh::objects[i]->root->localScale.SqrMagnitude() / sqrDist < 0.0000000000001;
+                bool meshTooSmallToSee = mesh->root->localScale.SqrMagnitude() / sqrDist < 0.0000000000001;
                 if (meshTooSmallToSee) {
                     continue;
                 }
-            }
+            }*/
             /*
             bool meshBehindCamera = DotProduct((Mesh::objects[i]->Position() - Camera::main->position), Camera::main->Forward()) <= 0.0;
             if (meshBehindCamera) {
                 continue;
             }
 */
-            if (Mesh::objects[i]->vertices)
+            if (bounds->vertices)
             {
-                List<Vec3> verts = *(Mesh::objects[i]->vertices);
-                for (size_t j = 0; j < verts.size(); j++)
+                Matrix4x4 trs4x4 = vpMatrix * mesh->TRS();
+                int count = 8;// sizeof(bounds->vertices) / sizeof(Vec3);
+                List<Vec3> verts = List<Vec3>(count);
+                for (size_t i = 0; i < count; i++)
                 {
-                    verts[j] = vpMatrix * Mesh::objects[i]->TRS() * verts[j];
+                    verts[i] = trs4x4 * bounds->vertices[i];
                 }
-                Range xRange = ProjectVertsOntoAxis(verts.data(), verts.size(), Direction::right);
-                Range yRange = ProjectVertsOntoAxis(verts.data(), verts.size(), Direction::up);
-                if ( ((xRange.min > 1.0 && xRange.max > 1.0) || (xRange.min < -1.0 && xRange.max < -1.0)) || ((yRange.min > 1.0 && yRange.max > 1.0) || (yRange.min < -1.0 && yRange.max < -1.0)) )
+                
+                if (!Camera::InsideViewScreen(verts.data(), count))
                 {
                     continue;
                 }
             }
-
             // ---------- Debug -----------
+            
+            if (Graphics::debugBounds)
+            {
+                bounds->Draw();
+            }
+
             if (Graphics::debugAxes)
             {
-                if (DotProduct(Mesh::objects[i]->Position() - Camera::main->Position(), Camera::main->Forward()) > 0)
+                if (DotProduct(mesh->Position() - Camera::main->Position(), Camera::main->Forward()) > 0)
                 {
-                    Matrix4x4 mvp = vpMatrix * Mesh::objects[i]->TRS();
+                    Matrix4x4 mvp = vpMatrix * mesh->TRS();
 
                     Vec2 center_p = mvp * Vec4(0, 0, 0, 1);
                     Vec2 xAxis_p = mvp * Vec4(0.5, 0, 0, 1); 
@@ -1385,9 +1526,11 @@ void Draw()
                     Line::AddLine(Line(center_p, mvp * (Direction::forward), Color::turquoise, 3));
                 }
             }
+
+            
         }
 
-        Mesh::objects[i]->TransformTriangles();
+        mesh->TransformTriangles();
     }
 
     Mesh::worldTriangleDrawCount = triBuffer->size();
@@ -1510,7 +1653,6 @@ void Draw()
             Line::AddLine(Line(from_p, to_p, Color::green, 4));
     }*/
     //---------------------------------------------------------------------------------------------------*/
-
 
     // ---------- Draw -----------
     for (int i = 0; i < triBuffer->size(); i++)
