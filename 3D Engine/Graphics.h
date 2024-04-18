@@ -282,7 +282,7 @@ class BoundingBox : public Transform, public ManagedObjectPool<BoundingBox>
     void tryCreatingBounds(Mesh* mesh);
 
 public:
-    Vec3* vertices;
+    List<Vec3> vertices = List<Vec3>(8);
     Vec3 min;
     Vec3 max;
     Mesh* mesh;
@@ -301,7 +301,7 @@ class Mesh : public Transform, public ManagedObjectPool<Mesh>
 {
 public:
     static int worldTriangleDrawCount;
-    List<Vec3>* vertices;
+    List<Vec3> vertices;
     List<int>* indices;
     List<Triangle>* triangles;
     Color color = Color::white;
@@ -330,7 +330,7 @@ public:
 
     virtual ~Mesh()
     {
-        delete vertices;
+        //delete vertices;
         delete indices;
         delete triangles;
         delete bounds;
@@ -1008,7 +1008,7 @@ void Mesh::SetColor(Color& c)
 
 List<Triangle>* Mesh::MapVertsToTriangles()
 {
-    if (vertices && indices)
+    if (indices)
     {
         int t = 0;
         for (size_t i = 0; i < indices->size(); i++)
@@ -1017,9 +1017,9 @@ List<Triangle>* Mesh::MapVertsToTriangles()
             int p2Index = (*indices)[i++];
             int p3Index = (*indices)[i];
 
-            (*triangles)[t].verts[0] = (*vertices)[p1Index];
-            (*triangles)[t].verts[1] = (*vertices)[p2Index];
-            (*triangles)[t].verts[2] = (*vertices)[p3Index];
+            (*triangles)[t].verts[0] = (vertices)[p1Index];
+            (*triangles)[t].verts[1] = (vertices)[p2Index];
+            (*triangles)[t].verts[2] = (vertices)[p3Index];
             
             t++;
         }
@@ -1031,7 +1031,7 @@ List<Triangle>* Mesh::MapVertsToTriangles()
 //Convert to world coordinates
 List<Vec3> Mesh::WorldVertices()
 {
-    List<Vec3> verts = *vertices;
+    List<Vec3> verts = vertices;
     Matrix4x4 matrix = TRS();
     for (size_t i = 0; i < verts.size(); i++)
     {
@@ -1193,7 +1193,7 @@ public:
         :Mesh(scale, position, rotationEuler)
     {
         // Local Space (Object Space)
-        this->vertices = new List<Vec3>({//new Vec3[8] {
+        this->vertices =  List<Vec3>({//new Vec3[8] {
             //south
             Vec3(-0.5, -0.5, 0.5),
             Vec3(-0.5, 0.5, 0.5),
@@ -1238,33 +1238,31 @@ public:
     PlaneMesh(const float& scale = 1, const Vec3& position = Vec3(0, 0, 0), const Vec3& rotationEuler = Vec3(0, 0, 0))
         :Mesh(scale, position, rotationEuler)
     {
-        this->vertices = new List<Vec3>{
+        this->vertices = List<Vec3>{
                 Vec3(-0.5, 0, 0.5),
                 Vec3(-0.5, 0, -0.5),
                 Vec3(0.5, 0, -0.5),
                 Vec3(0.5, 0, 0.5)
         };
 
-        this->triangles->emplace_back(Triangle((*vertices)[0], (*vertices)[1], (*vertices)[2]));
-        this->triangles->emplace_back(Triangle((*vertices)[0], (*vertices)[2], (*vertices)[3]));
+        this->triangles->emplace_back(Triangle((vertices)[0], (vertices)[1], (vertices)[2]));
+        this->triangles->emplace_back(Triangle((vertices)[0], (vertices)[2], (vertices)[3]));
     }
 };
 
 void BoundingBox::tryCreatingBounds(Mesh* mesh)
 {
+    if (!mesh) {
+        return;
+    }
     this->mesh = mesh;
-    if (!mesh->vertices)
+    if (mesh->vertices.size() < 1)
     {
         return;
     }
-    else if (!vertices)
-    {
-        vertices = new Vec3[8];
-    }
-
-    Range xRange = ProjectVertsOntoAxis(mesh->vertices->data(), mesh->vertices->size(), Direction::right);
-    Range yRange = ProjectVertsOntoAxis(mesh->vertices->data(), mesh->vertices->size(), Direction::up);
-    Range zRange = ProjectVertsOntoAxis(mesh->vertices->data(), mesh->vertices->size(), Direction::forward);
+    Range xRange = ProjectVertsOntoAxis(mesh->vertices.data(), mesh->vertices.size(), Direction::right);
+    Range yRange = ProjectVertsOntoAxis(mesh->vertices.data(), mesh->vertices.size(), Direction::up);
+    Range zRange = ProjectVertsOntoAxis(mesh->vertices.data(), mesh->vertices.size(), Direction::forward);
 
     min = Vec3(xRange.min, yRange.min, -zRange.min);
     max = Vec3(xRange.max, yRange.max, -zRange.max);
@@ -1283,14 +1281,13 @@ void BoundingBox::tryCreatingBounds(Mesh* mesh)
 
 Vec3* BoundingBox::WorldVertices()
 {
-    if (!vertices)
+    tryCreatingBounds(this->mesh);
+ 
+    if (vertices.size() < 1)
     {
-        tryCreatingBounds(mesh);
-        if (!vertices)
-        {
-            return nullptr;
-        }
+        return nullptr;
     }
+
     static Vec3 verts[8] = {};
 
     auto trs4x4 = mesh->TRS();
@@ -1303,13 +1300,10 @@ Vec3* BoundingBox::WorldVertices()
 }
 void BoundingBox::Draw()
 {
-    if (!vertices)
+    tryCreatingBounds(mesh);
+    if (vertices.size() < 1)
     {
-        tryCreatingBounds(mesh);
-        if (!vertices)
-        {
-            return;
-        }
+        return; 
     }
     if (mesh != Camera::main->GetMesh() && DotProduct(mesh->Position() - Camera::main->Position(), Camera::main->Forward()) > 0)
     {
@@ -1369,7 +1363,7 @@ Mesh* LoadMeshFromOBJFile(std::string objFileName)
 
     // -----------------Construct new mesh-------------------
     Mesh* mesh = new Mesh();
-    List<Vec3>* verts = new List<Vec3>();
+    List<Vec3> verts = List<Vec3>();
     List<int>* indices = new List<int>();
     List<Triangle>* triangles = new List<Triangle>(indices->size() / 3);
     Material material;
@@ -1428,7 +1422,7 @@ Mesh* LoadMeshFromOBJFile(std::string objFileName)
             float x = stof(strings[++i]);
             float y = stof(strings[++i]);
             float z = stof(strings[++i]);
-            verts->emplace_back(Vec3(x, y, z));
+            verts.emplace_back(Vec3(x, y, z));
         }
         //f means the next 3 strings will be the indices for mapping vertices
         else if (objFileSubString == "f") {
@@ -1440,7 +1434,7 @@ Mesh* LoadMeshFromOBJFile(std::string objFileName)
             indices->emplace_back(p2Index);
             indices->emplace_back(p3Index);
 
-            Triangle tri = Triangle((*verts)[p1Index], (*verts)[p2Index], (*verts)[p3Index]);
+            Triangle tri = Triangle((verts)[p1Index], (verts)[p2Index], (verts)[p3Index]);
             tri.color = material.color;
             triangles->emplace_back(tri);
         }
@@ -1487,7 +1481,8 @@ void Draw()
                 continue;
             }
 */
-            if (bounds->vertices)
+            
+            if (bounds)
             {
                 Matrix4x4 trs4x4 = vpMatrix * mesh->TRS();
                 int count = 8;// sizeof(bounds->vertices) / sizeof(Vec3);
@@ -1506,7 +1501,10 @@ void Draw()
             
             if (Graphics::debugBounds)
             {
-                bounds->Draw();
+                if (bounds)
+                {
+                    bounds->Draw();
+                }
             }
 
             if (Graphics::debugAxes)

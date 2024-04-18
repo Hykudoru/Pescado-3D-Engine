@@ -246,16 +246,16 @@ void Update()
         bender->localRotation *= Matrix3x3::RotY(5.0 * deltaTime);
     }
 
-    /*
+    
     static float t = 0;
     t += deltaTime;
     
     for (int i = 0; i < Mesh::objects.size(); i++)
     {
         Mesh* mesh = Mesh::objects[i];
-        for (int ii = 0; ii < mesh->vertices->size(); ii++)
+        for (int ii = 0; ii < mesh->vertices.size(); ii++)
         {
-            Vec3* v = &(*(mesh->vertices))[ii]; 
+            Vec3* v = &((mesh->vertices))[ii]; 
             
             //DECAY
             //*v += *v * 0.001*cos(2.0*PI*t*ii);
@@ -279,7 +279,7 @@ void Update()
             //Stretch 3
             //*v += (RandomDirection() * -ii * (0.001 * t * abs(sin(t * .1))));
         }
-    }*/
+    }
     
 }
 
