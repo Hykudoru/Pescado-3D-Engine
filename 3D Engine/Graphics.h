@@ -292,7 +292,7 @@ public:
         tryCreatingBounds(mesh);
     }
 
-    Vec3* WorldBounds();
+    Vec3* WorldVertices();
 
     void Draw();
 };
@@ -365,6 +365,7 @@ struct Graphics
     static bool debugBoxCollisions;
     static bool debugSphereCollisions;
     static bool debugPlaneCollisions;
+    static bool debugRaycasting;
     static bool perspective;
     static bool fillTriangles;
     static bool displayWireFrames;
@@ -440,6 +441,7 @@ bool Graphics::debugBounds = false;
 bool Graphics::debugBoxCollisions = false;
 bool Graphics::debugSphereCollisions = false;
 bool Graphics::debugPlaneCollisions = false;
+bool Graphics::debugRaycasting = false;
 bool Graphics::perspective = true;
 bool Graphics::fillTriangles = true;
 bool Graphics::displayWireFrames = false;
@@ -1279,7 +1281,7 @@ void BoundingBox::tryCreatingBounds(Mesh* mesh)
     vertices[7] = { max.x, min.y, min.z };  // Vec3(0.5, -0.5, -0.5),
 }
 
-Vec3* BoundingBox::WorldBounds()
+Vec3* BoundingBox::WorldVertices()
 {
     if (!vertices)
     {
@@ -1311,8 +1313,8 @@ void BoundingBox::Draw()
     }
     if (mesh != Camera::main->GetMesh() && DotProduct(mesh->Position() - Camera::main->Position(), Camera::main->Forward()) > 0)
     {
-        auto vertices_w = WorldBounds();
-        Point::AddWorldPoint(Point(mesh->TRS() * min, Color::red, 10));
+        auto vertices_w = WorldVertices();
+        Point::AddWorldPoint(Point(mesh->TRS() * min, Color::orange, 10));
         Point::AddWorldPoint(Point(mesh->TRS() * max, Color::red, 10));
         Line::AddWorldLine(Line(vertices_w[0], vertices_w[1], Color::red));
         Line::AddWorldLine(Line(vertices_w[1], vertices_w[2], Color::red));

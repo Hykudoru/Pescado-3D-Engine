@@ -828,21 +828,25 @@ bool Raycast(Ray& ray, RaycastInfo<T>& raycastInfo, const std::function<void(Ray
     float closestSqrDistHit = ray.distance * ray.distance;
     for (size_t i = 0; i < ManagedObjectPool<T>::objects.size(); i++)
     {
-        List<Triangle>* triangles = ManagedObjectPool<T>::objects[i]->MapVertsToTriangles();
+        auto obj = ManagedObjectPool<T>::objects[i];
+        
+        List<Triangle>* triangles = obj->MapVertsToTriangles();
         for (size_t j = 0; j < triangles->size(); j++)
         {
             Triangle worldSpaceTri = (*triangles)[j];
             for (size_t k = 0; k < 3; k++) {
-                worldSpaceTri.verts[k] = ManagedObjectPool<T>::objects[i]->TRS() * worldSpaceTri.verts[k];
+                worldSpaceTri.verts[k] = obj->TRS() * worldSpaceTri.verts[k];
             }
             //------------------Ray casting (World & Ray Space)--------------------------
             Vec3 pointOfIntersection;
             if (LinePlaneIntersecting(from, to, worldSpaceTri, &pointOfIntersection))
             {
+                // If not behind raycast
                 if (DotProduct(pointOfIntersection - from, ray.Direction()) >= 0)
                 {
-                    Line::AddWorldLine(Line(from, to, Color::red));
-
+                    if (Graphics::debugRaycasting) {
+                        Line::AddWorldLine(Line(from, to, Color::red));
+                    }
                     Matrix4x4 worldToRaySpaceMatrix = ray.WorldToRaySpaceMatrix();
                     Vec3 pointOfIntersection_v = worldToRaySpaceMatrix * pointOfIntersection;
                     Triangle* viewSpaceTri = &((*triangles)[j]);
@@ -857,7 +861,7 @@ bool Raycast(Ray& ray, RaycastInfo<T>& raycastInfo, const std::function<void(Ray
                         {
                             closestSqrDistHit = sqrDist;
 
-                            raycastInfo.objectHit = ManagedObjectPool<T>::objects[i];
+                            raycastInfo.objectHit = obj;
                             raycastInfo.contactPoint = pointOfIntersection;
                             raycastInfo.triangleHit = &(*triangles)[j];
                             raycastInfo.triangleHit_w = worldSpaceTri;
@@ -958,7 +962,7 @@ static void Physics()
             //info.objectHit->SetColor(Color::purple);
             info.triangleHit->color = Color::purple;//Color::Random();
         }
-        
+        /*
         Ray ray2 = Ray(Camera::cameras[2]->Position(), Camera::cameras[2]->Forward(), 50);
         RaycastInfo<Collider> info2;
         if (Raycast<Collider>(ray2, info2))
@@ -967,7 +971,7 @@ static void Physics()
             Line::AddWorldLine(Line(ray2.StartPosition(), ray2.EndPosition(), Color::green, 3));
             Point::AddWorldPoint(Point(info2.contactPoint, Color::green, 7));
             info2.objectHit->object->mesh->SetColor(Color::red);
-        }
+        }*/
     }
 
     if (DEBUGGING)

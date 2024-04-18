@@ -243,29 +243,35 @@ Vec3 ClosestPoint(List<Vec3>& verts, Vec3& pointComparing, float* closestDistanc
     return closestPoint;
 }
 
-bool LinePlaneIntersecting(Vec3& lineStart, Vec3& lineEnd, Plane& plane, Vec3* pointIntersecting)
+
+
+// Plane: N_x(x-x0) + N_y(y-y0) + N_z(z-z0) = 0
+// Point on plane: x0,y0,z0
+// Point on line: x,y,z
+// Parametric Line: P = P0 + Vt ---> lineEnd = lineStart + (lineEnd-lineStart)t
+// 1st. Paramiterize line like this ---> x = (P0_x + V_x*t), y =, z = ... 
+// 2nd. Plugin x,y,z it into plane equation and solve for t.
+// 3rd. Use t to find the point intersecting both the line and plane.
+
+bool LinePlaneIntersecting(Vec3& lineStart, Vec3& lineEnd, Vec3& pointOnPlane, Vec3& normal, Vec3* pointIntersecting)
 {
-    // Plane: N_x(x-x0) + N_y(y-y0) + N_z(z-z0) = 0
-    // Point on plane: x0,y0,z0
-    // Point on line: x,y,z
-    // Parametric Line: P = P0 + Vt ---> lineEnd = lineStart + (lineEnd-lineStart)t
-    // 1st. Paramiterize line like this ---> x = (P0_x + V_x*t), y =, z = ... 
-    // 2nd. Plugin x,y,z it into plane equation and solve for t.
-    // 3rd. Use t to find the point intersecting both the line and plane.
-    Vec3 n = plane.Normal();
-    Vec3 pointPlane = plane.verts[0];
     Vec3 v = lineEnd - lineStart;
-    float divisor = DotProduct(n, v);
-    if (divisor != 0.0) 
+    float divisor = DotProduct(normal, v);
+    if (divisor != 0.0)
     {
-        float t = DotProduct(n, pointPlane - lineStart) / divisor;    
+        float t = DotProduct(normal, pointOnPlane - lineStart) / divisor;
         //if (t >= 0.0)
         {
-            *pointIntersecting = lineStart + (v*t);
+            *pointIntersecting = lineStart + (v * t);
             return true;
         }
     }
     return false;
+}
+
+bool LinePlaneIntersecting(Vec3& lineStart, Vec3& lineEnd, Plane& plane, Vec3* pointIntersecting)
+{
+    return LinePlaneIntersecting(lineStart, lineEnd, ((Vec3&)plane.verts[0]), ((Vec3&)plane.Normal()), pointIntersecting);
 } 
 
 bool PointInsideTriangle(const Vec3& p, const Vec3 triPoints[3])
@@ -298,7 +304,7 @@ void PlanesIntersecting(Vec3& normal1, Vec3& p1, Vec3& normal2, Vec3& p2)
     Vec3 line = Vec3(x, y, 0) + v * t;
 }
 
-Vec3 ClosestPointOnSphere(Vec3 center, float radius, Vec3 somePoint)
+Vec3 ClosestPointOnSphere(Vec3& center, float& radius, Vec3& somePoint)
 {
     Vec3 dir = (somePoint - center).Normalized();
     return center + dir * radius;
