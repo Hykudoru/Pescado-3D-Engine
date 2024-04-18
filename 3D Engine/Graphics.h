@@ -14,7 +14,7 @@
 struct Plane;
 struct Point;
 struct Line;
-struct  Triangle;
+struct Triangle;
 class Transform;
 class Mesh;
 class Camera;
@@ -279,8 +279,6 @@ public:
 
 class BoundingBox : public Transform, public ManagedObjectPool<BoundingBox>
 {
-    void tryCreatingBounds(Mesh* mesh);
-
 public:
     List<Vec3> vertices = List<Vec3>(8);
     Vec3 min;
@@ -289,8 +287,10 @@ public:
 
     BoundingBox(Mesh* mesh) : ManagedObjectPool<BoundingBox>(this)
     {
-        tryCreatingBounds(mesh);
+        CreateBounds(mesh);
     }
+
+    void CreateBounds(Mesh* mesh);
 
     Vec3* WorldVertices();
 
@@ -1250,16 +1250,15 @@ public:
     }
 };
 
-void BoundingBox::tryCreatingBounds(Mesh* mesh)
+void BoundingBox::CreateBounds(Mesh* mesh)
 {
-    if (!mesh) {
-        return;
-    }
-    this->mesh = mesh;
-    if (mesh->vertices.size() < 1)
+    if (!mesh || mesh->vertices.size() < 1)
     {
         return;
     }
+
+    this->mesh = mesh;
+
     Range xRange = ProjectVertsOntoAxis(mesh->vertices.data(), mesh->vertices.size(), Direction::right);
     Range yRange = ProjectVertsOntoAxis(mesh->vertices.data(), mesh->vertices.size(), Direction::up);
     Range zRange = ProjectVertsOntoAxis(mesh->vertices.data(), mesh->vertices.size(), Direction::forward);
@@ -1281,9 +1280,7 @@ void BoundingBox::tryCreatingBounds(Mesh* mesh)
 
 Vec3* BoundingBox::WorldVertices()
 {
-    tryCreatingBounds(this->mesh);
- 
-    if (vertices.size() < 1)
+    if (!this->mesh)
     {
         return nullptr;
     }
@@ -1300,12 +1297,7 @@ Vec3* BoundingBox::WorldVertices()
 }
 void BoundingBox::Draw()
 {
-    tryCreatingBounds(mesh);
-    if (vertices.size() < 1)
-    {
-        return; 
-    }
-    if (mesh != Camera::main->GetMesh() && DotProduct(mesh->Position() - Camera::main->Position(), Camera::main->Forward()) > 0)
+    if (this->mesh && mesh != Camera::main->GetMesh() && DotProduct(mesh->Position() - Camera::main->Position(), Camera::main->Forward()) > 0)
     {
         auto vertices_w = WorldVertices();
         Point::AddWorldPoint(Point(mesh->TRS() * min, Color::orange, 10));
@@ -1362,7 +1354,7 @@ Mesh* LoadMeshFromOBJFile(std::string objFileName)
     objFile.close();
 
     // -----------------Construct new mesh-------------------
-    Mesh* mesh = new Mesh();
+    
     List<Vec3> verts = List<Vec3>();
     List<int>* indices = new List<int>();
     List<Triangle>* triangles = new List<Triangle>(indices->size() / 3);
@@ -1440,10 +1432,11 @@ Mesh* LoadMeshFromOBJFile(std::string objFileName)
         }
     }
     //mtlFile.close();
-
+    Mesh* mesh = new Mesh();
     mesh->vertices = verts;
     mesh->indices = indices;
     mesh->triangles = triangles;
+    mesh->bounds->CreateBounds(mesh);
 
     return mesh;
 }
