@@ -232,7 +232,7 @@ void OnKeyPressEvent(GLFWwindow* window, int key, int scancode, int action, int 
         else if (key == GLFW_KEY_G) {
             Physics::gravity = !Physics::gravity;
         }
-
+        
         //-------------------Debugging------------------------
         else if (key == GLFW_KEY_I) {
             Graphics::invertNormals = !Graphics::invertNormals;
@@ -367,6 +367,10 @@ static void CameraControl(Camera* cam)
     if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
     {
         accel = defaultAcceleration * 7;
+    }
+    else if (glfwGetKey(window, GLFW_KEY_T) == GLFW_PRESS)
+    {
+        accel = defaultAcceleration * 5000;
     }
     else {
         accel = defaultAcceleration;

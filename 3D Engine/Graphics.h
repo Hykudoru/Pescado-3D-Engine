@@ -277,6 +277,23 @@ public:
     Matrix4x4 TRInverse();
 };
 
+class Cube
+{
+public:
+    List<Vec3> vertices = List<Vec3>({//new Vec3[8] {
+        //south
+        Vec3(-0.5, -0.5, 0.5),
+        Vec3(-0.5, 0.5, 0.5),
+        Vec3(0.5, 0.5, 0.5),
+        Vec3(0.5, -0.5, 0.5),
+        //north
+        Vec3(-0.5, -0.5, -0.5),
+        Vec3(-0.5, 0.5, -0.5),
+        Vec3(0.5, 0.5, -0.5),
+        Vec3(0.5, -0.5, -0.5)
+        });
+};
+
 class BoundingBox : public Transform, public ManagedObjectPool<BoundingBox>
 {
 public:
@@ -1261,10 +1278,10 @@ void BoundingBox::CreateBounds(Mesh* mesh)
 
     Range xRange = ProjectVertsOntoAxis(mesh->vertices.data(), mesh->vertices.size(), Direction::right);
     Range yRange = ProjectVertsOntoAxis(mesh->vertices.data(), mesh->vertices.size(), Direction::up);
-    Range zRange = ProjectVertsOntoAxis(mesh->vertices.data(), mesh->vertices.size(), Direction::forward);
+    Range zRange = ProjectVertsOntoAxis(mesh->vertices.data(), mesh->vertices.size(), Direction::back);
 
-    min = Vec3(xRange.min, yRange.min, -zRange.min);
-    max = Vec3(xRange.max, yRange.max, -zRange.max);
+    min = Vec3(xRange.min, yRange.min, zRange.min);
+    max = Vec3(xRange.max, yRange.max, zRange.max);
     
     //south
     vertices[0] = { min.x, min.y, max.z };  //Vec3(-0.5, -0.5, 0.5),
