@@ -303,12 +303,12 @@ bool SpheresColliding(SphereCollider& sphere1, SphereCollider& sphere2, SphereCo
     float radius2 = sphere2.Radius();
     Vec3 sphere1Pos = sphere1.Position();
     Vec3 sphere2Pos = sphere2.Position();
-    Vec3 pointOnSphere1 = ClosestPointOnSphere(sphere1Pos, radius1, sphere2Pos);
-    Vec3 pointOnSphere2 = ClosestPointOnSphere(sphere2Pos, radius2, sphere1Pos);
-    float squareMagToPointOnSphere2 = (pointOnSphere2 - sphere1Pos).SqrMagnitude();
-    collisionInfo.colliding = squareMagToPointOnSphere2 < radius1 * radius1;
+
+    collisionInfo.colliding = (sphere2Pos - sphere1Pos).SqrMagnitude() < (radius1 + radius2) * (radius1 + radius2);
     if (collisionInfo.colliding)
     {
+        Vec3 pointOnSphere1 = ClosestPointOnSphere(sphere1Pos, radius1, sphere2Pos);
+        Vec3 pointOnSphere2 = ClosestPointOnSphere(sphere2Pos, radius2, sphere1Pos);
         Vec3 offset = (pointOnSphere1 - pointOnSphere2);
         collisionInfo.lineOfImpact = offset;
         if (resolve) {
@@ -321,6 +321,8 @@ bool SpheresColliding(SphereCollider& sphere1, SphereCollider& sphere2, SphereCo
 
     if (Graphics::debugSphereCollisions)
     {
+        Vec3 pointOnSphere1 = ClosestPointOnSphere(sphere1Pos, radius1, sphere2Pos);
+        Vec3 pointOnSphere2 = ClosestPointOnSphere(sphere2Pos, radius2, sphere1Pos);
         Point::AddWorldPoint(Point(pointOnSphere1, Color::red, 4));
         Point::AddWorldPoint(Point(pointOnSphere2, Color::red, 4));
         Line::AddWorldLine(Line(pointOnSphere1, pointOnSphere2));
@@ -464,20 +466,32 @@ bool OBBSATColliding(BoxCollider& box1, BoxCollider& box2, BoxCollisionInfo& col
 
     return collisionInfo.colliding;
 }
-/*
+
 template <typename T>
-class Node : public Transform
+class TreeNode : public CubeMesh
 {
 private:
-    List<Node<T>>* children = nullptr;
+    
 public:
+    int maxDepth = 4;
+    int maxCapacity = 8;
+    int maxChildren = 8;
     int level = 0;
-    Node<T>* root = nullptr;
-    Node<T>* parent = nullptr;
-    Node<T>* leaf = nullptr;
+    TreeNode<T>* root;
+    TreeNode<T>* parent = nullptr;
+    List<T*> objects = List<T*>();
+    List<TreeNode<T>*>* children = nullptr;
+    Vec3 min_w;
+    Vec3 max_w;
 
-    Node<T>(Node<T>* parent = nullptr)
+    TreeNode<T>(TreeNode<T>* parent = nullptr)
     {
+       // ManagedObjectPool<BoxCollider>::RemoveFromPool(this);
+        
+                                                   // this->mesh->SetVisibility(true);
+        min_w = localPosition + localScale * -0.5;
+        max_w = localPosition + localScale * 0.5;
+
         if (!this->root)
         {
             this->root = this;
@@ -486,92 +500,150 @@ public:
         {
             this->parent = parent;
             this->root = parent->root;
+            this->level = parent->level + 1;
         }
     }
 
-    List<Node<T>>* Children()
+    void Subdivide()
     {
-        if (!children)
+        if (!children && level < maxDepth)
         {
-            children = new List<Node<T>>();
+            children = new List<TreeNode<T>*>();
+
+            for (int width = -1; width <= 1; width += 2)
+            {
+                for (int height = -1; height <= 1; height += 2)
+                {
+                    for (int depth = -1; depth <= 1; depth += 2)
+                    {
+                        auto newChild = new TreeNode<T>(this);
+                        newChild->localScale = (this->localScale * .5);
+                        newChild->localPosition = this->Position() + Direction::right * width * .5 * newChild->localScale.x + Direction::up * height *.5 * newChild->localScale.y + Direction::forward * depth * .5 * newChild->localScale.z;
+                        newChild->bounds->CreateBounds(newChild);
+                        newChild->min_w = newChild->TRS() * bounds->min;// localPosition + localScale * -0.5;
+                        newChild->max_w = newChild->TRS() * bounds->max;// localPosition + localScale * 0.5;
+                        children->emplace_back(newChild);
+                    }
+                }
+            }
         }
-        return children;
+    }
+
+    bool Overlapping(T* obj)
+    {
+        return true;
+        Vec3 point = obj->Position();
+
+        if (point.x > min_w.x && point.x < max_w.x
+            && point.y > min_w.y && point.y < max_w.y
+            && point.z > min_w.z && point.z < max_w.z)
+        {
+            return true;
+        }
+
+        return false;
+    }
+
+    //Search for node containing obj
+    TreeNode<T>* Query(T& obj)
+    {
+        if (Overlapping(obj))
+        {
+            if (!children)
+            {
+                return this;
+            }
+            else 
+            {
+                for (size_t i = 0; i < children->size(); i++)
+                {
+                    auto node = (*children)[i++]->Query(obj);
+                    if (node) {
+                        return node;
+                    }
+                }
+            }
+        }
+
+        return nullptr;
+    }
+
+    TreeNode<T>* Insert(T* obj)
+    {
+        if (Overlapping(obj))
+        {
+            if (objects.size() < maxCapacity)
+            {
+                objects.emplace_back(obj);
+                return this;
+            }
+            else 
+            {
+                if (!children && level < maxDepth)
+                {
+                    Subdivide();
+                }
+
+                if (children)
+                {
+                    for (size_t i = 0; i < children->size(); i++)
+                    {
+                        TreeNode<T>* node = (*children)[i];
+                        node = node->Insert(obj);
+                        if (node) {
+                            return node;
+                        }
+                    }
+                }
+            }
+        }
+
+        return nullptr;
+    }
+
+    void Draw()
+    {
+        Point::AddWorldPoint(Point(this->Position(), Color::white, 10));
+
+        Point::AddWorldPoint(Point(min_w, Color::blue, 10));
+        Point::AddWorldPoint(Point(max_w, Color::blue, 10));
+        Line::AddWorldLine(Line(min_w, max_w, Color::pink, 5));
+
+        if (this->children)
+        {
+            for (size_t i = 0; i < this->children->size(); i++)
+            {
+                auto child = (*this->children)[i]; 
+                child->Draw();
+            }
+        }
     }
 };
 
-class OctTree
+template <typename T>
+class OctTree : public TreeNode<T>
 {
 public:
-    int depthLevel = 4;
-    Node<BoxCollider>* rootNode = new Node<BoxCollider>();
-    OctTree()
+
+    OctTree() : TreeNode<T>()
     {
-        rootNode->localScale = Vec3::one * 10000;
-        rootNode->level = 0;
-        CreateSubNodesFor(rootNode);
-        for (size_t i = 0; i < 8; i++)
+        this->localScale = Vec3(100000, 100000, 100000);
+        this->Subdivide();
+
+        for (size_t i = 0; i < ManagedObjectPool<T>::objects.size(); i++)
         {
-            ManagedObjectPool<BoxCollider>::RemoveFromPool((BoxCollider*)&(rootNode->Children()->at(i)));
-        }
-
-
-
-        for (size_t i = 0; i < ManagedObjectPool<BoxCollider>::objects.size(); i++)
-        {
-            auto obj = ManagedObjectPool<BoxCollider>::objects[i];
-            if (!obj->isStatic)
+            T* obj = ManagedObjectPool<T>::objects[i];
+            auto child = (*this->children)[0];
+            child->Insert(obj);
+            /*for (size_t i = 0; i < this->children->size(); i++)
             {
-                continue;
-            }
-
-            ManagedObjectPool<BoxCollider>::RemoveFromPool(obj);
-            //Check
-            for (size_t ii = 0; ii < 8; ii++)
-            {
-                Node<BoxCollider>* child = &(rootNode->Children()->at(ii));
-               
-                BoxCollisionInfo collisionInfo;
-                Vec3 point = child->TRSInverse() * obj->Position();
-                Vec3 dimensions = child->localScale;
-                if ((point.x > dimensions.x || point.x < -dimensions.x) 
-                    || (point.y > dimensions.y || point.y < -dimensions.y)
-                    || (point.z > dimensions.z || point.z < -dimensions.z))
-                {
-                        break;
-                }
-                else {
-                    child->Children()->emplace_back(obj);
-                    
-                    cout << "Contains" << endl;
-                }
-            }
+                auto child = (*this->children)[i];
+                child->Insert(obj);
+            }*/
         }
     }
+};
 
-    static void CreateSubNodesFor(Node<BoxCollider>* current)
-    {
-        int c = 0;
-        for (int width = -1; width < 1; width++)
-        {
-            for (int height = -1; height < 1; height++)
-            {
-                for (int depth = -1; depth < 1; depth++)
-                {
-                    BoxCollider* block = new BoxCollider(true, true);
-                    block->mesh->SetVisibility(true);
-                    block->localScale *= .5f;
-                    block->localPosition = Direction::right * width * .5f + Direction::up * height * .5f + Direction::forward * depth * .5f;
-                    block->SetParent(current, false);
-
-                    Node<BoxCollider>* newChild = new Node<BoxCollider>(current);
-                    newChild->localScale *= .5f;
-                    newChild->level = current->level + 1;
-                    current->Children()->emplace_back(newChild);
-                }
-            }
-        }
-    }
-};*/
 void DetectCollisions()
 {
     // How nested loop algorithm works: 

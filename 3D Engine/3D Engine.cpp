@@ -52,6 +52,7 @@ CubeMesh* greatGrandchild;
 Mesh* compass;
 //PhysicsObject temp = PhysicsObject(new CubeMesh(), new BoxCollider()); 
 Mesh* bender;
+OctTree<Mesh>* tree;
 void Init(GLFWwindow* window)
 {
     glfwSetCursorPosCallback(window, OnMouseMoveEvent);
@@ -143,11 +144,27 @@ void Init(GLFWwindow* window)
             {
                 PhysicsObject* block = new PhysicsObject(new CubeMesh(), new BoxCollider(true));
                 block->localScale *= .1;
-                block->localPosition = Direction::down * (15+(0.1*d)) + Direction::left * r * .1 + Direction::back * c * .1;
+                block->localPosition = Direction::down * (5+(0.1*d)) + Direction::left * r * .1 + Direction::back * c * .1;
             }
         }
     }
-    
+
+    //2 X 2 X 2
+    /*for (int width = -1; width <= 1; width += 2)
+    {
+        for (int height = -1; height <= 1; height+=2)
+        {
+            for (int depth = -1; depth <= 1; depth+=2)
+            {
+                PhysicsObject* block = new PhysicsObject(new CubeMesh(), new BoxCollider(true));
+                block->localScale *= 1;
+                //block->SetParent(mesh, false);
+                block->localPosition = Direction::right * width * .5 + Direction::up * height * .5 + Direction::forward * depth * .5;
+
+            }
+        }
+    }*/
+
     Transform* parent1 = new Transform(2, Direction::up * 50, Vec3(0, ToRad(-90), 0));
     Transform* prev = nullptr;
     for (size_t i = 0; i < 10; i++)
@@ -185,11 +202,12 @@ void Init(GLFWwindow* window)
     bender->localRotation = Matrix3x3::RotZ(ToRad(20));
     bender->localPosition = Camera::main->Position() + (Camera::main->Forward() + Camera::main->Right() * 3);
 
-    //octTree = new OctTree();
+   tree = new OctTree<Mesh>();
 }
 
 void Update()
 {
+    tree->Draw();
     if (CameraSettings::displayReticle)
     {
         Point::AddPoint(Point(Vec3(), Color::white, 5));
