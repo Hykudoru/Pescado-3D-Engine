@@ -489,8 +489,8 @@ public:
        // ManagedObjectPool<BoxCollider>::RemoveFromPool(this);
         
                                                    // this->mesh->SetVisibility(true);
-        min_w = localPosition + localScale * -0.5;
-        max_w = localPosition + localScale * 0.5;
+        min_w = this->TRS() * bounds->min;
+        max_w = this->TRS() * bounds->max;
 
         if (!this->root)
         {
@@ -633,13 +633,12 @@ public:
         for (size_t i = 0; i < ManagedObjectPool<T>::objects.size(); i++)
         {
             T* obj = ManagedObjectPool<T>::objects[i];
-            auto child = (*this->children)[0];
-            child->Insert(obj);
-            /*for (size_t i = 0; i < this->children->size(); i++)
+            
+            for (size_t i = 0; i < this->children->size(); i++)
             {
                 auto child = (*this->children)[i];
                 child->Insert(obj);
-            }*/
+            }
         }
     }
 };
