@@ -474,12 +474,12 @@ private:
     
 public:
     int maxDepth = 4;
-    int maxCapacity = 8;
+    int maxCapacity = 1;
     int maxChildren = 8;
     int level = 0;
-    TreeNode<T>* root;
+    TreeNode<T>* root = nullptr;
     TreeNode<T>* parent = nullptr;
-    List<T*> objects = List<T*>();
+    List<T*> contained = List<T*>();
     List<TreeNode<T>*>* children = nullptr;
     Vec3 min_w;
     Vec3 max_w;
@@ -489,8 +489,6 @@ public:
        // ManagedObjectPool<BoxCollider>::RemoveFromPool(this);
         
                                                    // this->mesh->SetVisibility(true);
-        min_w = this->TRS() * bounds->min;
-        max_w = this->TRS() * bounds->max;
 
         if (!this->root)
         {
@@ -501,6 +499,8 @@ public:
             this->parent = parent;
             this->root = parent->root;
             this->level = parent->level + 1;
+
+            this->localScale = (parent->localScale * .5);
         }
     }
 
@@ -517,11 +517,10 @@ public:
                     for (int depth = -1; depth <= 1; depth += 2)
                     {
                         auto newChild = new TreeNode<T>(this);
-                        newChild->localScale = (this->localScale * .5);
                         newChild->localPosition = this->Position() + Direction::right * width * .5 * newChild->localScale.x + Direction::up * height *.5 * newChild->localScale.y + Direction::forward * depth * .5 * newChild->localScale.z;
                         newChild->bounds->CreateBounds(newChild);
-                        newChild->min_w = newChild->TRS() * bounds->min;// localPosition + localScale * -0.5;
-                        newChild->max_w = newChild->TRS() * bounds->max;// localPosition + localScale * 0.5;
+                        newChild->min_w = newChild->TRS() * newChild->bounds->min;// localPosition + localScale * -0.5;
+                        newChild->max_w = newChild->TRS() * newChild->bounds->max;// localPosition + localScale * 0.5;
                         children->emplace_back(newChild);
                     }
                 }
@@ -531,7 +530,7 @@ public:
 
     bool Overlapping(T* obj)
     {
-        return true;
+        
         Vec3 point = obj->Position();
 
         if (point.x > min_w.x && point.x < max_w.x
@@ -572,9 +571,9 @@ public:
     {
         if (Overlapping(obj))
         {
-            if (objects.size() < maxCapacity)
+            if (contained.size() < maxCapacity)
             {
-                objects.emplace_back(obj);
+                contained.emplace_back(obj);
                 return this;
             }
             else 
@@ -609,6 +608,13 @@ public:
         Point::AddWorldPoint(Point(max_w, Color::blue, 10));
         Line::AddWorldLine(Line(min_w, max_w, Color::pink, 5));
 
+        for (size_t i = 0; i < this->contained.size(); i++)
+        {
+            auto obj = this->contained.at(i);
+
+            Point::AddWorldPoint(Point(obj->Position(), Color::turquoise, 8));
+        }
+
         if (this->children)
         {
             for (size_t i = 0; i < this->children->size(); i++)
@@ -634,9 +640,9 @@ public:
         {
             T* obj = ManagedObjectPool<T>::objects[i];
             
-            for (size_t i = 0; i < this->children->size(); i++)
+            for (size_t ii = 0; ii < this->children->size(); ii++)
             {
-                auto child = (*this->children)[i];
+                auto child = (*this->children)[ii];
                 child->Insert(obj);
             }
         }
