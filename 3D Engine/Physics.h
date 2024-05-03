@@ -486,10 +486,6 @@ public:
 
     TreeNode<T>(TreeNode<T>* parent = nullptr)
     {
-       // ManagedObjectPool<BoxCollider>::RemoveFromPool(this);
-        
-                                                   // this->mesh->SetVisibility(true);
-
         if (!this->root)
         {
             this->root = this;
@@ -519,8 +515,8 @@ public:
                         auto newChild = new TreeNode<T>(this);
                         newChild->localPosition = this->Position() + Direction::right * width * .5 * newChild->localScale.x + Direction::up * height *.5 * newChild->localScale.y + Direction::forward * depth * .5 * newChild->localScale.z;
                         newChild->bounds->CreateBounds(newChild);
-                        newChild->min_w = newChild->TRS() * newChild->bounds->min;// localPosition + localScale * -0.5;
-                        newChild->max_w = newChild->TRS() * newChild->bounds->max;// localPosition + localScale * 0.5;
+                        newChild->min_w = newChild->TRS() * newChild->bounds->min;
+                        newChild->max_w = newChild->TRS() * newChild->bounds->max;
                         children->emplace_back(newChild);
                     }
                 }
@@ -569,6 +565,10 @@ public:
 
     TreeNode<T>* Insert(T* obj)
     {
+        if (obj == (T*)this)
+        {
+            return nullptr;
+        }
         if (Overlapping(obj))
         {
             if (contained.size() < maxCapacity)
@@ -602,8 +602,7 @@ public:
 
     void Draw()
     {
-        Point::AddWorldPoint(Point(this->Position(), Color::white, 10));
-
+        //Point::AddWorldPoint(Point(this->Position(), Color::white, 10));
         Point::AddWorldPoint(Point(min_w, Color::blue, 10));
         Point::AddWorldPoint(Point(max_w, Color::blue, 10));
         Line::AddWorldLine(Line(min_w, max_w, Color::pink, 5));
@@ -611,7 +610,6 @@ public:
         for (size_t i = 0; i < this->contained.size(); i++)
         {
             auto obj = this->contained.at(i);
-
             Point::AddWorldPoint(Point(obj->Position(), Color::turquoise, 8));
         }
 
