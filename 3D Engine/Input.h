@@ -370,7 +370,7 @@ static void CameraControl(Camera* cam)
     }
     else if (glfwGetKey(window, GLFW_KEY_T) == GLFW_PRESS)
     {
-        accel = defaultAcceleration * 5000;
+        accel = defaultAcceleration * 3000;
     }
     else {
         accel = defaultAcceleration;

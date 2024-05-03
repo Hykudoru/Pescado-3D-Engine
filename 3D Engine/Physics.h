@@ -473,8 +473,8 @@ class TreeNode : public CubeMesh
 private:
     
 public:
-    int maxDepth = 4;
-    int maxCapacity = 1;
+    int maxDepth = 8;
+    int maxCapacity = 8;
     int maxChildren = 8;
     int level = 0;
     TreeNode<T>* root = nullptr;
@@ -526,7 +526,6 @@ public:
 
     bool Overlapping(T* obj)
     {
-        
         Vec3 point = obj->Position();
 
         if (point.x > min_w.x && point.x < max_w.x
@@ -569,6 +568,7 @@ public:
         {
             return nullptr;
         }
+
         if (Overlapping(obj))
         {
             if (contained.size() < maxCapacity)
@@ -605,12 +605,12 @@ public:
         //Point::AddWorldPoint(Point(this->Position(), Color::white, 10));
         Point::AddWorldPoint(Point(min_w, Color::blue, 10));
         Point::AddWorldPoint(Point(max_w, Color::blue, 10));
-        Line::AddWorldLine(Line(min_w, max_w, Color::pink, 5));
+        //Line::AddWorldLine(Line(min_w, max_w, Color::pink, 5));
 
         for (size_t i = 0; i < this->contained.size(); i++)
         {
             auto obj = this->contained.at(i);
-            Point::AddWorldPoint(Point(obj->Position(), Color::turquoise, 8));
+            Point::AddWorldPoint(Point(obj->Position(), Color::turquoise, 10));
         }
 
         if (this->children)
@@ -629,9 +629,9 @@ class OctTree : public TreeNode<T>
 {
 public:
 
-    OctTree() : TreeNode<T>()
+    OctTree(Vec3 size = Vec3(100000, 100000, 100000)) : TreeNode<T>()
     {
-        this->localScale = Vec3(100000, 100000, 100000);
+        this->localScale = size;
         this->Subdivide();
 
         for (size_t i = 0; i < ManagedObjectPool<T>::objects.size(); i++)

@@ -280,30 +280,68 @@ public:
 class Cube
 {
 public:
-    List<Vec3> vertices = List<Vec3>({//new Vec3[8] {
-        //south
-        Vec3(-0.5, -0.5, 0.5),
-        Vec3(-0.5, 0.5, 0.5),
-        Vec3(0.5, 0.5, 0.5),
-        Vec3(0.5, -0.5, 0.5),
-        //north
-        Vec3(-0.5, -0.5, -0.5),
-        Vec3(-0.5, 0.5, -0.5),
-        Vec3(0.5, 0.5, -0.5),
-        Vec3(0.5, -0.5, -0.5)
+    List<Vec3> vertices;
+
+    Cube()
+    {
+        vertices = List<Vec3>({//new Vec3[8] {
+            //south
+            Vec3(-0.5, -0.5, 0.5),
+            Vec3(-0.5, 0.5, 0.5),
+            Vec3(0.5, 0.5, 0.5),
+            Vec3(0.5, -0.5, 0.5),
+            //north
+            Vec3(-0.5, -0.5, -0.5),
+            Vec3(-0.5, 0.5, -0.5),
+            Vec3(0.5, 0.5, -0.5),
+            Vec3(0.5, -0.5, -0.5)
         });
+
+    }
+
+    Cube(Vec3 min, Vec3 max)
+    {
+        vertices = List<Vec3>(8);
+        //south
+        vertices[0] = { min.x, min.y, max.z };  //Vec3(-0.5, -0.5, 0.5),
+        vertices[1] = { min.x, max.y, max.z };  //Vec3(-0.5, 0.5, 0.5),
+        vertices[2] = { max.x, max.y, max.z };  //Vec3(0.5, 0.5, 0.5),
+        vertices[3] = { max.x, min.y, max.z };  // Vec3(0.5, -0.5, 0.5),
+        //north
+        vertices[4] = { min.x, min.y, min.z };  //Vec3(-0.5, -0.5, -0.5),
+        vertices[5] = { min.x, max.y, min.z };  //Vec3(-0.5, 0.5, -0.5),
+        vertices[6] = { max.x, max.y, min.z };  //Vec3(0.5, 0.5, -0.5),
+        vertices[7] = { max.x, min.y, min.z };  // Vec3(0.5, -0.5, -0.5),
+    }
+
+    Cube(float min, float max)
+    {
+        vertices = List<Vec3>(8);
+
+        //south
+        vertices[0] = { min, min, max };  //Vec3(-0.5, -0.5, 0.5),
+        vertices[1] = { min, max, max };  //Vec3(-0.5, 0.5, 0.5),
+        vertices[2] = { max, max, max };  //Vec3(0.5, 0.5, 0.5),
+        vertices[3] = { max, min, max };  // Vec3(0.5, -0.5, 0.5),
+        //north
+        vertices[4] = { min, min, min };  //Vec3(-0.5, -0.5, -0.5),
+        vertices[5] = { min, max, min };  //Vec3(-0.5, 0.5, -0.5),
+        vertices[6] = { max, max, min };  //Vec3(0.5, 0.5, -0.5),
+        vertices[7] = { max, min, min };  // Vec3(0.5, -0.5, -0.5),
+    }
 };
 
 class BoundingBox : public Transform, public ManagedObjectPool<BoundingBox>
 {
 public:
-    List<Vec3> vertices = List<Vec3>(8);
+    Cube bounds;
     Vec3 min;
     Vec3 max;
     Mesh* mesh;
 
     BoundingBox(Mesh* mesh) : ManagedObjectPool<BoundingBox>(this)
     {
+        this->mesh = mesh;
         CreateBounds(mesh);
     }
 
@@ -1210,7 +1248,7 @@ public:
         :Mesh(scale, position, rotationEuler)
     {
         // Local Space (Object Space)
-        this->vertices =  List<Vec3>({//new Vec3[8] {
+        this->vertices = List<Vec3>({//new Vec3[8] {
             //south
             Vec3(-0.5, -0.5, 0.5),
             Vec3(-0.5, 0.5, 0.5),
@@ -1245,6 +1283,8 @@ public:
         };
 
         triangles = new List<Triangle>(this->indices->size() / 3);
+
+        bounds->CreateBounds(this);
     }
 };
 
@@ -1264,6 +1304,8 @@ public:
 
         this->triangles->emplace_back(Triangle((vertices)[0], (vertices)[1], (vertices)[2]));
         this->triangles->emplace_back(Triangle((vertices)[0], (vertices)[2], (vertices)[3]));
+        
+        bounds->CreateBounds(this);
     }
 };
 
@@ -1283,16 +1325,7 @@ void BoundingBox::CreateBounds(Mesh* mesh)
     min = Vec3(xRange.min, yRange.min, zRange.min);
     max = Vec3(xRange.max, yRange.max, zRange.max);
     
-    //south
-    vertices[0] = { min.x, min.y, max.z };  //Vec3(-0.5, -0.5, 0.5),
-    vertices[1] = { min.x, max.y, max.z };  //Vec3(-0.5, 0.5, 0.5),
-    vertices[2] = { max.x, max.y, max.z };  //Vec3(0.5, 0.5, 0.5),
-    vertices[3] = { max.x, min.y, max.z };  // Vec3(0.5, -0.5, 0.5),
-    //north
-    vertices[4] = { min.x, min.y, min.z };  //Vec3(-0.5, -0.5, -0.5),
-    vertices[5] = { min.x, max.y, min.z };  //Vec3(-0.5, 0.5, -0.5),
-    vertices[6] = { max.x, max.y, min.z };  //Vec3(0.5, 0.5, -0.5),
-    vertices[7] = { max.x, min.y, min.z };  // Vec3(0.5, -0.5, -0.5),
+    bounds = Cube(min, max);
 }
 
 Vec3* BoundingBox::WorldVertices()
@@ -1307,18 +1340,18 @@ Vec3* BoundingBox::WorldVertices()
     auto trs4x4 = mesh->TRS();
     for (size_t i = 0; i < 8; i++)
     {
-        verts[i] = trs4x4 * vertices[i];
+        verts[i] = trs4x4 * bounds.vertices[i];
     }
 
     return verts;
 }
 void BoundingBox::Draw()
 {
-    if (this->mesh && mesh != Camera::main->GetMesh() && DotProduct(mesh->Position() - Camera::main->Position(), Camera::main->Forward()) > 0)
+    if (this->mesh)
     {
         auto vertices_w = WorldVertices();
         Point::AddWorldPoint(Point(mesh->TRS() * min, Color::orange, 10));
-        Point::AddWorldPoint(Point(mesh->TRS() * max, Color::red, 10));
+        Point::AddWorldPoint(Point(mesh->TRS() * max, Color::yellow, 10));
         Line::AddWorldLine(Line(vertices_w[0], vertices_w[1], Color::red));
         Line::AddWorldLine(Line(vertices_w[1], vertices_w[2], Color::red));
         Line::AddWorldLine(Line(vertices_w[2], vertices_w[3], Color::red));
@@ -1473,7 +1506,7 @@ void Draw()
     {
         Mesh* mesh = Mesh::objects[i];
         BoundingBox* bounds = mesh->bounds;
-        
+
         if (Graphics::frustumCulling)
         {
             // Scale/Distance ratio culling
@@ -1491,29 +1524,25 @@ void Draw()
                 continue;
             }
 */
-            
+
             if (bounds)
             {
                 Matrix4x4 trs4x4 = vpMatrix * mesh->TRS();
-                int count = 8;// sizeof(bounds->vertices) / sizeof(Vec3);
-                List<Vec3> verts = List<Vec3>(count);
-                for (size_t i = 0; i < count; i++)
-                {
-                    verts[i] = trs4x4 * bounds->vertices[i];
-                }
-                
-                if (!Camera::InsideViewScreen(verts.data(), count))
+                Cube box = Cube(trs4x4 * bounds->min, trs4x4 * bounds->max);
+                if (!Camera::InsideViewScreen(box.vertices.data(), 8))
                 {
                     continue;
                 }
-            }
-            // ---------- Debug -----------
-            
-            if (Graphics::debugBounds)
-            {
-                if (bounds)
+                
+                if (Graphics::debugBounds)
                 {
-                    bounds->Draw();
+                    if (bounds)
+                    {
+                        if (mesh != Camera::main->GetMesh() && DotProduct(mesh->Position() - Camera::main->Position(), Camera::main->Forward()) > 0)
+                        {
+                            bounds->Draw();
+                        }
+                    }
                 }
             }
 
