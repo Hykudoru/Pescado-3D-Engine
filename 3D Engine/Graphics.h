@@ -421,6 +421,7 @@ struct Graphics
     static bool debugSphereCollisions;
     static bool debugPlaneCollisions;
     static bool debugRaycasting;
+    static bool debugTree;
     static bool perspective;
     static bool fillTriangles;
     static bool displayWireFrames;
@@ -497,6 +498,7 @@ bool Graphics::debugBoxCollisions = false;
 bool Graphics::debugSphereCollisions = false;
 bool Graphics::debugPlaneCollisions = false;
 bool Graphics::debugRaycasting = false;
+bool Graphics::debugTree = false;
 bool Graphics::perspective = true;
 bool Graphics::fillTriangles = true;
 bool Graphics::displayWireFrames = false;
@@ -1052,6 +1054,7 @@ void Mesh::SetColor(Color&& c) {
 
 void Mesh::SetColor(Color& c)
 {
+    color = c;
     if (triangles)
     {
         for (int i = 0; i < triangles->size(); i++)
@@ -1350,8 +1353,8 @@ void BoundingBox::Draw()
     if (this->mesh)
     {
         auto vertices_w = WorldVertices();
-        Point::AddWorldPoint(Point(mesh->TRS() * min, Color::orange, 10));
-        Point::AddWorldPoint(Point(mesh->TRS() * max, Color::yellow, 10));
+        //Point::AddWorldPoint(Point(mesh->TRS() * min, Color::orange, 10));
+        //Point::AddWorldPoint(Point(mesh->TRS() * max, Color::yellow, 10));
         Line::AddWorldLine(Line(vertices_w[0], vertices_w[1], Color::red));
         Line::AddWorldLine(Line(vertices_w[1], vertices_w[2], Color::red));
         Line::AddWorldLine(Line(vertices_w[2], vertices_w[3], Color::red));

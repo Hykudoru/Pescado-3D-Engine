@@ -486,6 +486,8 @@ public:
 
     TreeNode<T>(TreeNode<T>* parent = nullptr)
     {
+        this->SetVisibility(false);
+
         if (!this->root)
         {
             this->root = this;
@@ -497,6 +499,10 @@ public:
             this->level = parent->level + 1;
 
             this->localScale = (parent->localScale * .5);
+            if (level > 1)
+            {
+                SetColor(parent->color);
+            }
         }
     }
 
@@ -602,15 +608,25 @@ public:
 
     void Draw()
     {
-        //Point::AddWorldPoint(Point(this->Position(), Color::white, 10));
-        Point::AddWorldPoint(Point(min_w, Color::blue, 10));
-        Point::AddWorldPoint(Point(max_w, Color::blue, 10));
+        if (Graphics::debugTree)
+        {
+            if (this->level > 0) {
+                this->SetVisibility(true);
+            }
+        }
+        else {
+            this->SetVisibility(false);
+        }
+
+        //Point::AddWorldPoint(Point(this->Position(), this->color, 15));
+        //Point::AddWorldPoint(Point(min_w, Color::blue, 10));
+        //Point::AddWorldPoint(Point(max_w, Color::blue, 10));
         //Line::AddWorldLine(Line(min_w, max_w, Color::pink, 5));
 
         for (size_t i = 0; i < this->contained.size(); i++)
         {
             auto obj = this->contained.at(i);
-            Point::AddWorldPoint(Point(obj->Position(), Color::turquoise, 10));
+            Point::AddWorldPoint(Point(obj->Position(), color, 10));
         }
 
         if (this->children)
@@ -634,6 +650,17 @@ public:
         this->localScale = size;
         this->Subdivide();
 
+        this->SetVisibility(false);
+        
+        (*this->children)[0]->SetColor(Color::red);
+        (*this->children)[1]->SetColor(Color::orange);
+        (*this->children)[2]->SetColor(Color::yellow);
+        (*this->children)[3]->SetColor(Color::green);
+        (*this->children)[4]->SetColor(Color::blue);
+        (*this->children)[5]->SetColor(Color::purple);
+        (*this->children)[6]->SetColor(Color::pink);
+        (*this->children)[7]->SetColor(Color::turquoise);
+
         for (size_t i = 0; i < ManagedObjectPool<T>::objects.size(); i++)
         {
             T* obj = ManagedObjectPool<T>::objects[i];
@@ -641,7 +668,10 @@ public:
             for (size_t ii = 0; ii < this->children->size(); ii++)
             {
                 auto child = (*this->children)[ii];
-                child->Insert(obj);
+                auto node = child->Insert(obj);
+                if (node) {
+                    break;
+                }
             }
         }
     }

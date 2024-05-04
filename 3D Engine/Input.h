@@ -304,6 +304,10 @@ void OnKeyPressEvent(GLFWwindow* window, int key, int scancode, int action, int 
         {
             Physics::raycasting = !Physics::raycasting;
         }
+        else if (key == GLFW_KEY_T)
+        {
+            Graphics::debugTree = !Graphics::debugTree;
+        }
     }
 }
 
@@ -368,7 +372,7 @@ static void CameraControl(Camera* cam)
     {
         accel = defaultAcceleration * 7;
     }
-    else if (glfwGetKey(window, GLFW_KEY_T) == GLFW_PRESS)
+    else if (glfwGetKey(window, GLFW_KEY_RIGHT_CONTROL) == GLFW_PRESS)
     {
         accel = defaultAcceleration * 3000;
     }
