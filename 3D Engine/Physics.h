@@ -497,11 +497,10 @@ public:
             this->parent = parent;
             this->root = parent->root;
             this->level = parent->level + 1;
-
             this->localScale = (parent->localScale * .5);
-            if (level > 1)
+            if (this->level > 1)
             {
-                SetColor(parent->color);
+                this->SetColor(parent->color);
             }
         }
     }
@@ -570,6 +569,7 @@ public:
 
     TreeNode<T>* Insert(T* obj)
     {
+        // Prevent box from being inserted into itself.
         if (obj == (T*)this)
         {
             return nullptr;
@@ -649,8 +649,6 @@ public:
     {
         this->localScale = size;
         this->Subdivide();
-
-        this->SetVisibility(false);
         
         (*this->children)[0]->SetColor(Color::red);
         (*this->children)[1]->SetColor(Color::orange);
