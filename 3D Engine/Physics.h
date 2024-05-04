@@ -545,9 +545,9 @@ public:
     {
         Vec3 point = obj->Position();
 
-        if (point.x > min_w.x && point.x < max_w.x
-            && point.y > min_w.y && point.y < max_w.y
-            && point.z > min_w.z && point.z < max_w.z)
+        if (point.x >= min_w.x && point.x <= max_w.x
+            && point.y >= min_w.y && point.y <= max_w.y
+            && point.z >= min_w.z && point.z <= max_w.z)
         {
             return true;
         }
