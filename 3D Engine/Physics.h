@@ -471,7 +471,8 @@ template <typename T>
 class TreeNode : public CubeMesh
 {
 private:
-    
+    Vec3 min_w;
+    Vec3 max_w;
 public:
     int maxDepth = 8;
     int maxCapacity = 8;
@@ -481,8 +482,6 @@ public:
     TreeNode<T>* parent = nullptr;
     List<T*> contained = List<T*>();
     List<TreeNode<T>*>* children = nullptr;
-    Vec3 min_w;
-    Vec3 max_w;
 
     TreeNode<T>(TreeNode<T>* parent = nullptr)
     {
@@ -657,6 +656,7 @@ template <typename T>
 class OctTree : public TreeNode<T>
 {
 public:
+    static OctTree<T>* tree;
 
     OctTree(Vec3 size = Vec3(100000, 100000, 100000)) : TreeNode<T>()
     {
@@ -686,7 +686,31 @@ public:
             }
         }
     }
+
+    static OctTree<T>* Tree()
+    {
+        if (!tree)
+        {
+            tree = new OctTree<T>();
+        }
+
+        return tree;
+    }
+
+    static void Update()
+    {
+        if (tree)
+        {
+            delete tree;
+        }
+        
+        tree = new OctTree<T>();
+
+        tree->Draw();
+    }
 };
+template <typename T>
+OctTree<T>* OctTree<T>::tree = nullptr;
 
 void DetectCollisions()
 {

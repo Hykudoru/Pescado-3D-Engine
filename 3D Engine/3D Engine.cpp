@@ -52,8 +52,7 @@ CubeMesh* greatGrandchild;
 Mesh* compass;
 //PhysicsObject temp = PhysicsObject(new CubeMesh(), new BoxCollider()); 
 Mesh* bender;
-OctTree<Mesh>* tree;
-OctTree<Collider>* colliderTree;
+
 void Init(GLFWwindow* window)
 {
     glfwSetCursorPosCallback(window, OnMouseMoveEvent);
@@ -202,18 +201,10 @@ void Init(GLFWwindow* window)
     bender = LoadMeshFromOBJFile("Bender.obj");
     bender->localRotation = Matrix3x3::RotZ(ToRad(20));
     bender->localPosition = Camera::main->Position() + (Camera::main->Forward() + Camera::main->Right() * 3);
-
-    tree = new OctTree<Mesh>();
 }
 
 void Update()
 {
-    if (tree) {
-        delete tree;
-    }
-    tree = new OctTree<Mesh>();
-    tree->Draw();
-
     if (CameraSettings::displayReticle)
     {
         Point::AddPoint(Point(Vec3(), Color::white, 5));
@@ -304,7 +295,8 @@ void Update()
             //*v += (RandomDirection() * -ii * (0.001 * t * abs(sin(t * .1))));
         }
     }
-    
+
+    OctTree<BoxCollider>::Update();
 }
 
 int main(void)
