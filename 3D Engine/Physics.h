@@ -505,6 +505,19 @@ public:
         }
     }
 
+    virtual ~TreeNode<T>()
+    {
+        if (children)
+        {
+            for (size_t i = 0; i < children->size(); i++)
+            {
+                delete (*children)[i];
+            }
+
+            delete children;
+        }
+    }
+
     void Subdivide()
     {
         if (!children && level < maxDepth)

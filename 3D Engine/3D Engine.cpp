@@ -208,6 +208,10 @@ void Init(GLFWwindow* window)
 
 void Update()
 {
+    if (tree) {
+        delete tree;
+    }
+    tree = new OctTree<Mesh>();
     tree->Draw();
 
     if (CameraSettings::displayReticle)
