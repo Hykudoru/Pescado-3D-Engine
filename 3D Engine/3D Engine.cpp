@@ -12,7 +12,6 @@
 #include <Input.h>
 using namespace std;
 GLFWwindow* window;
-//OctTree* octTree;
 
 // Checking if DEBUGGING true in other scripts before using cout also ensures readable slow incremental output.
 bool DEBUGGING = false;
@@ -132,10 +131,11 @@ void Init(GLFWwindow* window)
     child->SetColor(Color::orange);
     grandchild->SetColor(Color::yellow);
     greatGrandchild->SetColor(Color::green);
-
+    /*
     PhysicsObject* test = new PhysicsObject(new CubeMesh(), new BoxCollider(true));
     test->localScale = { 1, 2, 1 };
-    test->localPosition = Direction::forward * 5;
+    test->localPosition = Direction::forward * 5;*/
+
     for (int r = -1; r < 1; r++)
     {
         for (int c = -1; c < 1; c++)
@@ -144,7 +144,7 @@ void Init(GLFWwindow* window)
             {
                 PhysicsObject* block = new PhysicsObject(new CubeMesh(), new BoxCollider(true));
                 block->localScale *= .1;
-                block->localPosition = Direction::down * (5+(0.1*d)) + Direction::left * r * .1 + Direction::back * c * .1;
+                block->localPosition = Direction::down * (5+(block->localScale.y*d)) + Direction::left * r * block->localScale.x + Direction::back * c * block->localScale.z;
             }
         }
     }
@@ -205,6 +205,10 @@ void Init(GLFWwindow* window)
 
 void Update()
 {
+
+    OctTree<Mesh>::Update();
+    OctTree<Collider>::Update();
+
     if (CameraSettings::displayReticle)
     {
         Point::AddPoint(Point(Vec3(), Color::white, 5));
@@ -295,8 +299,6 @@ void Update()
             //*v += (RandomDirection() * -ii * (0.001 * t * abs(sin(t * .1))));
         }
     }
-
-    OctTree<BoxCollider>::Update();
 }
 
 int main(void)

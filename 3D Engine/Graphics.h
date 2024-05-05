@@ -1527,7 +1527,6 @@ void Draw()
                 continue;
             }
 */
-
             if (bounds)
             {
                 Matrix4x4 trs4x4 = vpMatrix * mesh->TRS();
@@ -1539,12 +1538,9 @@ void Draw()
                 
                 if (Graphics::debugBounds)
                 {
-                    if (bounds)
+                    if (mesh != Camera::main->GetMesh() && DotProduct(mesh->Position() - Camera::main->Position(), Camera::main->Forward()) > 0)
                     {
-                        if (mesh != Camera::main->GetMesh() && DotProduct(mesh->Position() - Camera::main->Position(), Camera::main->Forward()) > 0)
-                        {
-                            bounds->Draw();
-                        }
+                        bounds->Draw();
                     }
                 }
             }
