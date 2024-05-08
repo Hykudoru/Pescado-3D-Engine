@@ -205,9 +205,8 @@ void Init(GLFWwindow* window)
 
 void Update()
 {
-
     OctTree<Mesh>::Update();
-    OctTree<Collider>::Update();
+    OctTree<PhysicsObject>::Update();
 
     if (CameraSettings::displayReticle)
     {
@@ -265,17 +264,17 @@ void Update()
         bender->localRotation *= Matrix3x3::RotY(5.0 * deltaTime);
     }
 
-    
+
     static float t = 0;
     t += deltaTime;
-    
+
     for (int i = 0; i < Mesh::objects.size(); i++)
     {
         Mesh* mesh = Mesh::objects[i];
         for (int ii = 0; ii < mesh->vertices.size(); ii++)
         {
-            Vec3* v = &((mesh->vertices))[ii]; 
-            
+            Vec3* v = &((mesh->vertices))[ii];
+
             //DECAY
             //*v += *v * 0.001*cos(2.0*PI*t*ii);
 
@@ -291,7 +290,7 @@ void Update()
 
             //STRETCH
             //*v += (RandomDirection() * ii * (0.001 * sin((2.0 * PI / 4.0) * t)));
-           
+
             //STRETCH 2
             //*v += (RandomDirection()* ii *(0.001 * abs(sin((2.0 * PI / 4.0) * t ))));
 
@@ -299,6 +298,10 @@ void Update()
             //*v += (RandomDirection() * -ii * (0.001 * t * abs(sin(t * .1))));
         }
     }
+    /*
+    Foreach<Mesh>(ManagedObjectPool<Mesh>::objects, [](Mesh* obj) {
+        obj->SetColor(Color::blue);
+    });*/
 }
 
 int main(void)

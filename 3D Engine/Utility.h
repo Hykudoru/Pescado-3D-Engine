@@ -2,11 +2,33 @@
 #ifndef UTILITY_H
 #define UTILITY_H
 
+#include <functional>
+
 #define List std::vector
 extern bool DEBUGGING;
 const float PI = 3.14159265359f;
 const float TAO = 2.0 * PI;
 typedef void (*Callback)();
+
+template <typename T>
+void Foreach(List<T*>& objects, std::function<void(T*)>&& callback)
+{
+    for (size_t i = 0; i < objects.size(); i++)
+    {
+        auto obj = objects.at(i);
+        callback(obj);
+    }
+}
+
+template <typename T>
+void Foreach(List<T>& objects, std::function<void(T*)>&& callback)
+{
+    for (size_t i = 0; i < objects.size(); i++)
+    {
+        auto obj = objects.at(i);
+        callback(obj);
+    }
+}
 
 template <typename T>
 class ManagedObjectPool

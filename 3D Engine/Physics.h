@@ -115,7 +115,7 @@ public:
         return mesh->MapVertsToTriangles();
     }
     
-    List<Vec3> WorldBounds()
+    List<Vec3> WorldVertices()
     {
         return mesh->WorldVertices();
     }
@@ -343,8 +343,8 @@ bool OBBSATColliding(BoxCollider& box1, BoxCollider& box2, BoxCollisionInfo& col
         return false;
     }
 
-    List<Vec3> physObj1Verts = box1.WorldBounds();
-    List<Vec3> physObj2Verts = box2.WorldBounds();
+    List<Vec3> physObj1Verts = box1.WorldVertices();
+    List<Vec3> physObj2Verts = box2.WorldVertices();
     List<Vec3> physObj1Normals = List<Vec3>{ box1.root->localRotation * Direction::right, box1.root->localRotation * Direction::up, box1.root->localRotation * Direction::forward };// mesh1.WorldXYZNormals();
     List<Vec3> physObj2Normals = List<Vec3>{ box2.root->localRotation * Direction::right, box2.root->localRotation * Direction::up, box2.root->localRotation * Direction::forward }; //mesh2.WorldXYZNormals();
 
@@ -473,11 +473,11 @@ class TreeNode : public CubeMesh
 private:
     Vec3 min_w;
     Vec3 max_w;
+    int level = 0;
 public:
-    int maxDepth = 8;
+    int maxDepth = 16;
     int maxCapacity = 8;
     int maxChildren = 8;
-    int level = 0;
     TreeNode<T>* root = nullptr;
     TreeNode<T>* parent = nullptr;
     List<T*> contained = List<T*>();
@@ -543,13 +543,49 @@ public:
 
     bool Overlapping(T* obj)
     {
-        Vec3 point = obj->Position();
+        Vec3 pos = obj->Position();
 
-        if (point.x >= min_w.x && point.x <= max_w.x
-            && point.y >= min_w.y && point.y <= max_w.y
-            && point.z >= min_w.z && point.z <= max_w.z)
+        auto overlap = [&](Vec3& point) mutable {
+            if (point.x >= min_w.x && point.x <= max_w.x
+                && point.y >= min_w.y && point.y <= max_w.y
+                && point.z >= min_w.z && point.z <= max_w.z)
+            {
+                return true;
+            }
+            return false;
+        };
+
+        //if atleast containing position, check if completely overlapping bounds.
+        if (overlap(pos))
         {
-            return true;
+            Mesh* mesh = dynamic_cast<Mesh*>(obj);
+            if (mesh)
+            {
+                auto verts = mesh->bounds->WorldVertices();
+                for (size_t i = 0; i < 8; i++)
+                {
+                    if (!overlap(verts[i]))
+                    {
+                        return false;
+                    }
+                }
+                return true;
+            }
+
+            PhysicsObject* physObj = dynamic_cast<PhysicsObject*>(obj);
+            if (physObj)
+            {
+                auto verts = physObj->mesh->bounds->WorldVertices();
+                for (size_t i = 0; i < 8; i++)
+                {
+                    if (!overlap(verts[i]))
+                    {
+                        return false;
+                    }
+                }
+
+                return true;
+            }
         }
 
         return false;
@@ -620,11 +656,9 @@ public:
 
     void Draw()
     {
-        if (Graphics::debugTree)
+        if (Graphics::debugTree && this->level > 0)
         {
-            if (this->level > 0) {
-                this->SetVisibility(true);
-            }
+            this->SetVisibility(true);
         }
         else {
             this->SetVisibility(false);
@@ -638,7 +672,7 @@ public:
         for (size_t i = 0; i < this->contained.size(); i++)
         {
             auto obj = this->contained.at(i);
-            Point::AddWorldPoint(Point(obj->Position(), color, 10));
+            Point::AddWorldPoint(Point(obj->Position(), this->color, 8));
         }
 
         if (this->children)
@@ -672,16 +706,28 @@ public:
         (*this->children)[6]->SetColor(Color::pink);
         (*this->children)[7]->SetColor(Color::turquoise);
 
-        for (size_t i = 0; i < ManagedObjectPool<T>::objects.size(); i++)
+        for (size_t i = 0; i < ManagedObjectPool<T>::count; i++)
         {
-            T* obj = ManagedObjectPool<T>::objects[i];
-            
+            T* objTesting = ManagedObjectPool<T>::objects[i];
+
+            bool inserted = false;
             for (size_t ii = 0; ii < this->children->size(); ii++)
             {
                 auto child = (*this->children)[ii];
-                auto node = child->Insert(obj);
+                auto node = child->Insert(objTesting);
                 if (node) {
+                    inserted = true;
                     break;
+                }
+            }
+
+            if (!inserted) 
+            {
+                // Prevent box from being inserted into itself.
+                if (objTesting != (T*)this)
+                {
+                    //objects to big or not encapsulated
+                    this->contained.emplace_back(objTesting);
                 }
             }
         }

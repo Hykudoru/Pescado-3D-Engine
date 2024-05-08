@@ -337,6 +337,7 @@ public:
     Cube bounds;
     Vec3 min;
     Vec3 max;
+    Color color = Color::red;
     Mesh* mesh;
 
     BoundingBox(Mesh* mesh) : ManagedObjectPool<BoundingBox>(this)
@@ -1355,18 +1356,18 @@ void BoundingBox::Draw()
         auto vertices_w = WorldVertices();
         //Point::AddWorldPoint(Point(mesh->TRS() * min, Color::orange, 10));
         //Point::AddWorldPoint(Point(mesh->TRS() * max, Color::yellow, 10));
-        Line::AddWorldLine(Line(vertices_w[0], vertices_w[1], Color::red));
-        Line::AddWorldLine(Line(vertices_w[1], vertices_w[2], Color::red));
-        Line::AddWorldLine(Line(vertices_w[2], vertices_w[3], Color::red));
-        Line::AddWorldLine(Line(vertices_w[3], vertices_w[0], Color::red));
-        Line::AddWorldLine(Line(vertices_w[4], vertices_w[5], Color::red));
-        Line::AddWorldLine(Line(vertices_w[5], vertices_w[6], Color::red));
-        Line::AddWorldLine(Line(vertices_w[6], vertices_w[7], Color::red));
-        Line::AddWorldLine(Line(vertices_w[7], vertices_w[4], Color::red));
-        Line::AddWorldLine(Line(vertices_w[0], vertices_w[4], Color::red));
-        Line::AddWorldLine(Line(vertices_w[1], vertices_w[5], Color::red));
-        Line::AddWorldLine(Line(vertices_w[2], vertices_w[6], Color::red));
-        Line::AddWorldLine(Line(vertices_w[3], vertices_w[7], Color::red));
+        Line::AddWorldLine(Line(vertices_w[0], vertices_w[1], color));
+        Line::AddWorldLine(Line(vertices_w[1], vertices_w[2], color));
+        Line::AddWorldLine(Line(vertices_w[2], vertices_w[3], color));
+        Line::AddWorldLine(Line(vertices_w[3], vertices_w[0], color));
+        Line::AddWorldLine(Line(vertices_w[4], vertices_w[5], color));
+        Line::AddWorldLine(Line(vertices_w[5], vertices_w[6], color));
+        Line::AddWorldLine(Line(vertices_w[6], vertices_w[7], color));
+        Line::AddWorldLine(Line(vertices_w[7], vertices_w[4], color));
+        Line::AddWorldLine(Line(vertices_w[0], vertices_w[4], color));
+        Line::AddWorldLine(Line(vertices_w[1], vertices_w[5], color));
+        Line::AddWorldLine(Line(vertices_w[2], vertices_w[6], color));
+        Line::AddWorldLine(Line(vertices_w[3], vertices_w[7], color));
     }
 }
 
