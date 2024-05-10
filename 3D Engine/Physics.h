@@ -483,15 +483,14 @@ public:
     List<T*> contained = List<T*>();
     List<TreeNode<T>*>* children = nullptr;
 
-    TreeNode<T>(TreeNode<T>* parent = nullptr)
+    TreeNode(TreeNode<T>* parent = nullptr)
     {
-        this->SetVisibility(false);
-
-        if (!this->root)
+        if (!parent)
         {
             this->root = this;
+            this->localScale = Vec3(100000, 100000, 100000);
         }
-        if (parent)
+        else
         {
             this->parent = parent;
             this->root = parent->root;
@@ -499,9 +498,11 @@ public:
             this->localScale = (parent->localScale * .5);
             if (this->level > 1)
             {
-                this->SetColor(parent->color);
+                this->SetColor(this->parent->color);
             }
         }
+
+        this->SetVisibility(false);
     }
 
     virtual ~TreeNode<T>()
@@ -530,10 +531,11 @@ public:
                     for (int depth = -1; depth <= 1; depth += 2)
                     {
                         auto newChild = new TreeNode<T>(this);
-                        newChild->localPosition = this->Position() + Direction::right * width * .5 * newChild->localScale.x + Direction::up * height *.5 * newChild->localScale.y + Direction::forward * depth * .5 * newChild->localScale.z;
+                        newChild->localPosition = Position() + Direction::right * width * .5 * newChild->localScale.x + Direction::up * height *.5 * newChild->localScale.y + Direction::forward * depth * .5 * newChild->localScale.z;
                         newChild->bounds->CreateBounds(newChild);
                         newChild->min_w = newChild->TRS() * newChild->bounds->min;
                         newChild->max_w = newChild->TRS() * newChild->bounds->max;
+
                         children->emplace_back(newChild);
                     }
                 }
@@ -727,12 +729,8 @@ class OctTree : public TreeNode<T>
 public:
     static OctTree<T>* tree;
 
-    OctTree(Vec3 size = Vec3(100000, 100000, 100000)) : TreeNode<T>()
+    OctTree() : TreeNode<T>()
     {
-        this->localScale = size;
-        this->bounds->CreateBounds(this);
-        this->min_w = this->TRS() * this->bounds->min;
-        this->max_w = this->TRS() * this->bounds->max;
         this->Subdivide();
         
         (*this->children)[0]->SetColor(Color::red);

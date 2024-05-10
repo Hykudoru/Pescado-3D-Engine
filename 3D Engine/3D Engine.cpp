@@ -211,7 +211,7 @@ void Update()
     auto list = OctTree<Mesh>::Tree()->Search(pos);
     for (int i=0; i < list.size(); i++)
     {
-        (list)[i]->SetColor(Color::gray);
+        //list[i]->SetColor(Color::gray);
     }
 
 
