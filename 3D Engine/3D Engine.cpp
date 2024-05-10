@@ -207,6 +207,13 @@ void Update()
 {
     OctTree<Mesh>::Update();
     OctTree<PhysicsObject>::Update();
+    Vec3 pos = Camera::main->Position();
+    auto list = OctTree<Mesh>::Tree()->Search(pos);
+    for (int i=0; i < list.size(); i++)
+    {
+        (list)[i]->SetColor(Color::gray);
+    }
+
 
     if (CameraSettings::displayReticle)
     {
@@ -302,6 +309,7 @@ void Update()
     Foreach<Mesh>(ManagedObjectPool<Mesh>::objects, [](Mesh* obj) {
         obj->SetColor(Color::blue);
     });*/
+    
 }
 
 int main(void)

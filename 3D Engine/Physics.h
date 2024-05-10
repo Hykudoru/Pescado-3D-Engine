@@ -470,7 +470,7 @@ bool OBBSATColliding(BoxCollider& box1, BoxCollider& box2, BoxCollisionInfo& col
 template <typename T>
 class TreeNode : public CubeMesh
 {
-private:
+protected:
     Vec3 min_w;
     Vec3 max_w;
     int level = 0;
@@ -541,22 +541,23 @@ public:
         }
     }
 
+    bool OverlappingPoint(Vec3& point)
+    {
+        if (point.x >= min_w.x && point.x <= max_w.x
+            && point.y >= min_w.y && point.y <= max_w.y
+            && point.z >= min_w.z && point.z <= max_w.z)
+        {
+            return true;
+        }
+        
+        return false;
+    }
+
     bool Overlapping(T* obj)
     {
-        Vec3 pos = obj->Position();
-
-        auto overlap = [&](Vec3& point) mutable {
-            if (point.x >= min_w.x && point.x <= max_w.x
-                && point.y >= min_w.y && point.y <= max_w.y
-                && point.z >= min_w.z && point.z <= max_w.z)
-            {
-                return true;
-            }
-            return false;
-        };
-
         //if atleast containing position, check if completely overlapping bounds.
-        if (overlap(pos))
+        Vec3 pos = obj->Position();
+        if (OverlappingPoint(pos))
         {
             Mesh* mesh = dynamic_cast<Mesh*>(obj);
             if (mesh)
@@ -564,7 +565,7 @@ public:
                 auto verts = mesh->bounds->WorldVertices();
                 for (size_t i = 0; i < 8; i++)
                 {
-                    if (!overlap(verts[i]))
+                    if (!OverlappingPoint(verts[i]))
                     {
                         return false;
                     }
@@ -578,7 +579,7 @@ public:
                 auto verts = physObj->mesh->bounds->WorldVertices();
                 for (size_t i = 0; i < 8; i++)
                 {
-                    if (!overlap(verts[i]))
+                    if (!OverlappingPoint(verts[i]))
                     {
                         return false;
                     }
@@ -591,23 +592,29 @@ public:
         return false;
     }
 
-    //Search for node containing obj
-    TreeNode<T>* Query(T& obj)
+    //Search for farthest node containing point
+    TreeNode<T>* Query(Vec3& pos)
     {
-        if (Overlapping(obj))
+        if (this->OverlappingPoint(pos))
         {
-            if (!children)
+            if (!this->children)
             {
                 return this;
             }
             else 
             {
-                for (size_t i = 0; i < children->size(); i++)
+                TreeNode<T>* node = nullptr;
+                for (size_t i = 0; i < this->children->size(); i++)
                 {
-                    auto node = (*children)[i++]->Query(obj);
+                    node = (*children)[i++]->Query(pos);
                     if (node) {
                         return node;
                     }
+                }
+
+                if (!node)
+                {
+                    return this;
                 }
             }
         }
@@ -654,6 +661,34 @@ public:
         return nullptr;
     }
 
+    void Extract(List<T*>& list)
+    {
+        for (size_t i = 0; i < contained.size(); i++)
+        {
+            list.emplace_back(contained.at(i));
+        }
+
+        if (children)
+        {
+            for (size_t i = 0; i < children->size(); i++)
+            {
+                (*children)[i]->Extract(list);
+            }
+        }
+    }
+
+    List<T*> Search(Vec3& pos)
+    {
+        List<T*> list;
+        auto node = this->Query(pos);
+        if (node)
+        {
+            node->Extract(list);
+        }
+
+        return list;
+    }
+
     void Draw()
     {
         if (Graphics::debugTree && this->level > 0)
@@ -695,6 +730,9 @@ public:
     OctTree(Vec3 size = Vec3(100000, 100000, 100000)) : TreeNode<T>()
     {
         this->localScale = size;
+        this->bounds->CreateBounds(this);
+        this->min_w = this->TRS() * this->bounds->min;
+        this->max_w = this->TRS() * this->bounds->max;
         this->Subdivide();
         
         (*this->children)[0]->SetColor(Color::red);
