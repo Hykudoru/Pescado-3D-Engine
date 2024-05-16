@@ -49,7 +49,7 @@ CubeMesh* child;
 CubeMesh* grandchild;
 CubeMesh* greatGrandchild; 
 Mesh* compass;
-//PhysicsObject temp = PhysicsObject(new CubeMesh(), new BoxCollider()); 
+PhysicsObject temp = PhysicsObject(new CubeMesh(), new BoxCollider()); 
 Mesh* bender;
 
 void Init(GLFWwindow* window)
@@ -205,15 +205,22 @@ void Init(GLFWwindow* window)
 
 void Update()
 {
+    for (size_t i = 0; i < Mesh::count; i++)
+    {
+        Mesh::objects[i]->SetColor(Color::red);
+    }
     OctTree<Mesh>::Update();
-    OctTree<PhysicsObject>::Update();
+    //OctTree<PhysicsObject>::Update();
     Vec3 pos = Camera::main->Position();
-    auto list = OctTree<Mesh>::Tree()->Search(pos);
+
+    auto list = OctTree<Mesh>::Search(pos);
+    
     for (int i=0; i < list.size(); i++)
     {
-        //list[i]->SetColor(Color::gray);
+        auto obj = list.at(i);
+        //list.erase(list.begin() + i);//->SetColor(Color::gray);
+        obj->SetColor(Color::green);
     }
-
 
     if (CameraSettings::displayReticle)
     {
@@ -270,7 +277,6 @@ void Update()
         bender->localPosition += Direction::left * deltaTime * 0.7;
         bender->localRotation *= Matrix3x3::RotY(5.0 * deltaTime);
     }
-
 
     static float t = 0;
     t += deltaTime;

@@ -1056,7 +1056,7 @@ void Mesh::SetColor(Color&& c) {
 void Mesh::SetColor(Color& c)
 {
     color = c;
-    if (triangles)
+    if (vertices.size() > 0)
     {
         for (int i = 0; i < triangles->size(); i++)
         {

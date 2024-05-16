@@ -473,10 +473,10 @@ class TreeNode : public CubeMesh
 protected:
     Vec3 min_w;
     Vec3 max_w;
-    int level = 0;
 public:
+    int level = 0;
     int maxDepth = 16;
-    int maxCapacity = 8;
+    int maxCapacity = 2;
     int maxChildren = 8;
     TreeNode<T>* root = nullptr;
     TreeNode<T>* parent = nullptr;
@@ -593,30 +593,28 @@ public:
 
         return false;
     }
-
+    
     //Search for farthest node containing point
-    TreeNode<T>* Query(Vec3& pos)
+    TreeNode<T>* Query(Vec3& pos, List<T*>& list)
     {
         if (this->OverlappingPoint(pos))
         {
+            cout << " level: " << this->level << endl;
+            this->Extract(list);
+            
             if (!this->children)
             {
                 return this;
             }
             else 
             {
-                TreeNode<T>* node = nullptr;
                 for (size_t i = 0; i < this->children->size(); i++)
                 {
-                    node = (*children)[i++]->Query(pos);
-                    if (node) {
+                    auto node = (*children)[i];
+                    node = node->Query(pos, list);
+                    if (node != nullptr) {
                         return node;
                     }
-                }
-
-                if (!node)
-                {
-                    return this;
                 }
             }
         }
@@ -665,30 +663,10 @@ public:
 
     void Extract(List<T*>& list)
     {
-        for (size_t i = 0; i < contained.size(); i++)
+        for (size_t i = 0; i < this->contained.size(); i++)
         {
-            list.emplace_back(contained.at(i));
+            list.emplace_back(this->contained.at(i));
         }
-
-        if (children)
-        {
-            for (size_t i = 0; i < children->size(); i++)
-            {
-                (*children)[i]->Extract(list);
-            }
-        }
-    }
-
-    List<T*> Search(Vec3& pos)
-    {
-        List<T*> list;
-        auto node = this->Query(pos);
-        if (node)
-        {
-            node->Extract(list);
-        }
-
-        return list;
     }
 
     void Draw()
@@ -789,6 +767,22 @@ public:
         tree = new OctTree<T>();
 
         tree->Draw();
+    }
+
+    static List<T*> Search(Vec3& pos)
+    {
+        List<T*> list = List<T*>();
+        Tree()->Extract(list);
+        for (size_t i = 0; i < 8; i++)
+        {
+           auto child = (*Tree()->children)[i];
+           if (child->OverlappingPoint(pos))
+           {
+               child->Query(pos, list);
+               break;
+           }
+        }
+        return list;
     }
 };
 template <typename T>
