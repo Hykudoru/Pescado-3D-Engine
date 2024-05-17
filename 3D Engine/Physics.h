@@ -594,7 +594,6 @@ public:
         return false;
     }
     
-    //Search for farthest node containing point
     TreeNode<T>* Query(Vec3& pos, List<T*>& list)
     {
         if (this->OverlappingPoint(pos))
@@ -679,6 +678,8 @@ public:
             this->SetVisibility(false);
         }
 
+        this->bounds->color = color;
+
         //Point::AddWorldPoint(Point(this->Position(), this->color, 15));
         //Point::AddWorldPoint(Point(min_w, Color::blue, 10));
         //Point::AddWorldPoint(Point(max_w, Color::blue, 10));
@@ -720,6 +721,7 @@ public:
         (*this->children)[6]->SetColor(Color::pink);
         (*this->children)[7]->SetColor(Color::turquoise);
 
+        // Insert world objects
         for (size_t i = 0; i < ManagedObjectPool<T>::count; i++)
         {
             T* objTesting = ManagedObjectPool<T>::objects[i];
@@ -769,18 +771,24 @@ public:
         tree->Draw();
     }
 
-    static List<T*> Search(Vec3& pos)
+    static List<T*> Search(Vec3& pos, std::function<void(T*)> func = NULL)
     {
         List<T*> list = List<T*>();
         Tree()->Extract(list);
         for (size_t i = 0; i < 8; i++)
         {
-           auto child = (*Tree()->children)[i];
-           if (child->OverlappingPoint(pos))
-           {
-               child->Query(pos, list);
+           auto node = (*Tree()->children)[i]->Query(pos, list);
+           if (node) {
                break;
            }
+        }
+
+        if (func)
+        {
+            for (size_t i = 0; i < list.size(); i++)
+            {
+                func(list[i]);
+            }
         }
         return list;
     }
