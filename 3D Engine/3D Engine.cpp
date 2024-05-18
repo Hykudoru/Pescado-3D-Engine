@@ -213,7 +213,7 @@ void Update()
     //OctTree<PhysicsObject>::Update();
     Vec3 pos = Camera::main->Position();
 
-    auto list = OctTree<Mesh>::Search(pos, [&](Mesh* mesh) {mesh->SetColor(Color::green); });
+    auto list = OctTree<Mesh>::Search(pos, [](Mesh* mesh) {mesh->SetColor(Color::green); });
 
     if (CameraSettings::displayReticle)
     {

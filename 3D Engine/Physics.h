@@ -475,10 +475,11 @@ protected:
     Vec3 max_w;
 public:
     int level = 0;
-    int maxDepth = 16;
-    int maxCapacity = 2;
+    static int maxDepth;
+    int maxCapacity = 8;
     int maxChildren = 8;
     TreeNode<T>* root = nullptr;
+    TreeNode<T>* subroot = nullptr;
     TreeNode<T>* parent = nullptr;
     List<T*> contained = List<T*>();
     List<TreeNode<T>*>* children = nullptr;
@@ -487,6 +488,7 @@ public:
     {
         if (!parent)
         {
+            maxDepth = 8;
             this->root = this;
             this->localScale = Vec3(100000, 100000, 100000);
         }
@@ -496,6 +498,9 @@ public:
             this->root = parent->root;
             this->level = parent->level + 1;
             this->localScale = (parent->localScale * .5);
+            if (this->level == 1) {
+                this->subroot = this;
+            }
             if (this->level > 1)
             {
                 this->SetColor(this->parent->color);
@@ -594,12 +599,12 @@ public:
         return false;
     }
     
-    TreeNode<T>* Query(Vec3& pos, List<T*>& list)
+    TreeNode<T>* Query(Vec3& pos, List<T*>& container, const std::function<bool(T*)>& condition = NULL)
     {
         if (this->OverlappingPoint(pos))
         {
-            cout << " level: " << this->level << endl;
-            this->Extract(list);
+            cout << " >> level: " << this->level;
+            this->Extract(container, condition);
             
             if (!this->children)
             {
@@ -610,7 +615,7 @@ public:
                 for (size_t i = 0; i < this->children->size(); i++)
                 {
                     auto node = (*children)[i];
-                    node = node->Query(pos, list);
+                    node = node->Query(pos, container, condition);
                     if (node != nullptr) {
                         return node;
                     }
@@ -660,12 +665,26 @@ public:
         return nullptr;
     }
 
-    void Extract(List<T*>& list)
+    void Extract(List<T*>& list, const std::function<bool(T*)>& condition = NULL)
     {
-        for (size_t i = 0; i < this->contained.size(); i++)
+        if (condition) 
         {
-            list.emplace_back(this->contained.at(i));
+            for (size_t i = 0; i < this->contained.size(); i++)
+            {
+                auto obj = this->contained[i];
+                if (condition(obj)) {
+                    list.emplace_back(obj);
+                }
+            }
         }
+        else 
+        {
+            for (size_t i = 0; i < this->contained.size(); i++)
+            {
+                list.emplace_back(this->contained[i]);
+            }
+        }
+        
     }
 
     void Draw()
@@ -701,10 +720,22 @@ public:
         }
     }
 };
+template <typename T>
+int TreeNode<T>::maxDepth = 8;
 
 template <typename T>
 class OctTree : public TreeNode<T>
 {
+private:
+    static OctTree<T>* Tree()
+    {
+        if (!tree)
+        {
+            tree = new OctTree<T>();
+        }
+
+        return tree;
+    }
 public:
     static OctTree<T>* tree;
 
@@ -734,6 +765,10 @@ public:
                 if (node) {
                     inserted = true;
                     break;
+                }// Double check if subroot is overlapping and insert here instead of main root since insertion may have failed due to size in some smaller branch subnode.
+                else if (child->Overlapping(objTesting))
+                {
+                    child->contained.emplace_back(objTesting);
                 }
             }
 
@@ -749,16 +784,6 @@ public:
         }
     }
 
-    static OctTree<T>* Tree()
-    {
-        if (!tree)
-        {
-            tree = new OctTree<T>();
-        }
-
-        return tree;
-    }
-
     static void Update()
     {
         if (tree)
@@ -771,14 +796,20 @@ public:
         tree->Draw();
     }
 
-    static List<T*> Search(Vec3& pos, std::function<void(T*)> func = NULL)
+    static List<T*>* Search(Vec3& point, const std::function<void(T*)>& func = NULL)
     {
-        List<T*> list = List<T*>();
+        static List<T*> list = List<T*>();
+        list.clear();
+
+        //Extract contents from root which contains any objects too big or not encapsulated
         Tree()->Extract(list);
+
+        //Query subnodes
         for (size_t i = 0; i < 8; i++)
         {
-           auto node = (*Tree()->children)[i]->Query(pos, list);
+           auto node = (*tree->children)[i]->Query(point, list);
            if (node) {
+               cout << endl;
                break;
            }
         }
@@ -790,7 +821,8 @@ public:
                 func(list[i]);
             }
         }
-        return list;
+
+        return &list;
     }
 };
 template <typename T>
