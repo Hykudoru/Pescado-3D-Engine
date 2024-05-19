@@ -205,15 +205,15 @@ void Init(GLFWwindow* window)
 
 void Update()
 {
-    for (size_t i = 0; i < Mesh::count; i++)
+    for (size_t i = 0; i < ManagedObjectPool<SphereCollider>::count; i++)
     {
-        Mesh::objects[i]->SetColor(Color::red);
+        ManagedObjectPool<SphereCollider>::objects[i]->object->mesh->SetColor(Color::red);
     }
-    OctTree<Mesh>::Update();
-    //OctTree<PhysicsObject>::Update();
+    //OctTree<Mesh>::Update();
+    OctTree<SphereCollider>::Update();
     Vec3 pos = Camera::main->Position();
 
-    auto list = OctTree<Mesh>::Search(pos, [](Mesh* mesh) {mesh->SetColor(Color::green); });
+    auto list = OctTree<SphereCollider>::Search(pos, [](SphereCollider* obj) {obj->object->mesh->SetColor(Color::green); });
 
     if (CameraSettings::displayReticle)
     {

@@ -562,6 +562,19 @@ public:
 
     bool Overlapping(T* obj)
     {
+        Vec3* verts;
+        auto func = [&]()
+        {
+            for (size_t i = 0; i < 8; i++)
+            {
+                if (!OverlappingPoint(verts[i]))
+                {
+                    return false;
+                }
+            }
+            return true;
+        };
+
         //if atleast containing position, check if completely overlapping bounds.
         Vec3 pos = obj->Position();
         if (OverlappingPoint(pos))
@@ -569,42 +582,34 @@ public:
             Mesh* mesh = dynamic_cast<Mesh*>(obj);
             if (mesh)
             {
-                auto verts = mesh->bounds->WorldVertices();
-                for (size_t i = 0; i < 8; i++)
-                {
-                    if (!OverlappingPoint(verts[i]))
-                    {
-                        return false;
-                    }
-                }
-                return true;
+                verts = mesh->bounds->WorldVertices();
+                return func();
             }
 
             PhysicsObject* physObj = dynamic_cast<PhysicsObject*>(obj);
             if (physObj)
             {
-                auto verts = physObj->mesh->bounds->WorldVertices();
-                for (size_t i = 0; i < 8; i++)
-                {
-                    if (!OverlappingPoint(verts[i]))
-                    {
-                        return false;
-                    }
-                }
+                verts = physObj->mesh->bounds->WorldVertices();
+                return func();
+            }
 
-                return true;
+            Collider* collider = dynamic_cast<Collider*>(obj);
+            if (collider)
+            {
+                verts = collider->object->mesh->bounds->WorldVertices();
+                return func();
             }
         }
 
         return false;
     }
     
-    TreeNode<T>* Query(Vec3& pos, List<T*>& container, const std::function<bool(T*)>& condition = NULL)
+    TreeNode<T>* Query(Vec3& pos, List<T*>& containerFilling, const std::function<bool(T*)>& condition = NULL)
     {
         if (this->OverlappingPoint(pos))
         {
             cout << " >> level: " << this->level;
-            this->Extract(container, condition);
+            this->Extract(containerFilling, condition);
             
             if (!this->children)
             {
@@ -615,7 +620,7 @@ public:
                 for (size_t i = 0; i < this->children->size(); i++)
                 {
                     auto node = (*children)[i];
-                    node = node->Query(pos, container, condition);
+                    node = node->Query(pos, containerFilling, condition);
                     if (node != nullptr) {
                         return node;
                     }
@@ -665,7 +670,7 @@ public:
         return nullptr;
     }
 
-    void Extract(List<T*>& list, const std::function<bool(T*)>& condition = NULL)
+    void Extract(List<T*>& containerFilling, const std::function<bool(T*)>& condition = NULL)
     {
         if (condition) 
         {
@@ -673,7 +678,7 @@ public:
             {
                 auto obj = this->contained[i];
                 if (condition(obj)) {
-                    list.emplace_back(obj);
+                    containerFilling.emplace_back(obj);
                 }
             }
         }
@@ -681,7 +686,7 @@ public:
         {
             for (size_t i = 0; i < this->contained.size(); i++)
             {
-                list.emplace_back(this->contained[i]);
+                containerFilling.emplace_back(this->contained[i]);
             }
         }
         
@@ -689,7 +694,12 @@ public:
 
     void Draw()
     {
-        if (Graphics::debugTree && this->level > 0)
+        if (!Graphics::debugTree)
+        {
+            return;
+        }
+
+        if (this->level > 0)
         {
             this->SetVisibility(true);
         }
@@ -727,6 +737,7 @@ template <typename T>
 class OctTree : public TreeNode<T>
 {
 private:
+    static OctTree<T>* tree;
     static OctTree<T>* Tree()
     {
         if (!tree)
@@ -737,12 +748,11 @@ private:
         return tree;
     }
 public:
-    static OctTree<T>* tree;
-
     OctTree() : TreeNode<T>()
     {
         this->Subdivide();
         
+        // Color zones
         (*this->children)[0]->SetColor(Color::red);
         (*this->children)[1]->SetColor(Color::orange);
         (*this->children)[2]->SetColor(Color::yellow);
@@ -756,19 +766,21 @@ public:
         for (size_t i = 0; i < ManagedObjectPool<T>::count; i++)
         {
             T* objTesting = ManagedObjectPool<T>::objects[i];
-
             bool inserted = false;
+            
             for (size_t ii = 0; ii < this->children->size(); ii++)
             {
-                auto child = (*this->children)[ii];
-                auto node = child->Insert(objTesting);
+                auto zone = (*this->children)[ii];
+                auto node = zone->Insert(objTesting);
                 if (node) {
                     inserted = true;
                     break;
-                }// Double check if subroot is overlapping and insert here instead of main root since insertion may have failed due to size in some smaller branch subnode.
-                else if (child->Overlapping(objTesting))
+                }
+                // Double check if subroot is overlapping and insert here instead of main root 
+                // since insertion may have failed due to size in some smaller branch node.
+                else if (zone->Overlapping(objTesting))
                 {
-                    child->contained.emplace_back(objTesting);
+                    zone->contained.emplace_back(objTesting);
                 }
             }
 
@@ -777,7 +789,7 @@ public:
                 // Prevent box from being inserted into itself.
                 if (objTesting != (T*)this)
                 {
-                    //objects to big or not encapsulated
+                    //objects too big or not encapsulated
                     this->contained.emplace_back(objTesting);
                 }
             }
@@ -786,8 +798,7 @@ public:
 
     static void Update()
     {
-        if (tree)
-        {
+        if (tree) {
             delete tree;
         }
         
@@ -796,7 +807,7 @@ public:
         tree->Draw();
     }
 
-    static List<T*>* Search(Vec3& point, const std::function<void(T*)>& func = NULL)
+    static List<T*>* Search(Vec3& point, const std::function<void(T*)>& action = NULL)
     {
         static List<T*> list = List<T*>();
         list.clear();
@@ -814,11 +825,11 @@ public:
            }
         }
 
-        if (func)
+        if (action)
         {
             for (size_t i = 0; i < list.size(); i++)
             {
-                func(list[i]);
+                action(list[i]);
             }
         }
 
