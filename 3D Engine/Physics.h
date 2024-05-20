@@ -488,7 +488,7 @@ public:
     {
         if (!parent)
         {
-            maxDepth = 8;
+            maxDepth = 12;
             this->root = this;
             this->localScale = Vec3(100000, 100000, 100000);
         }
@@ -501,8 +501,7 @@ public:
             if (this->level == 1) {
                 this->subroot = this;
             }
-            if (this->level > 1)
-            {
+            if (this->level > 1) {
                 this->SetColor(this->parent->color);
             }
         }
@@ -731,7 +730,7 @@ public:
     }
 };
 template <typename T>
-int TreeNode<T>::maxDepth = 8;
+int TreeNode<T>::maxDepth = 12;
 
 template <typename T>
 class OctTree : public TreeNode<T>

@@ -209,7 +209,7 @@ void Update()
     {
         ManagedObjectPool<SphereCollider>::objects[i]->object->mesh->SetColor(Color::red);
     }
-    //OctTree<Mesh>::Update();
+    OctTree<Mesh>::Update();
     OctTree<SphereCollider>::Update();
     Vec3 pos = Camera::main->Position();
 
