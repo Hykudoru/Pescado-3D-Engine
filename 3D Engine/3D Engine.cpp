@@ -205,16 +205,13 @@ void Init(GLFWwindow* window)
 
 void Update()
 {
-    for (size_t i = 0; i < ManagedObjectPool<SphereCollider>::count; i++)
-    {
-        ManagedObjectPool<SphereCollider>::objects[i]->object->mesh->SetColor(Color::red);
-    }
-    OctTree<Mesh>::Update();
-    OctTree<SphereCollider>::Update();
+    Foreach<SphereCollider>(ManagedObjectPool<SphereCollider>::objects, [](SphereCollider* obj) {
+        obj->object->mesh->SetColor(Color::red);
+    });
+
     Vec3 pos = Camera::main->Position();
-
-    auto list = OctTree<SphereCollider>::Search(pos, [](SphereCollider* obj) {obj->object->mesh->SetColor(Color::green); });
-
+    auto list = OctTree<SphereCollider>::Search(pos, [](SphereCollider* obj) { obj->object->mesh->SetColor(Color::green); });
+    
     if (CameraSettings::displayReticle)
     {
         Point::AddPoint(Point(Vec3(), Color::white, 5));
@@ -271,6 +268,7 @@ void Update()
         bender->localRotation *= Matrix3x3::RotY(5.0 * deltaTime);
     }
 
+    /*
     static float t = 0;
     t += deltaTime;
 
@@ -304,10 +302,7 @@ void Update()
             //*v += (RandomDirection() * -ii * (0.001 * t * abs(sin(t * .1))));
         }
     }
-    /*
-    Foreach<Mesh>(ManagedObjectPool<Mesh>::objects, [](Mesh* obj) {
-        obj->SetColor(Color::blue);
-    });*/
+    */
     
 }
 

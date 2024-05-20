@@ -476,7 +476,7 @@ protected:
 public:
     int level = 0;
     static int maxDepth;
-    int maxCapacity = 8;
+    int maxCapacity = 4;
     int maxChildren = 8;
     TreeNode<T>* root = nullptr;
     TreeNode<T>* subroot = nullptr;
@@ -488,7 +488,6 @@ public:
     {
         if (!parent)
         {
-            maxDepth = 12;
             this->root = this;
             this->localScale = Vec3(100000, 100000, 100000);
         }
@@ -607,7 +606,7 @@ public:
     {
         if (this->OverlappingPoint(pos))
         {
-            cout << " >> level: " << this->level;
+            //cout << " >> level: " << this->level;
             this->Extract(containerFilling, condition);
             
             if (!this->children)
@@ -779,7 +778,9 @@ public:
                 // since insertion may have failed due to size in some smaller branch node.
                 else if (zone->Overlapping(objTesting))
                 {
+                    inserted = true;
                     zone->contained.emplace_back(objTesting);
+                    break;
                 }
             }
 
@@ -819,7 +820,7 @@ public:
         {
            auto node = (*tree->children)[i]->Query(point, list);
            if (node) {
-               cout << endl;
+               //cout << endl;
                break;
            }
         }
@@ -1168,6 +1169,9 @@ bool Raycast(Vec3 from, Vec3 to, RaycastInfo<T>& raycastInfo, const std::functio
 
 static void Physics()
 {
+    OctTree<Mesh>::Update();
+    OctTree<SphereCollider>::Update();
+    
     Camera* cam;
     if (CameraSettings::outsiderViewPerspective)
     {
