@@ -7,7 +7,6 @@
 #include <fstream>
 #include <sstream>
 #include <Utility.h>;
-
 #ifndef GRAPHICS_H
 #define GRAPHICS_H
 
@@ -19,21 +18,19 @@ class Transform;
 class Mesh;
 class Camera;
 
-struct Direction
-{
-    static Vec3 forward;
-    static Vec3 back;
-    static Vec3 right;
-    static Vec3 left;
-    static Vec3 up;
-    static Vec3 down;
-};
-Vec3 Direction::forward = Vec3(0, 0, -1);
-Vec3 Direction::back = Vec3(0, 0, 1);
-Vec3 Direction::right = Vec3(1, 0, 0);
-Vec3 Direction::left = Vec3(-1, 0, 0);
-Vec3 Direction::up = Vec3(0, 1, 0);
-Vec3 Direction::down = Vec3(0, -1, 0);
+Vec3 lightSource = .25 * Direction::up + Direction::back * .5;
+static float worldScale = 1;
+int screenWidth = 350;// 1920;//1600;
+int screenHeight = 200;// 1080;// 900;
+float nearClippingPlane = -0.1;
+float farClippingPlane = -100000.0;
+float fieldOfViewDeg = 60;
+float fov = ToRad(fieldOfViewDeg);
+float aspect = (float)screenHeight / (float)screenWidth;
+
+List<Point>* pointBuffer = new List<Point>();
+List<Line>* lineBuffer = new List<Line>();
+List<Triangle>* triBuffer = new List<Triangle>();
 
 struct Color
 {
@@ -348,7 +345,7 @@ public:
 
     void CreateBounds(Mesh* mesh);
 
-    Vec3* WorldVertices();
+    List<Vec3>* WorldVertices();
 
     void Draw();
 };
@@ -404,10 +401,6 @@ public:
 
     void TransformTriangles();
 };
-
-List<Point>* pointBuffer = new List<Point>();
-List<Line>* lineBuffer = new List<Line>();
-List<Triangle>* triBuffer = new List<Triangle>();
 
 struct Graphics
 {
@@ -506,17 +499,6 @@ bool Graphics::displayWireFrames = false;
 bool Graphics::lighting = true;
 bool Graphics::vfx = false;
 bool Graphics::matrixMode = false;
-
-
-Vec3 lightSource = .25*Direction::up  + Direction::back * .5;
-static float worldScale = 1;
-int screenWidth = 1920;//1600;
-int screenHeight = 1080;// 900;
-float nearClippingPlane = -0.1;
-float farClippingPlane = -100000.0;
-float fieldOfViewDeg = 60;
-float fov = ToRad(fieldOfViewDeg);
-float aspect = (float)screenHeight / (float)screenWidth;
 
 // Perspective Projection Matrix
 float persp[4][4] = {
@@ -1067,7 +1049,7 @@ void Mesh::SetColor(Color& c)
 
 List<Triangle>* Mesh::MapVertsToTriangles()
 {
-    if (indices)
+    if (indices && !vertices.empty())
     {
         int t = 0;
         for (size_t i = 0; i < indices->size(); i++)
@@ -1332,14 +1314,14 @@ void BoundingBox::CreateBounds(Mesh* mesh)
     bounds = Cube(min, max);
 }
 
-Vec3* BoundingBox::WorldVertices()
+List<Vec3>* BoundingBox::WorldVertices()
 {
     if (!this->mesh)
     {
         return nullptr;
     }
 
-    static Vec3 verts[8] = {};
+    static List<Vec3> verts = List<Vec3>(8);
 
     auto trs4x4 = mesh->TRS();
     for (size_t i = 0; i < 8; i++)
@@ -1347,7 +1329,7 @@ Vec3* BoundingBox::WorldVertices()
         verts[i] = trs4x4 * bounds.vertices[i];
     }
 
-    return verts;
+    return &verts;
 }
 void BoundingBox::Draw()
 {
@@ -1356,18 +1338,18 @@ void BoundingBox::Draw()
         auto vertices_w = WorldVertices();
         //Point::AddWorldPoint(Point(mesh->TRS() * min, Color::orange, 10));
         //Point::AddWorldPoint(Point(mesh->TRS() * max, Color::yellow, 10));
-        Line::AddWorldLine(Line(vertices_w[0], vertices_w[1], color));
-        Line::AddWorldLine(Line(vertices_w[1], vertices_w[2], color));
-        Line::AddWorldLine(Line(vertices_w[2], vertices_w[3], color));
-        Line::AddWorldLine(Line(vertices_w[3], vertices_w[0], color));
-        Line::AddWorldLine(Line(vertices_w[4], vertices_w[5], color));
-        Line::AddWorldLine(Line(vertices_w[5], vertices_w[6], color));
-        Line::AddWorldLine(Line(vertices_w[6], vertices_w[7], color));
-        Line::AddWorldLine(Line(vertices_w[7], vertices_w[4], color));
-        Line::AddWorldLine(Line(vertices_w[0], vertices_w[4], color));
-        Line::AddWorldLine(Line(vertices_w[1], vertices_w[5], color));
-        Line::AddWorldLine(Line(vertices_w[2], vertices_w[6], color));
-        Line::AddWorldLine(Line(vertices_w[3], vertices_w[7], color));
+        Line::AddWorldLine(Line((*vertices_w)[0], (*vertices_w)[1], color));
+        Line::AddWorldLine(Line((*vertices_w)[1], (*vertices_w)[2], color));
+        Line::AddWorldLine(Line((*vertices_w)[2], (*vertices_w)[3], color));
+        Line::AddWorldLine(Line((*vertices_w)[3], (*vertices_w)[0], color));
+        Line::AddWorldLine(Line((*vertices_w)[4], (*vertices_w)[5], color));
+        Line::AddWorldLine(Line((*vertices_w)[5], (*vertices_w)[6], color));
+        Line::AddWorldLine(Line((*vertices_w)[6], (*vertices_w)[7], color));
+        Line::AddWorldLine(Line((*vertices_w)[7], (*vertices_w)[4], color));
+        Line::AddWorldLine(Line((*vertices_w)[0], (*vertices_w)[4], color));
+        Line::AddWorldLine(Line((*vertices_w)[1], (*vertices_w)[5], color));
+        Line::AddWorldLine(Line((*vertices_w)[2], (*vertices_w)[6], color));
+        Line::AddWorldLine(Line((*vertices_w)[3], (*vertices_w)[7], color));
     }
 }
 
@@ -1495,6 +1477,8 @@ Mesh* LoadMeshFromOBJFile(std::string objFileName)
     return mesh;
 }
 
+#include <OctTree.h>
+
 void Draw()
 {
     // Camera TRInverse = (TR)^-1 = R^-1*T^-1 = M = Mcw = World to Camera coords. 
@@ -1505,6 +1489,48 @@ void Draw()
     projectionMatrix = ProjectionMatrix();
     Matrix4x4 vpMatrix = projectionMatrix * worldToViewMatrix;
 
+    /*
+    int nodeCount = 0;
+    auto visible = [&](TreeNode<Mesh>* node) mutable {
+        List<Vec3>* verts = node->bounds->WorldVertices();
+        Vec3 camPos = Camera::main->Position();
+        Vec3 camLooking = Camera::main->Forward();
+        for (size_t v = 0; v < verts->size(); v++)
+        {
+            bool behindCamera = DotProduct((*verts)[v] - camPos, camLooking) < 0;
+            if (!behindCamera)
+            {
+                nodeCount++;
+                return true;
+            }
+        }
+        return false;
+    };
+    
+    List<Mesh*> meshes;
+    OctTree<Mesh>::Update();
+    OctTree<Mesh>::Tree()->Extract(meshes);
+    for (size_t i = 0; i < 8; i++)
+    {
+        auto zone = OctTree<Mesh>::Tree()->children->at(i);
+        if (visible(zone))
+        {
+            zone->Extract(meshes);
+            zone->ForEachSubNode([&](TreeNode<Mesh>* sub) {
+                if (visible(sub))
+                {
+                    sub->Extract(meshes);
+                }
+            });
+        }
+    }
+
+    if (DEBUGGING) {
+        std::cout << "Nodes: " << OctTree<Mesh>::count << std::endl;
+        std::cout << "Nodes Visible: " << nodeCount << std::endl;
+        std::cout << "Meshes Looping: " << meshes.size() << std::endl;
+    }
+    */
     // ---------- Transform -----------
     for (int i = 0; i < Mesh::count; i++)
     {

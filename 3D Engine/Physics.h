@@ -5,6 +5,7 @@
 #include <Graphics.h>
 #include <Utility.h>
 #include <Functional>
+#include <OctTree.h>
 using namespace std;
 
 
@@ -467,378 +468,6 @@ bool OBBSATColliding(BoxCollider& box1, BoxCollider& box2, BoxCollisionInfo& col
     return collisionInfo.colliding;
 }
 
-template <typename T>
-class TreeNode : public CubeMesh
-{
-protected:
-    Vec3 min_w;
-    Vec3 max_w;
-public:
-    int level = 0;
-    static int maxDepth;
-    int maxCapacity = 4;
-    int maxChildren = 8;
-    TreeNode<T>* root = nullptr;
-    TreeNode<T>* subroot = nullptr;
-    TreeNode<T>* parent = nullptr;
-    List<T*> contained = List<T*>();
-    List<TreeNode<T>*>* children = nullptr;
-
-    TreeNode(TreeNode<T>* parent = nullptr)
-    {
-        if (!parent)
-        {
-            this->root = this;
-            this->localScale = Vec3(100000, 100000, 100000);
-        }
-        else
-        {
-            this->parent = parent;
-            this->root = parent->root;
-            this->level = parent->level + 1;
-            this->localScale = (parent->localScale * .5);
-            if (this->level == 1) {
-                this->subroot = this;
-            }
-            if (this->level > 1) {
-                this->SetColor(this->parent->color);
-            }
-        }
-
-        this->SetVisibility(false);
-    }
-
-    virtual ~TreeNode<T>()
-    {
-        if (children)
-        {
-            for (size_t i = 0; i < children->size(); i++)
-            {
-                delete (*children)[i];
-            }
-
-            delete children;
-        }
-    }
-
-    void Subdivide()
-    {
-        if (!children && level < maxDepth)
-        {
-            children = new List<TreeNode<T>*>();
-
-            for (int width = -1; width <= 1; width += 2)
-            {
-                for (int height = -1; height <= 1; height += 2)
-                {
-                    for (int depth = -1; depth <= 1; depth += 2)
-                    {
-                        auto newChild = new TreeNode<T>(this);
-                        newChild->localPosition = Position() + Direction::right * width * .5 * newChild->localScale.x + Direction::up * height *.5 * newChild->localScale.y + Direction::forward * depth * .5 * newChild->localScale.z;
-                        newChild->bounds->CreateBounds(newChild);
-                        newChild->min_w = newChild->TRS() * newChild->bounds->min;
-                        newChild->max_w = newChild->TRS() * newChild->bounds->max;
-
-                        children->emplace_back(newChild);
-                    }
-                }
-            }
-        }
-    }
-
-    bool OverlappingPoint(Vec3& point)
-    {
-        if (point.x >= min_w.x && point.x <= max_w.x
-            && point.y >= min_w.y && point.y <= max_w.y
-            && point.z >= min_w.z && point.z <= max_w.z)
-        {
-            return true;
-        }
-        
-        return false;
-    }
-
-    bool Overlapping(T* obj)
-    {
-        Vec3* verts;
-        auto func = [&]()
-        {
-            for (size_t i = 0; i < 8; i++)
-            {
-                if (!OverlappingPoint(verts[i]))
-                {
-                    return false;
-                }
-            }
-            return true;
-        };
-
-        //if atleast containing position, check if completely overlapping bounds.
-        Vec3 pos = obj->Position();
-        if (OverlappingPoint(pos))
-        {
-            Mesh* mesh = dynamic_cast<Mesh*>(obj);
-            if (mesh)
-            {
-                verts = mesh->bounds->WorldVertices();
-                return func();
-            }
-
-            PhysicsObject* physObj = dynamic_cast<PhysicsObject*>(obj);
-            if (physObj)
-            {
-                verts = physObj->mesh->bounds->WorldVertices();
-                return func();
-            }
-
-            Collider* collider = dynamic_cast<Collider*>(obj);
-            if (collider)
-            {
-                verts = collider->object->mesh->bounds->WorldVertices();
-                return func();
-            }
-        }
-
-        return false;
-    }
-    
-    TreeNode<T>* Query(Vec3& pos, List<T*>& containerFilling, const std::function<bool(T*)>& condition = NULL)
-    {
-        if (this->OverlappingPoint(pos))
-        {
-            //cout << " >> level: " << this->level;
-            this->Extract(containerFilling, condition);
-            
-            if (!this->children)
-            {
-                return this;
-            }
-            else 
-            {
-                for (size_t i = 0; i < this->children->size(); i++)
-                {
-                    auto node = (*children)[i];
-                    node = node->Query(pos, containerFilling, condition);
-                    if (node != nullptr) {
-                        return node;
-                    }
-                }
-            }
-        }
-
-        return nullptr;
-    }
-
-    TreeNode<T>* Insert(T* obj)
-    {
-        // Prevent box from being inserted into itself.
-        if (obj == (T*)this)
-        {
-            return nullptr;
-        }
-
-        if (Overlapping(obj))
-        {
-            if (contained.size() < maxCapacity)
-            {
-                contained.emplace_back(obj);
-                return this;
-            }
-            else 
-            {
-                if (!children && level < maxDepth)
-                {
-                    Subdivide();
-                }
-
-                if (children)
-                {
-                    for (size_t i = 0; i < children->size(); i++)
-                    {
-                        TreeNode<T>* node = (*children)[i];
-                        node = node->Insert(obj);
-                        if (node) {
-                            return node;
-                        }
-                    }
-                }
-            }
-        }
-
-        return nullptr;
-    }
-
-    void Extract(List<T*>& containerFilling, const std::function<bool(T*)>& condition = NULL)
-    {
-        if (condition) 
-        {
-            for (size_t i = 0; i < this->contained.size(); i++)
-            {
-                auto obj = this->contained[i];
-                if (condition(obj)) {
-                    containerFilling.emplace_back(obj);
-                }
-            }
-        }
-        else 
-        {
-            for (size_t i = 0; i < this->contained.size(); i++)
-            {
-                containerFilling.emplace_back(this->contained[i]);
-            }
-        }
-        
-    }
-
-    void Draw()
-    {
-        if (!Graphics::debugTree)
-        {
-            return;
-        }
-
-        if (this->level > 0)
-        {
-            this->SetVisibility(true);
-        }
-        else {
-            this->SetVisibility(false);
-        }
-
-        this->bounds->color = color;
-
-        //Point::AddWorldPoint(Point(this->Position(), this->color, 15));
-        //Point::AddWorldPoint(Point(min_w, Color::blue, 10));
-        //Point::AddWorldPoint(Point(max_w, Color::blue, 10));
-        //Line::AddWorldLine(Line(min_w, max_w, Color::pink, 5));
-
-        for (size_t i = 0; i < this->contained.size(); i++)
-        {
-            auto obj = this->contained.at(i);
-            Point::AddWorldPoint(Point(obj->Position(), this->color, 8));
-        }
-
-        if (this->children)
-        {
-            for (size_t i = 0; i < this->children->size(); i++)
-            {
-                auto child = (*this->children)[i]; 
-                child->Draw();
-            }
-        }
-    }
-};
-template <typename T>
-int TreeNode<T>::maxDepth = 12;
-
-template <typename T>
-class OctTree : public TreeNode<T>
-{
-private:
-    static OctTree<T>* tree;
-    static OctTree<T>* Tree()
-    {
-        if (!tree)
-        {
-            tree = new OctTree<T>();
-        }
-
-        return tree;
-    }
-public:
-    OctTree() : TreeNode<T>()
-    {
-        this->Subdivide();
-        
-        // Color zones
-        (*this->children)[0]->SetColor(Color::red);
-        (*this->children)[1]->SetColor(Color::orange);
-        (*this->children)[2]->SetColor(Color::yellow);
-        (*this->children)[3]->SetColor(Color::green);
-        (*this->children)[4]->SetColor(Color::blue);
-        (*this->children)[5]->SetColor(Color::purple);
-        (*this->children)[6]->SetColor(Color::pink);
-        (*this->children)[7]->SetColor(Color::turquoise);
-
-        // Insert world objects
-        for (size_t i = 0; i < ManagedObjectPool<T>::count; i++)
-        {
-            T* objTesting = ManagedObjectPool<T>::objects[i];
-            bool inserted = false;
-            
-            for (size_t ii = 0; ii < this->children->size(); ii++)
-            {
-                auto zone = (*this->children)[ii];
-                auto node = zone->Insert(objTesting);
-                if (node) {
-                    inserted = true;
-                    break;
-                }
-                // Double check if subroot is overlapping and insert here instead of main root 
-                // since insertion may have failed due to size in some smaller branch node.
-                else if (zone->Overlapping(objTesting))
-                {
-                    inserted = true;
-                    zone->contained.emplace_back(objTesting);
-                    break;
-                }
-            }
-
-            if (!inserted) 
-            {
-                // Prevent box from being inserted into itself.
-                if (objTesting != (T*)this)
-                {
-                    //objects too big or not encapsulated
-                    this->contained.emplace_back(objTesting);
-                }
-            }
-        }
-    }
-
-    static void Update()
-    {
-        if (tree) {
-            delete tree;
-        }
-        
-        tree = new OctTree<T>();
-
-        tree->Draw();
-    }
-
-    static List<T*>* Search(Vec3& point, const std::function<void(T*)>& action = NULL)
-    {
-        static List<T*> list = List<T*>();
-        list.clear();
-
-        //Extract contents from root which contains any objects too big or not encapsulated
-        Tree()->Extract(list);
-
-        //Query subnodes
-        for (size_t i = 0; i < 8; i++)
-        {
-           auto node = (*tree->children)[i]->Query(point, list);
-           if (node) {
-               //cout << endl;
-               break;
-           }
-        }
-
-        if (action)
-        {
-            for (size_t i = 0; i < list.size(); i++)
-            {
-                action(list[i]);
-            }
-        }
-
-        return &list;
-    }
-};
-template <typename T>
-OctTree<T>* OctTree<T>::tree = nullptr;
-
 void DetectCollisions()
 {
     // How nested loop algorithm works: 
@@ -985,6 +614,116 @@ void DetectCollisions()
                             plane->object->mass,
                             sphere1->object->velocity,
                             plane->object->velocity,
+                            1.0
+                        );
+                    }
+                }
+            }
+        }
+    }
+}
+
+void DetectCollisions2()
+{
+    for (size_t i = 0; i < ManagedObjectPool<BoxCollider>::count; i++)
+    {
+        // exit if this is the last Collider
+        if ((i + 1) >= ManagedObjectPool<BoxCollider>::count) {
+            break;
+        }
+
+        // Current Collider
+        BoxCollider* box1 = ManagedObjectPool<BoxCollider>::objects[i];
+        auto closestBoxes = OctTree<BoxCollider>::Search(box1->Position());
+
+        for (size_t j = i + 1; j < closestBoxes->size(); j++)
+        {
+            // Next Collider
+            BoxCollider* box2 = (*closestBoxes)[j];
+
+            if (box1->isStatic && box2->isStatic) {
+                continue;
+            }
+
+            BoxCollisionInfo collisionInfo;
+            bool resolveIfNotTrigger = !(box1->isTrigger || box2->isTrigger);
+            if (OBBSATColliding(*box1, *box2, collisionInfo, resolveIfNotTrigger))
+            {
+                if (Physics::dynamics)
+                {
+                    if (box1->object->isKinematic || box2->object->isKinematic) {
+                        continue;
+                    }
+                    /*
+                    Although static objects themselves are not effected by momentum
+                    transfers, their velocity variable may still be updating from new collisions.
+                    Consequently, objects touching a static collider would be effected, so the
+                    velocity is zeroed out to prevent this.
+                    */
+                    if (box1->isStatic)
+                    {
+                        box1->object->velocity = Vec3::zero;
+                    }
+                    else if (box2->isStatic)
+                    {
+                        box2->object->velocity = Vec3::zero;
+                    }
+
+                    CalculateCollision(
+                        collisionInfo.minOverlapAxis,
+                        box1->object->mass,
+                        box2->object->mass,
+                        box1->object->velocity,
+                        box2->object->velocity,
+                        1.0
+                    );
+                }
+            }
+        }
+    }
+
+    for (size_t i = 0; i < ManagedObjectPool<SphereCollider>::count; i++)
+    {
+        // Current Collider
+        SphereCollider* sphere1 = ManagedObjectPool<SphereCollider>::objects[i];
+
+        auto closestSpheres = OctTree<SphereCollider>::Search(sphere1->Position());
+        
+        // SPHERE-SPHERE COLLISIONS
+        for (size_t j = i + 1; j < closestSpheres->size(); j++)
+        {
+            // Next Collider
+            SphereCollider* sphere2 = (*closestSpheres)[j];
+
+            if (sphere1->isStatic && sphere2->isStatic) {
+                continue;
+            }
+            
+            SphereCollisionInfo collisionInfo;
+            bool resolveIfNotTrigger = !(sphere1->isTrigger || sphere2->isTrigger);
+            if (SpheresColliding(*sphere1, *sphere2, collisionInfo, resolveIfNotTrigger))
+            {
+                if (Physics::dynamics)
+                {
+                    if (sphere1->object->isKinematic || sphere2->object->isKinematic) {
+                        continue;
+                    }
+                    if (sphere1->isStatic)
+                    {
+                        CalculateStaticCollision(collisionInfo.lineOfImpact, sphere2->object->velocity, sphere2->coefficientRestitution);
+                    }
+                    else if (sphere2->isStatic)
+                    {
+                        CalculateStaticCollision(collisionInfo.lineOfImpact, sphere1->object->velocity, sphere1->coefficientRestitution);
+                    }
+                    else
+                    {
+                        CalculateCollision(
+                            collisionInfo.lineOfImpact,
+                            sphere1->object->mass,
+                            sphere2->object->mass,
+                            sphere1->object->velocity,
+                            sphere2->object->velocity,
                             1.0
                         );
                     }
@@ -1168,10 +907,7 @@ bool Raycast(Vec3 from, Vec3 to, RaycastInfo<T>& raycastInfo, const std::functio
 }
 
 static void Physics()
-{
-    OctTree<Mesh>::Update();
-    OctTree<SphereCollider>::Update();
-    
+{    
     Camera* cam;
     if (CameraSettings::outsiderViewPerspective)
     {

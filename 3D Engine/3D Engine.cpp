@@ -205,12 +205,11 @@ void Init(GLFWwindow* window)
 
 void Update()
 {
-    Foreach<SphereCollider>(ManagedObjectPool<SphereCollider>::objects, [](SphereCollider* obj) {
-        obj->object->mesh->SetColor(Color::red);
+    
+    Foreach<Mesh>(ManagedObjectPool<Mesh>::objects, [](Mesh* obj) {
+        obj->SetColor(Color::red);
     });
-
-    Vec3 pos = Camera::main->Position();
-    auto list = OctTree<SphereCollider>::Search(pos, [](SphereCollider* obj) { obj->object->mesh->SetColor(Color::green); });
+    auto list = OctTree<Mesh>::Search(Camera::main->Position(), [](Mesh* obj) { obj->SetColor(Color::green); });
     
     if (CameraSettings::displayReticle)
     {
