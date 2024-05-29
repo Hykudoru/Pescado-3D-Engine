@@ -623,8 +623,11 @@ void DetectCollisions()
     }
 }
 
-void DetectCollisions2()
+void DetectCollisionsOctTree()
 {
+    OctTree<BoxCollider>::Update();
+    OctTree<SphereCollider>::Update();
+
     for (size_t i = 0; i < ManagedObjectPool<BoxCollider>::count; i++)
     {
         // exit if this is the last Collider
@@ -634,7 +637,8 @@ void DetectCollisions2()
 
         // Current Collider
         BoxCollider* box1 = ManagedObjectPool<BoxCollider>::objects[i];
-        auto closestBoxes = OctTree<BoxCollider>::Search(box1->Position());
+        auto volume = Cube(box1->TRS() * box1->mesh->bounds->min, box1->TRS() * box1->mesh->bounds->max);
+        auto closestBoxes = OctTree<BoxCollider>::Search(volume);
 
         for (size_t j = i + 1; j < closestBoxes->size(); j++)
         {
@@ -686,8 +690,8 @@ void DetectCollisions2()
     {
         // Current Collider
         SphereCollider* sphere1 = ManagedObjectPool<SphereCollider>::objects[i];
-
-        auto closestSpheres = OctTree<SphereCollider>::Search(sphere1->Position());
+        auto volume = Cube(sphere1->TRS() * sphere1->mesh->bounds->min, sphere1->TRS() * sphere1->mesh->bounds->max);
+        auto closestSpheres = OctTree<SphereCollider>::Search(volume);
         
         // SPHERE-SPHERE COLLISIONS
         for (size_t j = i + 1; j < closestSpheres->size(); j++)
@@ -953,7 +957,7 @@ static void Physics()
 
     if (Physics::collisionDetection)
     {
-        DetectCollisions();
+        DetectCollisionsOctTree();
     }
 
     if (Physics::raycasting)

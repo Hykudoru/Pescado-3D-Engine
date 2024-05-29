@@ -24,24 +24,24 @@ public:
         count++;
         if (!parent)
         {
-            this->root = this;
-            this->localScale = Vec3(10000, 10000, 10000);
+            root = this;
+            localScale = Vec3(10000, 10000, 10000);
         }
         else
         {
             this->parent = parent;
-            this->root = parent->root;
-            this->level = parent->level + 1;
-            this->localScale = (parent->localScale * .5);
-            if (this->level == 1) {
-                this->subroot = this;
+            root = parent->root;
+            level = parent->level + 1;
+            localScale = (parent->localScale * .5);
+            if (level == 1) {
+                subroot = this;
             }
-            if (this->level > 1) {
-                this->SetColor(this->parent->color);
+            if (level > 1) {
+                SetColor(parent->color);
             }
         }
 
-        this->SetVisibility(false);
+        SetVisibility(false);
     }
 
     virtual ~TreeNode<T>()
@@ -105,7 +105,7 @@ public:
 
         return false;
     }
-
+    
     bool Overlapping(T* obj)
     {
         List<Vec3>* verts;
@@ -113,7 +113,7 @@ public:
             {
                 for (size_t i = 0; i < 8; i++)
                 {
-                    if (!OverlappingPoint((*verts)[i]))
+                    if (!this->OverlappingPoint((*verts)[i]))
                     {
                         return false;
                     }
@@ -123,7 +123,7 @@ public:
 
         //if atleast containing position, check if completely overlapping bounds.
         Vec3 pos = obj->Position();
-        if (OverlappingPoint(pos))
+        if (this->OverlappingPoint(pos))
         {
             Mesh* mesh = dynamic_cast<Mesh*>(obj);
             if (mesh)
@@ -382,6 +382,39 @@ public:
         tree->Draw();
     }
 
+    static List<T*>* Search(Cube& volume, const std::function<void(T*)>& action = NULL)
+    {
+        static List<T*> list = List<T*>();
+        list.clear();
+
+        //Extract contents from root which contains any objects too big or not encapsulated
+        Tree()->Extract(list);
+
+        for (size_t i = 0; i < 8; i++)
+        {
+            Vec3 point = volume.vertices[i];
+            //Query subnodes
+            for (size_t ii = 0; ii < 8; ii++)
+            {
+                auto node = (*tree->children)[ii]->Query(point, list);
+                if (node) {
+                    //cout << endl;
+                    break;
+                }
+            }
+        }
+
+        if (action)
+        {
+            for (size_t i = 0; i < list.size(); i++)
+            {
+                action(list[i]);
+            }
+        }
+
+        return &list;
+    }
+    
     static List<T*>* Search(Vec3&& point, const std::function<void(T*)>& action = NULL)
     {
         static List<T*> list = List<T*>();
