@@ -274,7 +274,7 @@ public:
     Matrix4x4 TRInverse();
 };
 
-class Cube
+class Cube : public Transform
 {
 public:
     List<Vec3> vertices;

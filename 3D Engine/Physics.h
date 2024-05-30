@@ -304,8 +304,8 @@ bool SpheresColliding(SphereCollider& sphere1, SphereCollider& sphere2, SphereCo
     float radius2 = sphere2.Radius();
     Vec3 sphere1Pos = sphere1.Position();
     Vec3 sphere2Pos = sphere2.Position();
-
-    collisionInfo.colliding = (sphere2Pos - sphere1Pos).SqrMagnitude() < (radius1 + radius2) * (radius1 + radius2);
+    float sumRadii = (radius1 + radius2);
+    collisionInfo.colliding = (sphere2Pos - sphere1Pos).SqrMagnitude() < (sumRadii*sumRadii);
     if (collisionInfo.colliding)
     {
         Vec3 pointOnSphere1 = ClosestPointOnSphere(sphere1Pos, radius1, sphere2Pos);
@@ -637,10 +637,12 @@ void DetectCollisionsOctTree()
 
         // Current Collider
         BoxCollider* box1 = ManagedObjectPool<BoxCollider>::objects[i];
-        auto volume = Cube(box1->TRS() * box1->mesh->bounds->min, box1->TRS() * box1->mesh->bounds->max);
-        auto closestBoxes = OctTree<BoxCollider>::Search(volume);
 
-        for (size_t j = i + 1; j < closestBoxes->size(); j++)
+        // Search for nearby colliders
+        auto volume = Cube(box1->TRS() * box1->mesh->bounds->min, box1->TRS() * box1->mesh->bounds->max);
+        auto closestBoxes = OctTree<BoxCollider>::Search(volume, [&](BoxCollider* collider) { return collider != box1; });
+
+        for (size_t j = 0; j < closestBoxes->size(); j++)
         {
             // Next Collider
             BoxCollider* box2 = (*closestBoxes)[j];
@@ -690,11 +692,17 @@ void DetectCollisionsOctTree()
     {
         // Current Collider
         SphereCollider* sphere1 = ManagedObjectPool<SphereCollider>::objects[i];
+
+        // Search for nearby colliders
         auto volume = Cube(sphere1->TRS() * sphere1->mesh->bounds->min, sphere1->TRS() * sphere1->mesh->bounds->max);
-        auto closestSpheres = OctTree<SphereCollider>::Search(volume);
+        auto closestSpheres = OctTree<SphereCollider>::Search(volume, [&](SphereCollider* collider) { return collider != sphere1; });
         
+        if (DEBUGGING) {
+            cout << closestSpheres->size() << endl;
+        }
+
         // SPHERE-SPHERE COLLISIONS
-        for (size_t j = i + 1; j < closestSpheres->size(); j++)
+        for (size_t j = 0; j < closestSpheres->size(); j++)
         {
             // Next Collider
             SphereCollider* sphere2 = (*closestSpheres)[j];

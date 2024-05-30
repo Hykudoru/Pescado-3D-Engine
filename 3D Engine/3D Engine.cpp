@@ -205,12 +205,16 @@ void Init(GLFWwindow* window)
 
 void Update()
 {
-    
+    OctTree<Mesh>::Update();
     Foreach<Mesh>(ManagedObjectPool<Mesh>::objects, [](Mesh* obj) {
         obj->SetColor(Color::red);
     });
     auto list = OctTree<Mesh>::Search(Camera::main->Position(), [](Mesh* obj) { obj->SetColor(Color::green); });
     
+    if (DEBUGGING) {
+        cout << list->size() << endl;
+    }
+
     if (CameraSettings::displayReticle)
     {
         Point::AddPoint(Point(Vec3(), Color::white, 5));

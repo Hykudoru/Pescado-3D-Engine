@@ -1,5 +1,6 @@
 #pragma once
 #include <Graphics.h>
+#include <unordered_set>
 class Collider;
 class PhysicsObject;
 
@@ -12,12 +13,13 @@ public:
     int level = 0;
     static int maxDepth;
     static int count;
-    int maxCapacity = 8;
+    int maxCapacity = 4;
     TreeNode<T>* root = nullptr;
     TreeNode<T>* subroot = nullptr;
     TreeNode<T>* parent = nullptr;
     List<T*> contained = List<T*>();
     List<TreeNode<T>*>* children = nullptr;
+    bool flagged = false;
 
     TreeNode(TreeNode<T>* parent = nullptr)
     {
@@ -150,13 +152,18 @@ public:
         return false;
     }
 
-    TreeNode<T>* Query(Vec3& pos, List<T*>& containerFilling, const std::function<bool(T*)>& condition = NULL)
+    TreeNode<T>* Query(Vec3& pos, List<T*>& containerFilling, const std::function<bool(T*)>& condition = NULL, const std::function<void(TreeNode<T>*)>& onOverlappingNode = NULL)
     {
         if (this->OverlappingPoint(pos))
-        {
-            //cout << " >> level: " << this->level;
-            this->Extract(containerFilling, condition);
-
+        {   
+            if (onOverlappingNode) {
+                onOverlappingNode(this);
+            }
+            if (!this->flagged)
+            {
+                this->Extract(containerFilling, condition);
+                this->flagged = true;
+            }
             if (!this->children)
             {
                 return this;
@@ -166,7 +173,7 @@ public:
                 for (size_t i = 0; i < this->children->size(); i++)
                 {
                     auto node = (*children)[i];
-                    node = node->Query(pos, containerFilling, condition);
+                    node = node->Query(pos, containerFilling, condition, onOverlappingNode);
                     if (node != nullptr) {
                         return node;
                     }
@@ -390,20 +397,32 @@ public:
         //Extract contents from root which contains any objects too big or not encapsulated
         Tree()->Extract(list);
 
+        List<TreeNode<T>*> nodesFlagged;
+        auto func = [&](TreeNode<T>* thisNode) mutable {
+            if (!thisNode->flagged) {
+                nodesFlagged.emplace_back(thisNode);
+            }};
+        
+        Vec3 center = volume.Position();
+
+        //Query subnodes
         for (size_t i = 0; i < 8; i++)
         {
-            Vec3 point = volume.vertices[i];
-            //Query subnodes
-            for (size_t ii = 0; ii < 8; ii++)
+            auto zone = (*tree->children)[i];
+
+            zone->Query(center, list, NULL, func);
+            for (size_t ii = 0; ii < volume.vertices.size(); ii++)
             {
-                auto node = (*tree->children)[ii]->Query(point, list);
-                if (node) {
-                    //cout << endl;
-                    break;
-                }
+                Vec3 point = volume.vertices[ii];
+                zone->Query(point, list, NULL, func);
             }
         }
-
+        //Fix later since may contain duplicates
+        for (size_t i = 0; i < nodesFlagged.size(); i++)
+        {
+            nodesFlagged[i]->flagged = false;
+        }
+        
         if (action)
         {
             for (size_t i = 0; i < list.size(); i++)
@@ -433,6 +452,7 @@ public:
             }
         }
 
+       
         if (action)
         {
             for (size_t i = 0; i < list.size(); i++)
