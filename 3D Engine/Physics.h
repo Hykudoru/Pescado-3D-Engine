@@ -46,12 +46,14 @@ public:
     static bool raycasting;
     static bool raycastDebugging;
     static bool gravity;
+    static bool octTree;
 };
 bool Physics::collisionDetection = true;
 bool Physics::dynamics = true;
 bool Physics::raycasting = false;
 bool Physics::raycastDebugging = false;
 bool Physics::gravity = false;
+bool Physics::octTree = true;
 
 double deltaTime = 0;
 int fps = 0;
@@ -99,6 +101,7 @@ public:
     bool isStatic = false;
     bool isTrigger = false;
     float coefficientRestitution = 1.0;
+    bool flagged = false;
 
     Collider(bool isStatic = false, bool isTrigger = false): ManagedObjectPool<Collider>(this)
     {
@@ -626,21 +629,20 @@ void DetectCollisions()
 void DetectCollisionsOctTree()
 {
     OctTree<BoxCollider>::Update();
-    OctTree<SphereCollider>::Update();
+
+    for (size_t i = 0; i < ManagedObjectPool<BoxCollider>::objects.size(); i++) {
+        ManagedObjectPool<BoxCollider>::objects[i]->flagged = false;
+    }
 
     for (size_t i = 0; i < ManagedObjectPool<BoxCollider>::count; i++)
     {
-        // exit if this is the last Collider
-        if ((i + 1) >= ManagedObjectPool<BoxCollider>::count) {
-            break;
-        }
-
         // Current Collider
         BoxCollider* box1 = ManagedObjectPool<BoxCollider>::objects[i];
+        box1->flagged = true;
 
         // Search for nearby colliders
         auto volume = Cube(box1->TRS() * box1->mesh->bounds->min, box1->TRS() * box1->mesh->bounds->max);
-        auto closestBoxes = OctTree<BoxCollider>::Search(volume, [&](BoxCollider* collider) { return collider != box1; });
+        auto closestBoxes = OctTree<BoxCollider>::Search(volume, [&](Collider* collider) { return !collider->flagged; });
 
         for (size_t j = 0; j < closestBoxes->size(); j++)
         {
@@ -688,18 +690,24 @@ void DetectCollisionsOctTree()
         }
     }
 
-    for (size_t i = 0; i < ManagedObjectPool<SphereCollider>::count; i++)
+    OctTree<SphereCollider>::Update();
+
+    for (size_t i = 0; i < ManagedObjectPool<SphereCollider>::objects.size(); i++) {
+        ManagedObjectPool<SphereCollider>::objects[i]->flagged = false;
+    }
+
+    for (size_t i = 0; i < ManagedObjectPool<SphereCollider>::objects.size(); i++)
     {
         // Current Collider
         SphereCollider* sphere1 = ManagedObjectPool<SphereCollider>::objects[i];
+        sphere1->flagged = true;
 
         // Search for nearby colliders
         auto volume = Cube(sphere1->TRS() * sphere1->mesh->bounds->min, sphere1->TRS() * sphere1->mesh->bounds->max);
-        auto closestSpheres = OctTree<SphereCollider>::Search(volume, [&](SphereCollider* collider) { return collider != sphere1; });
-        
-        if (DEBUGGING) {
-            cout << closestSpheres->size() << endl;
-        }
+        auto closestSpheres = OctTree<SphereCollider>::Search(volume, [&](Collider* collider) { return !collider->flagged; });
+        /*if (DEBUGGING) {
+           cout << closestSpheres->size() << endl;
+        }*/
 
         // SPHERE-SPHERE COLLISIONS
         for (size_t j = 0; j < closestSpheres->size(); j++)
@@ -965,7 +973,13 @@ static void Physics()
 
     if (Physics::collisionDetection)
     {
-        DetectCollisionsOctTree();
+        if (Physics::octTree)
+        {
+            DetectCollisionsOctTree();
+        }
+        else {
+            DetectCollisions();
+        }
     }
 
     if (Physics::raycasting)
@@ -999,16 +1013,19 @@ static void Physics()
         string onoff = Physics::dynamics ? "On" : "Off";
         std::cout << "Physics: " << onoff << " (press p)" << endl;
 
-        onoff = Physics::collisionDetection ? "On" : "Off";
-        std::cout << "Collisions: " << onoff << " (press \\)" << endl;
-
         onoff = Physics::gravity ? "On" : "Off";
         std::cout << "Gravity: " << onoff << " (press G)" << endl;
 
+        onoff = Physics::collisionDetection ? "On" : "Off";
+        std::cout << "Collisions: " << onoff << " (press \\)" << endl;
+        
+        onoff = Physics::octTree ? "On" : "Off";
+        std::cout << "OctTree Collisions: " << onoff << " (press Caps Lock)" << endl;
+
+        std::cout << "Colliders: " << Collider::count << endl;
         std::cout << "Sphere Colliders: " << ManagedObjectPool<SphereCollider>::count << endl;
         std::cout << "Box Colliders: " << ManagedObjectPool <BoxCollider>::count << endl;
         std::cout << "Plane Colliders: " << ManagedObjectPool<PlaneCollider>::count << endl;
-        std::cout << "Colliders: " << Collider::count << endl;
 
         std::cout << "--------PLAYER-------" << endl;
 

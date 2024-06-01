@@ -304,7 +304,7 @@ public:
 };
 
 template <typename T>
-int TreeNode<T>::maxDepth = 12;
+int TreeNode<T>::maxDepth = 16;
 template <typename T>
 int TreeNode<T>::count = 0;
 
@@ -342,18 +342,6 @@ public:
                     inserted = true;
                     break;
                 }
-                /*// Double check if subroot is overlapping and insert here instead of main root 
-                // since insertion may have failed due to size in some smaller branch node.
-                else if (zone->Overlapping(objTesting))
-                {
-                    // Prevent box from being inserted into itself.
-                    if (objTesting != (T*)zone)
-                    {
-                        inserted = true;
-                        zone->contained.emplace_back(objTesting);
-                        break;
-                    }
-                }*/
             }
 
             if (!inserted)
@@ -398,23 +386,26 @@ public:
         Tree()->Extract(list);
 
         List<TreeNode<T>*> nodesFlagged;
-        auto func = [&](TreeNode<T>* thisNode) mutable {
+        static auto func = [&](TreeNode<T>* thisNode) mutable {
             if (!thisNode->flagged) {
                 nodesFlagged.emplace_back(thisNode);
             }};
         
         Vec3 center = volume.Position();
-
-        //Query subnodes
-        for (size_t i = 0; i < 8; i++)
+        for (size_t i = 0; i < volume.vertices.size(); i++)
         {
-            auto zone = (*tree->children)[i];
-
-            zone->Query(center, list, NULL, func);
-            for (size_t ii = 0; ii < volume.vertices.size(); ii++)
+            Vec3 point = volume.vertices[i];
+            
+            //Query subnodes
+            for (size_t ii = 0; ii < 8; ii++)
             {
-                Vec3 point = volume.vertices[ii];
-                zone->Query(point, list, NULL, func);
+                auto zone = (*tree->children)[ii];
+                //zone->Query(center, list, NULL, func);
+                auto n = zone->Query(point, list, NULL, func);
+                if (n)
+                {
+                    break;
+                }
             }
         }
         //Fix later since may contain duplicates

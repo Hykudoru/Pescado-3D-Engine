@@ -298,7 +298,7 @@ void OnKeyPressEvent(GLFWwindow* window, int key, int scancode, int action, int 
         }
         // Toggle Transform Hierarchy
         else if (glfwGetKey(window, GLFW_KEY_CAPS_LOCK) == GLFW_PRESS) {
-            //...
+            Physics::octTree = !Physics::octTree;
         }
         else if (key == GLFW_KEY_TAB)
         {
