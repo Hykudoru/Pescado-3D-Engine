@@ -27,7 +27,7 @@ public:
         if (!parent)
         {
             root = this;
-            localScale = Vec3(10000, 10000, 10000);
+            localScale = Vec3(50000, 50000, 50000);
         }
         else
         {

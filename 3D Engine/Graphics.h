@@ -10,7 +10,7 @@
 #ifndef GRAPHICS_H
 #define GRAPHICS_H
 
-struct Plane;
+class Plane;
 struct Point;
 struct Line;
 struct Triangle;
@@ -20,8 +20,8 @@ class Camera;
 
 Vec3 lightSource = .25 * Direction::up + Direction::back * .5;
 static float worldScale = 1;
-int screenWidth = 350;// 1920;//1600;
-int screenHeight = 200;// 1080;// 900;
+int screenWidth = 1920;//1600;
+int screenHeight = 1080;// 900;
 float nearClippingPlane = -0.1;
 float farClippingPlane = -100000.0;
 float fieldOfViewDeg = 60;
@@ -278,7 +278,8 @@ class Cube : public Transform
 {
 public:
     List<Vec3> vertices;
-
+    Vec3 min;
+    Vec3 max;
     Cube()
     {
         vertices = List<Vec3>({//new Vec3[8] {
@@ -293,7 +294,8 @@ public:
             Vec3(0.5, 0.5, -0.5),
             Vec3(0.5, -0.5, -0.5)
         });
-
+        min = Vec3(-0.5, -0.5, -0.5);
+        max = Vec3(0.5, 0.5, 0.5);
     }
 
     Cube(Vec3 min, Vec3 max)
@@ -309,6 +311,9 @@ public:
         vertices[5] = { min.x, max.y, min.z };  //Vec3(-0.5, 0.5, -0.5),
         vertices[6] = { max.x, max.y, min.z };  //Vec3(0.5, 0.5, -0.5),
         vertices[7] = { max.x, min.y, min.z };  // Vec3(0.5, -0.5, -0.5),
+
+        this->min = min;
+        this->max = max;
     }
 
     Cube(float min, float max)
@@ -325,6 +330,9 @@ public:
         vertices[5] = { min, max, min };  //Vec3(-0.5, 0.5, -0.5),
         vertices[6] = { max, max, min };  //Vec3(0.5, 0.5, -0.5),
         vertices[7] = { max, min, min };  // Vec3(0.5, -0.5, -0.5),
+
+        this->min = Vec3(min, min, min);
+        this->max = Vec3(max, max, max);
     }
 };
 
@@ -360,7 +368,7 @@ public:
     Color color = Color::white;
     bool ignoreLighting = false;
     bool forceWireFrame = false;
-//Mesh(const Mesh& other) = delete;//disables copying
+    //Mesh(const Mesh& other) = delete;//disables copying
     BoundingBox* bounds;
 
     Mesh(const float& scale = 1, const Vec3& position = Vec3(0, 0, 0), const Vec3& rotationEuler = Vec3(0, 0, 0))
