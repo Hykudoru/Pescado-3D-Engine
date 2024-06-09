@@ -556,6 +556,10 @@ void DetectCollisions()
     // Compare B:C, B:D, B:E
     // Compare C:D, C:E
     // Compare D:E
+
+    //-----------------------
+    // BOX-BOX COLLISIONS
+    //-----------------------
     for (size_t i = 0; i < ManagedObjectPool<BoxCollider>::count; i++)
     {
         // exit if this is the last Collider
@@ -612,6 +616,9 @@ void DetectCollisions()
         }
     }
 
+    //--------------------------
+    // SPHERE-SPHERE COLLISIONS
+    //--------------------------
     for (size_t i = 0; i < ManagedObjectPool<SphereCollider>::count; i++)
     {
         // Current Collider
@@ -659,7 +666,56 @@ void DetectCollisions()
             }
         }
 
+        //-----------------------
+        // SPHERE-BOX COLLISIONS
+        //-----------------------
+        // Checks every cube against every sphere
+        for (size_t i = 0; i < ManagedObjectPool<BoxCollider>::objects.size(); i++)
+        {
+            // Current Collider
+            BoxCollider* box = ManagedObjectPool<BoxCollider>::objects[i];
+            for (size_t j = 0; j < ManagedObjectPool<SphereCollider>::objects.size(); j++)
+            {
+                // Sphere Collider
+                SphereCollider* sphere = ManagedObjectPool<SphereCollider>::objects[j];
+
+                if (sphere->isStatic && box->isStatic) {
+                    continue;
+                }
+
+                SphereCollisionInfo collisionInfo;
+                bool resolveIfNotTrigger = !(sphere->isTrigger || box->isTrigger);
+                if (SphereCubeColliding(*sphere, *box, collisionInfo, resolveIfNotTrigger))
+                {
+                    if (Physics::dynamics)
+                    {
+                        if (sphere->object->isKinematic || box->object->isKinematic) {
+                            continue;
+                        }
+                        if (sphere->isStatic) {
+                            CalculateStaticCollision(collisionInfo.lineOfImpact, box->object->velocity, box->coefficientRestitution);
+                        }
+                        else if (box->isStatic) {
+                            CalculateStaticCollision(collisionInfo.lineOfImpact, sphere->object->velocity, box->coefficientRestitution);
+                        }
+                        else {
+                            CalculateCollision(
+                                collisionInfo.lineOfImpact,
+                                sphere->object->mass,
+                                box->object->mass,
+                                sphere->object->velocity,
+                                box->object->velocity,
+                                1.0
+                            );
+                        }
+                    }
+                }
+            }
+        }
+
+        //-------------------------
         // SPHERE-PLANE COLLISIONS
+        //-------------------------
         for (size_t ii = 0; ii < ManagedObjectPool<PlaneCollider>::count; ii++)
         {
             // Next Collider
