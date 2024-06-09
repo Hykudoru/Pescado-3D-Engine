@@ -10,6 +10,23 @@ const float PI = 3.14159265359f;
 const float TAO = 2.0 * PI;
 typedef void (*Callback)();
 
+struct Direction
+{
+    static Vec3 forward;
+    static Vec3 back;
+    static Vec3 right;
+    static Vec3 left;
+    static Vec3 up;
+    static Vec3 down;
+};
+Vec3 Direction::forward = Vec3(0, 0, -1);
+Vec3 Direction::back = Vec3(0, 0, 1);
+Vec3 Direction::right = Vec3(1, 0, 0);
+Vec3 Direction::left = Vec3(-1, 0, 0);
+Vec3 Direction::up = Vec3(0, 1, 0);
+Vec3 Direction::down = Vec3(0, -1, 0);
+
+
 template <typename T>
 void Foreach(List<T*>& objects, std::function<void(T*)>&& callback)
 {
@@ -91,8 +108,11 @@ List<T*> ManagedObjectPool<T>::objects = List<T*>();
 template <typename T>
 int ManagedObjectPool<T>::count = 0;
 
-struct Plane
+class Plane
 {
+private:
+    bool pointNormalForm = false;
+public:
     Vec3 verts[3];
     Vec3 normal;
 
@@ -110,48 +130,56 @@ struct Plane
     //NEEDS TESTING
     Plane(Vec3 pointOnPlane, Vec3 normal)
     {
+        pointNormalForm = true;
         this->normal = normal;
         verts[0] = pointOnPlane;
         float D = DotProduct(normal, pointOnPlane);
-        float x = pointOnPlane.x;
-        float y = pointOnPlane.y;
-        float z = pointOnPlane.z;
         
-        if (normal.x == 0.0 && normal.y == 0.0 && normal.z == 1.0)
+        if (normal.x == 0.0 && normal.y == 0.0 && normal.z != 0.0)
         {
-            verts[1] = pointOnPlane + Vec3(1, 1, 0);
-            verts[2] = pointOnPlane + Vec3(-1, 1, 0);
-            return;
+            verts[1] = Vec3(-1, 1, pointOnPlane.z);
+            verts[2] = Vec3(1, 1, pointOnPlane.z);
         }
-        else if (normal.x == 0.0 && normal.y == 1.0 && normal.z == 0.0)
+        else if (normal.x == 0.0 && normal.y != 0.0 && normal.z == 0.0)
         {
-            verts[1] = pointOnPlane + Vec3(1, 0, 1);
-            verts[2] = pointOnPlane + Vec3(-1, 0, 1);
-            return;
+            verts[1] = Vec3(-1, pointOnPlane.y, 1);
+            verts[2] = Vec3(1, pointOnPlane.y, 1);
         }
-        else if (normal.x == 1.0 && normal.y == 0.0 && normal.z == 0.0)
+        else if (normal.x != 0.0 && normal.y == 0.0 && normal.z == 0.0)
         {
-            verts[1] = pointOnPlane + Vec3(0, 1, 1);
-            verts[2] = pointOnPlane + Vec3(0, -1, 1);
-            return;
+            verts[1] = Vec3(pointOnPlane.x, -1, 1);
+            verts[2] = Vec3(pointOnPlane.x, 1, 1);
         }
-
-        if (normal.x != 0.0) {
-            x = D / normal.x;
-            verts[0] = Vec3(x, 0, 0);
-        }
-        if (normal.y != 0.0) {
-            y = D / normal.y;
-            verts[0] = Vec3(0, y, 0);
-        }
-        if (normal.x != 0.0) {
-            z = D / normal.z;
-            verts[0] = Vec3(0, 0, z);
+        else
+        {
+            if (normal.x != 0.0) {
+                float x1 = (D - normal.y) / normal.x;// = (D - (Ny*1 + Nz*0)) / Nx
+                float x2 = (D - normal.z) / normal.x;// = (D - (Ny*0 + Nz*1)) / Nx
+                verts[1] = Vec3(x1, 1, 0);
+                verts[2] = Vec3(x2, 0, 1); 
+            }
+            else if (normal.y != 0.0) {
+                float y1 = (D - normal.x) / normal.y;// = (D - (Nx*1 + Nz*0)) / Ny
+                float y2 = (D - normal.z) / normal.y;// = (D - (Nx*0 + Nz*1)) / Ny
+                verts[1] = Vec3(1, y1, 0);
+                verts[2] = Vec3(0, y2, 1);
+            }
+            else if (normal.z != 0.0) {
+                float z1 = (D - normal.x) / normal.z;// = (D - (Nx*1 + Ny*0)) / Nz
+                float z2 = (D - normal.y) / normal.z;// = (D - (Nx*0 + Ny*1)) / Nz
+                verts[1] = Vec3(1, 0, z1); 
+                verts[2] = Vec3(0, 1, z2); 
+            }
         }
     }
 
     Vec3 Normal()
     {
+        if (pointNormalForm)
+        {
+            return normal;
+        }
+
         // Calculate triangle suface Normal
         Vec3 a = verts[2] - verts[0];
         Vec3 b = verts[1] - verts[0];
@@ -265,8 +293,6 @@ Vec3 ClosestPoint(List<Vec3>& verts, Vec3& pointComparing, float* closestDistanc
     return closestPoint;
 }
 
-
-
 // Plane: N_x(x-x0) + N_y(y-y0) + N_z(z-z0) = 0
 // Point on plane: x0,y0,z0
 // Point on line: x,y,z
@@ -313,6 +339,17 @@ bool PointInsideTriangle(const Vec3& p, const Vec3 triPoints[3])
     return ((w1 >= 0.0 && w2 >= 0.0) && (w1 + w2) <= 1.0);
 }
 
+bool PointInsideCube(Vec3& cubeMin, Vec3& cubeMax, Vec3& point)
+{
+    if (point.x >= cubeMin.x && point.x <= cubeMax.x
+        && point.y >= cubeMin.y && point.y <= cubeMax.y
+        && point.z >= cubeMin.z && point.z <= cubeMax.z)
+    {
+        return true;
+    }
+    return false;
+}
+
 //Needs Testing
 void PlanesIntersecting(Vec3& normal1, Vec3& p1, Vec3& normal2, Vec3& p2)
 {
@@ -330,5 +367,12 @@ Vec3 ClosestPointOnSphere(Vec3& center, float& radius, Vec3& somePoint)
 {
     Vec3 dir = (somePoint - center).Normalized();
     return center + dir * radius;
+}
+
+Vec3 ClosestPointOnPlane(Vec3& pointOnPlane, Vec3& normal, Vec3& somePoint)
+{
+    Vec3 v = somePoint - pointOnPlane;
+    Vec3 vPerp = normal * (DotProduct(v, normal));
+    return somePoint - vPerp;
 }
 #endif

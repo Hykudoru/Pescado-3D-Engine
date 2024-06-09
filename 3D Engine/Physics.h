@@ -7,8 +7,6 @@
 #include <Functional>
 #include <OctTree.h>
 using namespace std;
-
-
 /*TO-DO
 * 
 * // OPTIMIZATIONS
@@ -348,40 +346,71 @@ bool SphereCubeColliding(SphereCollider& sphere, BoxCollider& cube, SphereCollis
     Vec3 sphereCenter_cubeCoords = cube.TRInverse() * sphereCenter;
     
     Plane planes[] = {
-        Plane(cube.mesh->bounds->min, (Direction::left+Direction::up).Normalized()),
-        Plane(cube.mesh->bounds->min, Direction::down),
-        Plane(cube.mesh->bounds->min, Direction::forward),
-        Plane(cube.mesh->bounds->max, Direction::right),
-        Plane(cube.mesh->bounds->max, Direction::up),
-        Plane(cube.mesh->bounds->max, Direction::back)
-    }; 
-    Point::AddWorldPoint(Point(cube.TRS() * cube.mesh->bounds->min, Color::yellow, 10));
+            Plane(cube.mesh->bounds->min, Direction::left),
+            Plane(cube.mesh->bounds->min, Direction::down),
+            Plane(cube.mesh->bounds->min, Direction::forward),
+            Plane(cube.mesh->bounds->max, Direction::right),
+            Plane(cube.mesh->bounds->max, Direction::up),
+            Plane(cube.mesh->bounds->max, Direction::back)
+    };
+    /*Point::AddWorldPoint(Point(cube.TRS() * cube.mesh->bounds->min, Color::yellow, 10));
     Point::AddWorldPoint(Point(cube.TRS() * cube.mesh->bounds->max, Color::orange, 10));
     for (size_t i = 0; i < 6; i++)
     {
         Line::AddWorldLine(Line(cube.TRS()*planes[i].verts[0], cube.TRS()*(planes[i].verts[0] + planes[i].Normal()), Color::green));
-        
+
         Line::AddWorldLine(Line(cube.TRS() * planes[i].verts[0], cube.TRS() * (planes[i].verts[1]), Color::red));
         Line::AddWorldLine(Line(cube.TRS() * planes[i].verts[1], cube.TRS() * (planes[i].verts[2]), Color::red));
         Line::AddWorldLine(Line(cube.TRS() * planes[i].verts[2], cube.TRS() * (planes[i].verts[0] ), Color::red));
+    }*/
+
+    for (size_t i = 0; i < 6; i++)
+    {
+        Vec3 pointOnPlane_cubeCoords = ClosestPointOnPlane(planes[i].verts[0], planes[i].normal, sphereCenter_cubeCoords);
+        if ((pointOnPlane_cubeCoords - sphereCenter_cubeCoords).SqrMagnitude() <= radius * radius)
+        {
+            Vec3 pointOnSphere_cubeCoords = ClosestPointOnSphere(sphereCenter_cubeCoords, radius, pointOnPlane_cubeCoords);
+            if (PointInsideCube(cube.mesh->bounds->min, cube.mesh->bounds->max, pointOnSphere_cubeCoords))
+            {
+                collisionInfo.colliding = true;
+                Vec3 offset = (Vec3)(cube.TRS() * pointOnSphere_cubeCoords) - (Vec3)(cube.TRS() * pointOnPlane_cubeCoords);//?
+                collisionInfo.lineOfImpact = offset;
+                if (resolve)
+                {
+                    sphere.object->mesh->forceWireFrame = true;
+                    cube.object->mesh->forceWireFrame = true;
+                    offset *= 0.5;
+                    sphere.root->localPosition -= offset;
+                    cube.root->localPosition += offset;
+                    collisionInfo.pointOfContact = collisionInfo.lineOfImpact.Normalized() * sphere.Radius();
+                    Point::AddWorldPoint(Point(collisionInfo.pointOfContact, Color::red, 10));
+                }
+                Line::AddWorldLine(Line(cube.TRS() * pointOnPlane_cubeCoords, cube.TRS() * pointOnSphere_cubeCoords));
+
+                return true;
+            }
+        }
     }
 
-    float dist;
-    auto verts = cube.Vertices();
-    Vec3 closestPoint_cubeCoords = ClosestPoint(verts, sphereCenter_cubeCoords, &dist);
-
-    if (dist <= sphere.Radius())
+    if (!collisionInfo.colliding)
     {
-        Vec3 closestInsideSphere = cube.TRS() * closestPoint_cubeCoords;
-        Vec3 offset = ClosestPointOnSphere(sphereCenter, radius, closestInsideSphere) - closestInsideSphere;
-        collisionInfo.lineOfImpact = offset;
-        if (resolve) {
-            offset *= 0.5;
-            sphere.root->localPosition -= offset;
-            cube.root->localPosition += offset;
-            collisionInfo.pointOfContact = collisionInfo.lineOfImpact.Normalized()*sphere.Radius();
+        float dist;
+        auto verts = cube.Vertices();
+        Vec3 closestPoint_cubeCoords = ClosestPoint(verts, sphereCenter_cubeCoords, &dist);
+
+        if (dist <= sphere.Radius())
+        {
+            collisionInfo.colliding = true;
+            Vec3 closestInsideSphere = cube.TRS() * closestPoint_cubeCoords;
+            Vec3 offset = ClosestPointOnSphere(sphereCenter, radius, closestInsideSphere) - closestInsideSphere;
+            collisionInfo.lineOfImpact = offset;
+            if (resolve) {
+                offset *= 0.5;
+                sphere.root->localPosition -= offset;
+                cube.root->localPosition += offset;
+                collisionInfo.pointOfContact = collisionInfo.lineOfImpact.Normalized() * sphere.Radius();
+            }
         }
-        collisionInfo.colliding = true;
     }
 
     return collisionInfo.colliding;

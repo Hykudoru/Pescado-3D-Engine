@@ -21,7 +21,7 @@ void Debug()
     DEBUGGING = false;
     static double coutTimer = 0;
     coutTimer += deltaTime;
-    if (coutTimer > 0.5 && coutTimer < 0.5 + deltaTime)
+    if (coutTimer > 1.0 && coutTimer < 1.0 + deltaTime)
     {
         DEBUGGING = true;
         coutTimer = 0;
@@ -49,7 +49,7 @@ CubeMesh* child;
 CubeMesh* grandchild;
 CubeMesh* greatGrandchild; 
 Mesh* compass;
-PhysicsObject temp = PhysicsObject(new CubeMesh(), new BoxCollider()); 
+//PhysicsObject temp = PhysicsObject(new CubeMesh(), new BoxCollider()); 
 Mesh* bender;
 
 void Init(GLFWwindow* window)
@@ -201,10 +201,16 @@ void Init(GLFWwindow* window)
     bender = LoadMeshFromOBJFile("Bender.obj");
     bender->localRotation = Matrix3x3::RotZ(ToRad(20));
     bender->localPosition = Camera::main->Position() + (Camera::main->Forward() + Camera::main->Right() * 3);
+
+    for (size_t i = 0; i < 500; i++)
+    {
+        auto obj = new PhysicsObject(LoadMeshFromOBJFile("Sphere.obj"), new SphereCollider());
+        obj->localPosition += Vec3::one * .1*i;
+    }
 }
 
 void Update()
-{
+{/*
     OctTree<Mesh>::Update();
     Foreach<Mesh>(ManagedObjectPool<Mesh>::objects, [](Mesh* obj) {
         obj->SetColor(Color::red);
@@ -214,7 +220,7 @@ void Update()
     if (DEBUGGING) {
         cout << list->size() << endl;
     }
-
+*/
     if (CameraSettings::displayReticle)
     {
         Point::AddPoint(Point(Vec3(), Color::white, 5));
