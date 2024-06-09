@@ -377,15 +377,11 @@ bool SphereCubeColliding(SphereCollider& sphere, BoxCollider& cube, SphereCollis
                 collisionInfo.lineOfImpact = offset;
                 if (resolve)
                 {
-                    sphere.object->mesh->forceWireFrame = true;
-                    cube.object->mesh->forceWireFrame = true;
                     offset *= 0.5;
                     sphere.root->localPosition -= offset;
                     cube.root->localPosition += offset;
                     collisionInfo.pointOfContact = collisionInfo.lineOfImpact.Normalized() * sphere.Radius();
-                    Point::AddWorldPoint(Point(collisionInfo.pointOfContact, Color::red, 10));
                 }
-                Line::AddWorldLine(Line(cube.TRS() * pointOnPlane_cubeCoords, cube.TRS() * pointOnSphere_cubeCoords));
 
                 return true;
             }
