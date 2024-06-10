@@ -379,6 +379,14 @@ static void CameraControl(Camera* cam)
     else {
         accel = defaultAcceleration;
     }
+    if (glfwGetKey(window, GLFW_KEY_PAGE_UP) == GLFW_PRESS)
+    {
+        deltaTime *= 10;
+    }
+    if (glfwGetKey(window, GLFW_KEY_PAGE_DOWN) == GLFW_PRESS)
+    {
+        deltaTime *= -10;
+    }
 }
 
 static void Input()
