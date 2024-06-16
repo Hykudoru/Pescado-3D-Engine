@@ -89,7 +89,6 @@ public:
     float mass = 1;
     bool isKinematic = false;
     Vec3 velocity = Vec3::zero;
-    Vec3 angularVelocity = Vec3::zero;
 };
 
 class Collider : public Component, public  ManagedObjectPool<Collider>
@@ -1030,7 +1029,7 @@ public:
         direction = disp.Normalized();
         transform.localRotation = OrthogonalMatrixLookAt(direction);
         transform.localPosition = start;
-        endPosition = start + direction * distance;
+        endPosition = end;
     }
 
     Vec3 StartPosition()
@@ -1051,30 +1050,6 @@ public:
     Matrix4x4 WorldToRaySpaceMatrix()
     {
         return transform.TRInverse();
-    }
-   
-    // Builds a 3x3 orthogonal matrix with its -Z axis facing the given direction (similar to a camera with no rotation.
-    static Matrix3x3 OrthogonalMatrixLookAt(Vec3 direction)
-    {
-        // Cached staticallly since highly improbable the initial random vector will ever be exactly aligned with direction arg. 
-        // Prevent recalculating a random vector every call.
-        static Vec3 randomDirection = RandomDirection();
-
-        Vec3 rayZ = direction * -1.0;
-        if (rayZ == randomDirection) {
-            randomDirection = RandomDirection();
-        }
-        Vec3 rayX = CrossProduct(rayZ, randomDirection);
-        Vec3 rayY = CrossProduct(rayZ, rayX);
-        rayX.Normalize();
-        rayY.Normalize();
-        float rotationMatrix[3][3] = {
-            { rayX.x, rayY.x, rayZ.x },
-            { rayX.y, rayY.y, rayZ.y },
-            { rayX.z, rayY.z, rayZ.z }
-        };
-
-        return rotationMatrix;
     }
 };
 

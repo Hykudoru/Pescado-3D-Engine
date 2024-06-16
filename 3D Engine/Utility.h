@@ -375,4 +375,51 @@ Vec3 ClosestPointOnPlane(Vec3& pointOnPlane, Vec3& normal, Vec3& somePoint)
     Vec3 vPerp = normal * (DotProduct(v, normal));
     return somePoint - vPerp;
 }
+
+// Builds a 3x3 orthogonal matrix with its -Z axis facing the given direction (similar to a camera with no rotation).
+Matrix3x3 OrthogonalMatrixLookAt(Vec3 direction)
+{
+    // Cached staticallly since highly improbable the initial random vector will ever be exactly aligned with direction arg. 
+    // Prevent recalculating a random vector every call.
+    static Vec3 randomDirection = RandomDirection();
+
+    Vec3 rayZ = direction * -1.0;
+    if (rayZ == randomDirection) {
+        randomDirection = RandomDirection();
+    }
+    Vec3 rayX = CrossProduct(rayZ, randomDirection);
+    Vec3 rayY = CrossProduct(rayZ, rayX);
+    //rayX.Normalize();
+    //rayY.Normalize();
+    float rotationMatrix[3][3] = {
+        { rayX.x, rayY.x, rayZ.x },
+        { rayX.y, rayY.y, rayZ.y },
+        { rayX.z, rayY.z, rayZ.z }
+    };
+
+    return rotationMatrix;
+}
+
+Matrix3x3 SkewSymmetric3x3(const Vec3& w)
+{
+    float matrix[][3] = {
+        {0, -w.z, w.y },
+        {w.z, 0, -w.x },
+        {-w.y, w.x, 0}
+    };
+
+    return matrix;
+}
+
+Matrix3x3 SkewSymmetric3x3(Vec3& normal, float& radians)
+{
+    Vec3 w = normal * radians;
+    float matrix[][3] = {
+        {0, -w.z, w.y },
+        {w.z, 0, -w.x },
+        {-w.y, w.x, 0}
+    };
+
+    return matrix;
+}
 #endif
