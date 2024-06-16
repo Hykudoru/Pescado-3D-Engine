@@ -98,14 +98,7 @@ public:
 
     bool OverlappingPoint(Vec3& point)
     {
-        if (point.x >= min_w.x && point.x <= max_w.x
-            && point.y >= min_w.y && point.y <= max_w.y
-            && point.z >= min_w.z && point.z <= max_w.z)
-        {
-            return true;
-        }
-
-        return false;
+        return PointInsideCube(this->min_w, this->max_w, point);
     }
     
     bool Overlapping(T* obj)
@@ -184,6 +177,12 @@ public:
         return nullptr;
     }
 
+    /*
+    *   Algorithm:
+    *   1st. If node is overlapping AND not full, object will be inserted into this node.
+    *   2nd. If node is overlapping AND is full, it will subdivide if not already and search each subnode and restart the process but with itself (recursion).
+    *   3rd. Inserts into parent node if no overlapping children could fully contain it. This will break the max capacity rule so that everything eventually is inserted somewhere.
+    */
     TreeNode<T>* Insert(T* obj)
     {
         // Prevent box from being inserted into itself.
