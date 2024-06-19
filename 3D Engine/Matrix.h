@@ -165,6 +165,33 @@ public:
         Matrix3x3 matrix(standardRotZ);
         return matrix;
     }
+
+    static Matrix3x3 RotAxisAngle(Vec3& axis, const float& angle)
+    {
+        float c = cos(angle);
+        float s = sin(angle);
+        float oneMinCos = 1.0 - c;
+        float x = axis.x;
+        float y = axis.y;
+        float z = axis.z;
+        float xSqr = x * x;
+        float ySqr = y * y;
+        float zSqr = z * z;
+        float xy = x * y;
+        float xz = x * z;
+        float yz = y * z;
+        float sx = s * x;
+        float sy = s * y;
+        float sz = s * z;
+
+        float matrix[][3] = {
+            {oneMinCos * xSqr + c, oneMinCos * xy - sz, oneMinCos * xz + sy},
+            {oneMinCos * xy + sz, oneMinCos * ySqr + c, oneMinCos * yz - sx},
+            {oneMinCos * xz - sy, oneMinCos * yz + sx, oneMinCos * zSqr + c}
+        };
+
+        return matrix;
+    }
 };
 float Matrix3x3::identity[3][3] = {
     {1, 0, 0},
@@ -350,6 +377,33 @@ public:
         return standardRotZ;
     }
 
+    static Matrix4x4 RotAxisAngle(Vec3& axis, const float& theta)
+    {
+        float c = cos(theta);
+        float s = sin(theta);
+        float oneMinCos = 1.0 - c;
+        float x = axis.x;
+        float y = axis.y;
+        float z = axis.z;
+        float xSqr = x * x;
+        float ySqr = y * y;
+        float zSqr = z * z;
+        float xy = x * y;
+        float xz = x * z;
+        float yz = y * z;
+        float sx = s * x;
+        float sy = s * y;
+        float sz = s * z;
+
+        float matrix[][4] = {
+            {oneMinCos * xSqr + c, oneMinCos * xy - sz, oneMinCos * xz + sy, 0},
+            {oneMinCos * xy + sz, oneMinCos * ySqr + c, oneMinCos * yz - sx, 0},
+            {oneMinCos * xz - sy, oneMinCos * yz + sx, oneMinCos * zSqr + c, 0},
+            {0, 0, 0, 1}
+        };
+
+        return matrix;
+    }
 };
 float Matrix4x4::identity[4][4] = {
     {1, 0, 0, 0},

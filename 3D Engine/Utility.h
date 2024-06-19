@@ -2,6 +2,7 @@
 #ifndef UTILITY_H
 #define UTILITY_H
 
+#include <math.h>
 #include <functional>
 
 #define List std::vector
@@ -403,21 +404,32 @@ Matrix3x3 OrthogonalMatrixLookAt(Vec3 direction)
 Matrix3x3 SkewSymmetric3x3(const Vec3& w)
 {
     float matrix[][3] = {
-        {0, -w.z, w.y },
-        {w.z, 0, -w.x },
+        {0, -w.z, w.y},
+        {w.z, 0, -w.x},
         {-w.y, w.x, 0}
     };
 
     return matrix;
 }
 
-Matrix3x3 SkewSymmetric3x3(Vec3& normal, float& radians)
+Matrix3x3 SkewSymmetric3x3(Vec3& dir, float& radians)
 {
-    Vec3 w = normal * radians;
+    return SkewSymmetric3x3(dir * radians);
+}
+
+Matrix3x3 MatrixDot(Vec3& dir)
+{
+    float xSqr = dir.x*dir.x;
+    float ySqr = dir.y *dir.y;
+    float zSqr = dir.z*dir.z;
+    float xy = dir.x * dir.y;
+    float xz = dir.x * dir.z;
+    float yz = dir.y * dir.z;
+
     float matrix[][3] = {
-        {0, -w.z, w.y },
-        {w.z, 0, -w.x },
-        {-w.y, w.x, 0}
+        {xSqr, xy, xz},
+        {xy, ySqr, yz},
+        {xz, yz, zSqr}
     };
 
     return matrix;
