@@ -248,7 +248,6 @@ Matrix3x3 YPR(const float& roll, const float& pitch, const float& yaw)
 
     return rotation;
 }
-
 //-------------------4x4---------------------
 
 class Matrix4x4
@@ -265,7 +264,7 @@ public:
     static float zero[4][4];
 
     Matrix4x4() {}
-    Matrix4x4(float matrix[4][4]) { Set(matrix); }
+    Matrix4x4(const float matrix[4][4]) { Set(matrix); }
 
     void Set(const float matrix[4][4])
     {
@@ -325,7 +324,6 @@ public:
         this->Set(matrix);
         return *this;
     }
-
 
     // Homogeneous Rotation Matrix about the X axis (in radians)
     static Matrix4x4 RotX(const float& theta)
@@ -404,6 +402,8 @@ public:
 
         return matrix;
     }
+
+    static Matrix4x4 RotAroundPoint(Vec3& point, Vec3& axis, const float& angle);
 };
 float Matrix4x4::identity[4][4] = {
     {1, 0, 0, 0},
@@ -455,4 +455,24 @@ Vector4<float> operator*(const Matrix4x4& matrix, const Vector4<float>& colVec)
 
     return result;
 }
+
+Matrix4x4 Matrix4x4::RotAroundPoint(Vec3& point, Vec3& axis, const float& angle)
+{
+    float translate4x4[][4] = {
+        {1,0,0,point.x},
+        {0,1,0,point.y},
+        {0,0,1,point.z},
+        {0,0,0,1},
+    };
+
+    float translateInverse4x4[][4] = {
+        {1,0,0,-point.x},
+        {0,1,0,-point.y},
+        {0,0,1,-point.z},
+        {0,0,0,1},
+    };
+
+    return translate4x4 * Matrix4x4::RotAxisAngle(axis, angle) * translateInverse4x4;
+}
+
 #endif
