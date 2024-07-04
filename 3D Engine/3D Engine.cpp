@@ -52,6 +52,9 @@ Mesh* compass;
 //PhysicsObject temp = PhysicsObject(new CubeMesh(), new BoxCollider()); 
 Mesh* bender;
 
+
+PhysicsObject* trigger;
+
 void Init(GLFWwindow* window)
 {
     glfwSetCursorPosCallback(window, OnMouseMoveEvent);
@@ -207,6 +210,26 @@ void Init(GLFWwindow* window)
         auto obj = new PhysicsObject(LoadMeshFromOBJFile("Sphere.obj"), new SphereCollider());
         obj->localPosition += Vec3::one * .1*i;
     }*/
+    /*
+    trigger = new PhysicsObject(LoadMeshFromOBJFile("Sphere.obj"), new SphereCollider());
+    trigger = new PhysicsObject(new CubeMesh(), new BoxCollider());
+    trigger->IsTrigger(true);
+    trigger->localScale = Vec3::one * 10;
+    trigger->collider->mesh->SetVisibility(true);
+
+    trigger->collider->onCollision = [&](Collider* other) {
+        if (other != trigger->collider)
+        {
+            Vec3 dir = (trigger->Position() - other->Position()).Normalized();
+            Vec3 a = dir * 100.0 * deltaTime;
+            other->object->velocity += a;
+            other->object->mesh->SetColor(Color::gray);
+
+            cout << typeid(*other).name() << endl;
+            cout << a.Magnitude() << endl;
+        }
+    };
+    */
 }
 
 void Update()
@@ -221,6 +244,7 @@ void Update()
         cout << list->size() << endl;
     }
 */
+
     if (CameraSettings::displayReticle)
     {
         Point::AddPoint(Point(Vec3(), Color::white, 5));
