@@ -166,7 +166,8 @@ public:
         return matrix;
     }
 
-    static Matrix3x3 RotAxisAngle(Vec3& axis, const float& angle)
+    // Rodrigues' rotation formula in matrix form
+    static Matrix3x3 RotAxisAngle(const Vec3& axis, const float& angle)
     {
         float c = cos(angle);
         float s = sin(angle);
@@ -375,7 +376,8 @@ public:
         return standardRotZ;
     }
 
-    static Matrix4x4 RotAxisAngle(Vec3& axis, const float& theta)
+    // Rodrigues' rotation formula in matrix form
+    static Matrix4x4 RotAxisAngle(const Vec3& axis, const float& theta)
     {
         float c = cos(theta);
         float s = sin(theta);

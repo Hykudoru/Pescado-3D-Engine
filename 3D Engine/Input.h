@@ -296,7 +296,6 @@ void OnKeyPressEvent(GLFWwindow* window, int key, int scancode, int action, int 
         {
             greatGrandchild->localRotation *= Matrix3x3::RotY(ToRad(10));
         }
-        // Toggle Transform Hierarchy
         else if (glfwGetKey(window, GLFW_KEY_CAPS_LOCK) == GLFW_PRESS) {
             Physics::octTree = !Physics::octTree;
         }

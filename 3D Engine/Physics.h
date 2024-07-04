@@ -10,15 +10,11 @@ using namespace std;
 /*TO-DO
 * 
 * // OPTIMIZATIONS
-* Revisit sphere-plane collisions (possible performance optimization)
-* Box collisions not quite right
+* - Revisit sphere-plane collisions (possible performance optimization)
+* - Box collisions not quite right
 * 
 * // ISSUES
-* Fix Physics Object collider parenting issue
-* 
-* // FUTURE (POSSIBLE BIG CHANGE)
-* World Partitioning
-* 
+* - Fix Physics Object collider parenting issue
 */
 
 class PhysicsObject;
@@ -89,6 +85,13 @@ public:
     float mass = 1;
     bool isKinematic = false;
     Vec3 velocity = Vec3::zero;
+    Vec3 angVelAxis = Vec3::zero;
+    float angVelSpeed = 0;
+
+    Vec3 AngularVelocity()
+    {
+        return angVelAxis * angVelSpeed;
+    }
 };
 
 class Collider : public Component, public  ManagedObjectPool<Collider>
@@ -99,11 +102,11 @@ public:
     bool isTrigger = false;
     float coefficientRestitution = 1.0;
     bool flagged = false;
+    std::function<void(Collider*)> onCollision = [](Collider* collider){};
 
-    Collider(bool isStatic = false, bool isTrigger = false): ManagedObjectPool<Collider>(this)
+    Collider(bool isStatic = false): ManagedObjectPool<Collider>(this)
     {
         this->isStatic = isStatic;
-        this->isTrigger = isTrigger;
     }
 
     virtual ~Collider()
@@ -130,7 +133,7 @@ public:
 class BoxCollider : public Collider, public ManagedObjectPool<BoxCollider>
 {
 public:
-    BoxCollider(bool isStatic = false, bool isTrigger = false) : Collider(isStatic, isTrigger), ManagedObjectPool<BoxCollider>(this)
+    BoxCollider(bool isStatic = false) : Collider(isStatic), ManagedObjectPool<BoxCollider>(this)
     {
         mesh = new CubeMesh();
         mesh->SetColor(Color::red);
@@ -144,7 +147,7 @@ class SphereCollider : public Collider, public ManagedObjectPool<SphereCollider>
     float radius = 1;
 public:
     
-    SphereCollider(bool isStatic = false, bool isTrigger = false) : Collider(isStatic, isTrigger), ManagedObjectPool<SphereCollider>(this)
+    SphereCollider(bool isStatic = false) : Collider(isStatic), ManagedObjectPool<SphereCollider>(this)
     {
         mesh = LoadMeshFromOBJFile("Sphere.obj");
         mesh->SetColor(Color::red);
@@ -162,7 +165,7 @@ class PlaneCollider : public Collider, public ManagedObjectPool<PlaneCollider>
 {
 public:
     Vec3 normal;
-    PlaneCollider(Vec3 normal, bool isStatic = false, bool isTrigger = false) : Collider(isStatic, isTrigger), ManagedObjectPool<PlaneCollider>(this)
+    PlaneCollider(Vec3 normal, bool isStatic = false) : Collider(isStatic), ManagedObjectPool<PlaneCollider>(this)
     {
         mesh = new PlaneMesh();
         this->normal = normal;
@@ -219,6 +222,20 @@ public:
             this->mesh = mesh;
             this->mesh->SetParent(collider, false);
         }
+    }
+
+    void IsTrigger(bool condition)
+    {
+        collider->isTrigger = condition;
+        if (condition)
+        {
+            isKinematic = true;
+        }
+    }
+
+    bool IsTrigger()
+    {
+        return collider->isTrigger;
     }
 };
 
@@ -337,13 +354,14 @@ bool SpheresColliding(SphereCollider& sphere1, SphereCollider& sphere2, SphereCo
     return collisionInfo.colliding;
 }
 
+/*
 bool SphereCubeColliding(SphereCollider& sphere, BoxCollider& cube, SphereCollisionInfo& collisionInfo, bool resolve = true)
 {
     collisionInfo.colliding = false;
     float radius = sphere.Radius();
     Vec3 sphereCenter = sphere.Position();
     Vec3 sphereCenter_cubeCoords = cube.TRInverse() * sphereCenter;
-    
+
     Plane planes[] = {
             Plane(cube.mesh->bounds->min, Direction::left),
             Plane(cube.mesh->bounds->min, Direction::down),
@@ -352,16 +370,16 @@ bool SphereCubeColliding(SphereCollider& sphere, BoxCollider& cube, SphereCollis
             Plane(cube.mesh->bounds->max, Direction::up),
             Plane(cube.mesh->bounds->max, Direction::back)
     };
-    /*Point::AddWorldPoint(Point(cube.TRS() * cube.mesh->bounds->min, Color::yellow, 10));
-    Point::AddWorldPoint(Point(cube.TRS() * cube.mesh->bounds->max, Color::orange, 10));
-    for (size_t i = 0; i < 6; i++)
-    {
-        Line::AddWorldLine(Line(cube.TRS()*planes[i].verts[0], cube.TRS()*(planes[i].verts[0] + planes[i].Normal()), Color::green));
-
-        Line::AddWorldLine(Line(cube.TRS() * planes[i].verts[0], cube.TRS() * (planes[i].verts[1]), Color::red));
-        Line::AddWorldLine(Line(cube.TRS() * planes[i].verts[1], cube.TRS() * (planes[i].verts[2]), Color::red));
-        Line::AddWorldLine(Line(cube.TRS() * planes[i].verts[2], cube.TRS() * (planes[i].verts[0] ), Color::red));
-    }*/
+//    Point::AddWorldPoint(Point(cube.TRS() * cube.mesh->bounds->min, Color::yellow, 10));
+//    Point::AddWorldPoint(Point(cube.TRS() * cube.mesh->bounds->max, Color::orange, 10));
+//    for (size_t i = 0; i < 6; i++)
+//    {
+//       Line::AddWorldLine(Line(cube.TRS()*planes[i].verts[0], cube.TRS()*(planes[i].verts[0] + planes[i].Normal()), Color::green));
+//
+//       Line::AddWorldLine(Line(cube.TRS() * planes[i].verts[0], cube.TRS() * (planes[i].verts[1]), Color::red));
+//       Line::AddWorldLine(Line(cube.TRS() * planes[i].verts[1], cube.TRS() * (planes[i].verts[2]), Color::red));
+//       Line::AddWorldLine(Line(cube.TRS() * planes[i].verts[2], cube.TRS() * (planes[i].verts[0] ), Color::red));
+//    }
 
     for (size_t i = 0; i < 6; i++)
     {
@@ -408,6 +426,109 @@ bool SphereCubeColliding(SphereCollider& sphere, BoxCollider& cube, SphereCollis
         }
     }
 
+    return collisionInfo.colliding;
+}
+*/
+/*
+bool SphereCubeColliding(SphereCollider& sphere, BoxCollider& cube, SphereCollisionInfo& collisionInfo, bool resolve = true)
+{
+    collisionInfo.colliding = false;
+    float radius = sphere.Radius();
+    Vec3 sphereCenter = sphere.Position();
+    
+    Vec3 min_w = cube.TRS() * cube.mesh->bounds->min;
+    Vec3 max_w = cube.TRS() * cube.mesh->bounds->max;
+    Plane planes[] = {
+            Plane(min_w, cube.TRS()*Direction::left),
+            Plane(min_w, cube.TRS()*Direction::down),
+            Plane(min_w, cube.TRS()*Direction::forward),
+            Plane(max_w, cube.TRS()*Direction::right),
+            Plane(max_w, cube.TRS()*Direction::up),
+            Plane(max_w, cube.TRS()*Direction::back)
+    };
+    Point::AddWorldPoint(Point(min_w, Color::yellow, 10));
+    Point::AddWorldPoint(Point(max_w, Color::orange, 10));
+
+    for (size_t i = 0; i < 6; i++)
+    {
+        Vec3 pointOnPlane = ClosestPointOnPlane(planes[i].verts[0], planes[i].normal, sphereCenter);
+        if ((pointOnPlane - sphereCenter).SqrMagnitude() <= radius * radius)
+        {
+            Vec3 pointOnSphere = ClosestPointOnSphere(sphereCenter, radius, pointOnPlane);
+            if (PointInsideCube(min_w, max_w, pointOnSphere))
+            {
+                collisionInfo.colliding = true;
+                Vec3 offset = pointOnSphere - pointOnPlane;
+                collisionInfo.lineOfImpact = offset;
+                if (resolve)
+                {
+                    offset *= 0.5;
+                    sphere.root->localPosition -= offset;
+                    cube.root->localPosition += offset;
+                    collisionInfo.pointOfContact = collisionInfo.lineOfImpact.Normalized() * sphere.Radius();
+                }
+
+                return true;
+            }
+        }
+    }
+
+    if (!collisionInfo.colliding)
+    {
+        float dist;
+        auto verts = cube.WorldVertices();
+        Vec3 closestPoint = ClosestPoint(verts, sphereCenter, &dist);
+
+        if (dist <= sphere.Radius())
+        {
+            collisionInfo.colliding = true;
+            Vec3 closestInsideSphere = closestPoint;
+            Vec3 offset = ClosestPointOnSphere(sphereCenter, radius, closestInsideSphere) - closestInsideSphere;
+            collisionInfo.lineOfImpact = offset;
+            if (resolve) {
+                offset *= 0.5;
+                sphere.root->localPosition -= offset;
+                cube.root->localPosition += offset;
+                collisionInfo.pointOfContact = collisionInfo.lineOfImpact.Normalized() * sphere.Radius();
+            }
+        }
+    }
+
+    return collisionInfo.colliding;
+}
+*/
+bool SphereCubeColliding(SphereCollider& sphere, BoxCollider& cube, SphereCollisionInfo& collisionInfo, bool resolve = true)
+{
+    collisionInfo.colliding = false;
+    float radius = sphere.Radius();
+    Vec3 sphereCenter = sphere.Position();
+    Vec3 sphereCenter_cubeCoords = cube.TRInverse()*sphereCenter;
+    Vec3 min = cube.root->LocalScale4x4()*cube.mesh->bounds->min;
+    Vec3 max = cube.root->LocalScale4x4()*cube.mesh->bounds->max;
+
+    Vec3 closestPointOnCube_cubeCoords;
+    closestPointOnCube_cubeCoords.x = Clamp(sphereCenter_cubeCoords.x, min.x, max.x);
+    closestPointOnCube_cubeCoords.y = Clamp(sphereCenter_cubeCoords.y, min.y, max.y);
+    closestPointOnCube_cubeCoords.z = Clamp(sphereCenter_cubeCoords.z, min.z, max.z);
+
+    Vec3 disp_cubeCoords = closestPointOnCube_cubeCoords - sphereCenter_cubeCoords;
+    if ((disp_cubeCoords).SqrMagnitude() < radius*radius)
+    {
+        collisionInfo.colliding = true;
+
+        if (resolve)
+        {
+            Vec3 closestOnCube = cube.TR() * closestPointOnCube_cubeCoords;
+            Vec3 closestOnSphere = ClosestPointOnSphere(sphereCenter, radius, closestOnCube);
+            Vec3 offset = closestOnSphere - closestOnCube;
+            collisionInfo.lineOfImpact = offset;
+            collisionInfo.pointOfContact = (closestOnCube + closestOnSphere) * 0.5;
+            offset *= 0.5;
+            sphere.root->localPosition -= offset;
+            cube.root->localPosition += offset;
+        }
+    }
+    
     return collisionInfo.colliding;
 }
 
@@ -582,6 +703,9 @@ void DetectCollisions()
             bool resolveIfNotTrigger = !(box1->isTrigger || box2->isTrigger);
             if (OBBSATColliding(*box1, *box2, collisionInfo, resolveIfNotTrigger))
             {
+                box1->onCollision(box2);
+                box2->onCollision(box1);
+
                 if (Physics::dynamics)
                 {
                     if (box1->object->isKinematic || box2->object->isKinematic) {
@@ -637,6 +761,9 @@ void DetectCollisions()
             bool resolveIfNotTrigger = !(sphere1->isTrigger || sphere2->isTrigger);
             if (SpheresColliding(*sphere1, *sphere2, collisionInfo, resolveIfNotTrigger))
             {
+                sphere1->onCollision(sphere2);
+                sphere2->onCollision(sphere1);
+                
                 if (Physics::dynamics)
                 {
                     if (sphere1->object->isKinematic || sphere2->object->isKinematic) {
@@ -686,6 +813,9 @@ void DetectCollisions()
                 bool resolveIfNotTrigger = !(sphere->isTrigger || box->isTrigger);
                 if (SphereCubeColliding(*sphere, *box, collisionInfo, resolveIfNotTrigger))
                 {
+                    sphere->onCollision(box);
+                    box->onCollision(sphere);
+
                     if (Physics::dynamics)
                     {
                         if (sphere->object->isKinematic || box->object->isKinematic) {
@@ -728,6 +858,9 @@ void DetectCollisions()
             bool resolveIfNotTrigger = !(sphere1->isTrigger || plane->isTrigger);
             if (SpherePlaneColliding(*sphere1, *plane, collisionInfo, resolveIfNotTrigger))
             {
+                sphere1->onCollision(plane);
+                plane->onCollision(sphere1);
+
                 if (Physics::dynamics)
                 {
                     if (sphere1->object->isKinematic || plane->object->isKinematic) {
@@ -788,6 +921,9 @@ void DetectCollisionsOctTree()
             bool resolveIfNotTrigger = !(box1->isTrigger || box2->isTrigger);
             if (OBBSATColliding(*box1, *box2, collisionInfo, resolveIfNotTrigger))
             {
+                box1->onCollision(box2);
+                box2->onCollision(box1);
+
                 if (Physics::dynamics)
                 {
                     if (box1->object->isKinematic || box2->object->isKinematic) {
@@ -852,6 +988,9 @@ void DetectCollisionsOctTree()
             bool resolveIfNotTrigger = !(sphere1->isTrigger || sphere2->isTrigger);
             if (SpheresColliding(*sphere1, *sphere2, collisionInfo, resolveIfNotTrigger))
             {
+                sphere1->onCollision(sphere2);
+                sphere2->onCollision(sphere1);
+
                 if (Physics::dynamics)
                 {
                     if (sphere1->object->isKinematic || sphere2->object->isKinematic) {
@@ -913,6 +1052,9 @@ void DetectCollisionsOctTree()
                 bool resolveIfNotTrigger = !(sphere->isTrigger || box->isTrigger);
                 if (SphereCubeColliding(*sphere, *box, collisionInfo, resolveIfNotTrigger))
                 {
+                    sphere->onCollision(box);
+                    box->onCollision(sphere);
+
                     if (Physics::dynamics)
                     {
                         if (sphere->object->isKinematic || box->object->isKinematic) {
@@ -969,6 +1111,9 @@ void DetectCollisionsOctTree()
                 bool resolveIfNotTrigger = !(sphere->isTrigger || box->isTrigger);
                 if (SphereCubeColliding(*sphere, *box, collisionInfo, resolveIfNotTrigger))
                 {
+                    sphere->onCollision(box);
+                    box->onCollision(sphere);
+
                     if (Physics::dynamics)
                     {
                         if (sphere->object->isKinematic || box->object->isKinematic) {
@@ -1192,6 +1337,7 @@ static void Physics()
                     obj->velocity += gravity * deltaTime;
                 }
                 obj->localPosition += obj->velocity * deltaTime;
+                obj->localRotation = Matrix3x3::RotAxisAngle(obj->angVelAxis, obj->angVelSpeed * deltaTime) * obj->localRotation;
             }
         }
     }
