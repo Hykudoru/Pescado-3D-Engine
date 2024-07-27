@@ -244,6 +244,26 @@ void Update()
         cout << list->size() << endl;
     }
 */
+    /*
+    for (int width = -100; width < 100; width++)
+    {
+        for (int depth = -100; depth < 100; depth++)
+        {
+            Vec3 from1 = Direction::right* width;
+            Vec3 to1 = Direction::right * width + Direction::forward * depth;
+            Vec3 from2 = Direction::forward * width;
+            Vec3 to2 = Direction::forward * width + Direction::right * depth;
+            if (DotProduct(Camera::main->Forward(), from1 - Camera::main->Position()) < 0
+             && DotProduct(Camera::main->Forward(), to1 - Camera::main->Position()) < 0
+             || DotProduct(Camera::main->Forward(), from2 - Camera::main->Position()) < 0
+             && DotProduct(Camera::main->Forward(), from2 - Camera::main->Position()) < 0)
+            {
+                continue;
+            }
+            Line::AddWorldLine(Line(from1, to1));
+            Line::AddWorldLine(Line(from2, to2));
+        }
+    }*/
 
     if (CameraSettings::displayReticle)
     {

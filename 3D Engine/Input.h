@@ -72,11 +72,21 @@ void OnMouseButtonEvent(GLFWwindow* window, int button, int action, int mods)
             PhysicsObject* obj = spawn();// new PhysicsObject(new CubeMesh(), new BoxCollider());//LoadMeshFromOBJFile("Objects/Sphere.obj");
             Throw(*obj);
             obj->mass = massFactor;
-            obj->mesh->SetColor(Color::orange);
             obj->mass = massFactor;
             obj->localScale *= massFactor;
+            if (obj->collider->isStatic)
+            {
+                obj->mesh->SetColor(Color::white);
+            }
+            else if (obj->isKinematic) 
+            {
+                obj->mesh->SetColor(Color::blue);
+            }
+            else {
+                obj->mesh->SetColor(Color::orange);
+            }
         }
-        // Spawn Kinematic
+        // Raycast and Spawn a kinematic object beside and aligned with object intersecting the ray.
         if (button == 2) {
             PhysicsObject* obj = spawn();// new PhysicsObject(new CubeMesh(), new BoxCollider());//LoadMeshFromOBJFile("Objects/Sphere.obj");
             obj->isKinematic = true;
@@ -177,6 +187,24 @@ void OnKeyPressEvent(GLFWwindow* window, int key, int scancode, int action, int 
         {
             spawn = []() { return new PhysicsObject(new CubeMesh(), new BoxCollider()); }; //= spawnCube;
         }
+        else if (glfwGetKey(window, GLFW_KEY_3) == GLFW_PRESS)
+        {
+            spawn = []() { 
+                auto obj = new PhysicsObject(LoadMeshFromOBJFile("Sphere.obj"), new SphereCollider());
+                obj->collider->isStatic = true;
+                obj->mesh->SetColor(Color::white);
+                return obj;
+                };
+        }
+        else if (glfwGetKey(window, GLFW_KEY_4) == GLFW_PRESS)
+        {
+            spawn = []() { 
+                auto obj = new PhysicsObject(new CubeMesh(), new BoxCollider()); 
+                obj->collider->isStatic = true;
+                obj->mesh->SetColor(Color::white);
+                return obj;
+                }; //= spawnCube;
+        }
         else if (glfwGetKey(window, GLFW_KEY_7) == GLFW_PRESS) {
             spawn = []() {
                 auto obj = new PhysicsObject(LoadMeshFromOBJFile("Diamond.obj"), new BoxCollider(false));
@@ -196,9 +224,16 @@ void OnKeyPressEvent(GLFWwindow* window, int key, int scancode, int action, int 
             auto obj = spawn();
             obj->localPosition = Camera::main->Position() + (Camera::main->Forward() * 10);
             obj->localRotation = Camera::main->Rotation();
-            obj->isKinematic = true;
             obj->localScale *= massFactor;
-            obj->mesh->SetColor(Color::blue);
+            obj->isKinematic = true;
+
+            if (obj->collider->isStatic)
+            {
+                obj->mesh->SetColor(Color::white);
+            }
+            else {
+                obj->mesh->SetColor(Color::blue);
+            }
         }
         else if (key == GLFW_KEY_DELETE) {
             RaycastInfo<Collider> info;
@@ -279,6 +314,9 @@ void OnKeyPressEvent(GLFWwindow* window, int key, int scancode, int action, int 
         else if (key == GLFW_KEY_B)
         {
             Graphics::debugBounds = !Graphics::debugBounds;
+        }
+        else if (key == GLFW_KEY_R) {
+            Physics::raycastDebugging = !Physics::raycastDebugging;
         }
         else if (key == GLFW_KEY_F6)
         {

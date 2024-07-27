@@ -1,20 +1,20 @@
 #pragma once
 #include <GLFW/glfw3.h>
 #include <math.h>
+#include <Functional>
 #include <Matrix.h>
 #include <Graphics.h>
 #include <Utility.h>
-#include <Functional>
 #include <OctTree.h>
 using namespace std;
 /*TO-DO
 * 
 * // OPTIMIZATIONS
 * - Revisit sphere-plane collisions (possible performance optimization)
-* - Box collisions not quite right
 * 
 * // ISSUES
 * - Fix Physics Object collider parenting issue
+* - Box collisions not quite right
 */
 
 class PhysicsObject;
@@ -282,9 +282,10 @@ void CalculateCollision(Vec3 lineOfImpact, float& m1, float& m2, Vec3& v1, Vec3&
 
 void CalculateStaticCollision(Vec3 lineOfImpact, Vec3& v1, float e = 1.0)
 {
+    lineOfImpact.Normalize();
     Vec3 v1LineOfImpact = lineOfImpact * DotProduct(v1, lineOfImpact);
     Vec3 v1PerpendicularFinal = (v1 - v1LineOfImpact);//Perpendicular Velocity is the same before and after impact
-    v1 = (v1LineOfImpact * -e) + v1PerpendicularFinal;
+    v1 = (-e*v1LineOfImpact) + v1PerpendicularFinal;
 }
 
 bool SpherePlaneColliding(SphereCollider& sphere, PlaneCollider& plane, SphereCollisionInfo& collisionInfo, bool resolve = true)
@@ -335,9 +336,21 @@ bool SpheresColliding(SphereCollider& sphere1, SphereCollider& sphere2, SphereCo
         Vec3 offset = (pointOnSphere1 - pointOnSphere2);
         collisionInfo.lineOfImpact = offset;
         if (resolve) {
-            offset *= 0.5;
-            sphere1.root->localPosition -= offset;
-            sphere2.root->localPosition += offset;
+            bool neitherStatic = !sphere1.isStatic && !sphere2.isStatic;
+            if (neitherStatic)
+            {
+                offset *= 0.5;
+                sphere1.root->localPosition -= offset;
+                sphere2.root->localPosition += offset;
+            }
+            //Only one is movable at this stage
+            else if (sphere1.isStatic) {
+                sphere2.root->localPosition += offset;
+            }
+            else {
+                sphere1.root->localPosition -= offset;
+            }
+
             collisionInfo.pointOfContact = (pointOnSphere1 + pointOnSphere2) * 0.5;
         }
     }
@@ -379,10 +392,23 @@ bool SphereCubeColliding(SphereCollider& sphere, BoxCollider& cube, SphereCollis
             Vec3 closestOnSphere = ClosestPointOnSphere(sphereCenter, radius, closestOnCube);
             Vec3 offset = closestOnSphere - closestOnCube;
             collisionInfo.lineOfImpact = offset;
-            collisionInfo.pointOfContact = (closestOnCube + closestOnSphere) * 0.5;
-            offset *= 0.5;
-            sphere.root->localPosition -= offset;
-            cube.root->localPosition += offset;
+            collisionInfo.pointOfContact = (closestOnCube + closestOnSphere) * 0.5; // check this
+            Point::AddWorldPoint(Point(collisionInfo.pointOfContact, Color::red, 5));
+
+            bool neitherStatic = !sphere.isStatic && !cube.isStatic;
+            if (neitherStatic)
+            {
+                offset *= 0.5;
+                sphere.root->localPosition -= offset;
+                cube.root->localPosition += offset;
+            }
+            //Only one is movable at this stage
+            else if (sphere.isStatic) {
+                cube.root->localPosition += offset;
+            }
+            else {
+                sphere.root->localPosition -= offset;
+            }
         }
     }
     
@@ -395,12 +421,7 @@ bool OBBSATColliding(BoxCollider& box1, BoxCollider& box2, BoxCollisionInfo& col
     bool gap = true;
 
     collisionInfo = BoxCollisionInfo();
-
-    if (box1.isStatic && box2.isStatic)
-    {
-        return false;
-    }
-
+    
     List<Vec3> physObj1Verts = box1.WorldVertices();
     List<Vec3> physObj2Verts = box2.WorldVertices();
     List<Vec3> physObj1Normals = List<Vec3>{ box1.root->localRotation * Direction::right, box1.root->localRotation * Direction::up, box1.root->localRotation * Direction::forward };// mesh1.WorldXYZNormals();
@@ -565,9 +586,9 @@ void DetectCollisions()
 
                 if (Physics::dynamics)
                 {
-                    if (box1->object->isKinematic || box2->object->isKinematic) {
+                    /*if (box1->object->isKinematic || box2->object->isKinematic) {
                         continue;
-                    }
+                    }*/
                     /*
                     Although static objects themselves are not effected by momentum
                     transfers, their velocity variable may still be updating from new collisions.
@@ -623,15 +644,17 @@ void DetectCollisions()
                 
                 if (Physics::dynamics)
                 {
-                    if (sphere1->object->isKinematic || sphere2->object->isKinematic) {
+                    /*if (sphere1->object->isKinematic || sphere2->object->isKinematic) {
                         continue;
-                    }
+                    }*/
                     if (sphere1->isStatic)
                     {
+                        sphere1->object->velocity = Vec3::zero;
                         CalculateStaticCollision(collisionInfo.lineOfImpact, sphere2->object->velocity, sphere2->coefficientRestitution);
                     }
                     else if (sphere2->isStatic)
                     {
+                        sphere2->object->velocity = Vec3::zero;
                         CalculateStaticCollision(collisionInfo.lineOfImpact, sphere1->object->velocity, sphere1->coefficientRestitution);
                     }
                     else
@@ -675,14 +698,18 @@ void DetectCollisions()
 
                     if (Physics::dynamics)
                     {
-                        if (sphere->object->isKinematic || box->object->isKinematic) {
+                        /*if (sphere->object->isKinematic || box->object->isKinematic) {
                             continue;
-                        }
-                        if (sphere->isStatic) {
+                        }*/
+                        if (sphere->isStatic) 
+                        {
+                            sphere->object->velocity = Vec3::zero;
                             CalculateStaticCollision(collisionInfo.lineOfImpact, box->object->velocity, box->coefficientRestitution);
                         }
-                        else if (box->isStatic) {
-                            CalculateStaticCollision(collisionInfo.lineOfImpact, sphere->object->velocity, box->coefficientRestitution);
+                        else if (box->isStatic) 
+                        {
+                            box->object->velocity = Vec3::zero;
+                            CalculateStaticCollision(collisionInfo.lineOfImpact, sphere->object->velocity, sphere->coefficientRestitution);
                         }
                         else {
                             CalculateCollision(
@@ -750,6 +777,39 @@ void DetectCollisions()
 
 void DetectCollisionsOctTree()
 {
+    static auto ApplyCollision = [&](Collider& colliderA, Collider& colliderB, Vec3& lineOfImpact) {
+
+        colliderA.onCollision(&colliderB);
+        colliderB.onCollision(&colliderA);
+
+        if (Physics::dynamics)
+        {
+            /*if (sphere->object->isKinematic || box->object->isKinematic) {
+                continue;
+            }*/
+            if (colliderA.isStatic)
+            {
+                //colliderA.object->velocity = Vec3::zero;
+                CalculateStaticCollision(lineOfImpact, colliderB.object->velocity, colliderB.coefficientRestitution);
+            }
+            else if (colliderB.isStatic)
+            {
+                //colliderB.object->velocity = Vec3::zero;
+                CalculateStaticCollision(lineOfImpact, colliderA.object->velocity, colliderA.coefficientRestitution);
+            }
+            else {
+                CalculateCollision(
+                    lineOfImpact,
+                    colliderA.object->mass,
+                    colliderB.object->mass,
+                    colliderA.object->velocity,
+                    colliderB.object->velocity,
+                    1.0
+                );
+            }
+        }
+    };
+
     //--------------------
     // BOX-BOX COLLISIONS
     //--------------------
@@ -778,36 +838,8 @@ void DetectCollisionsOctTree()
             bool resolveIfNotTrigger = !(box1->isTrigger || box2->isTrigger);
             if (OBBSATColliding(*box1, *box2, collisionInfo, resolveIfNotTrigger))
             {
-                box1->onCollision(box2);
-                box2->onCollision(box1);
-
-                if (Physics::dynamics)
-                {
-                    if (box1->object->isKinematic || box2->object->isKinematic) {
-                        continue;
-                    }
-                    /*
-                    Although static objects themselves are not effected by momentum
-                    transfers, their velocity variable may still be updating from new collisions.
-                    Consequently, objects touching a static collider would be effected, so the
-                    velocity is zeroed out to prevent this.
-                    */
-                    if (box1->isStatic) {
-                        box1->object->velocity = Vec3::zero;
-                    }
-                    else if (box2->isStatic) {
-                        box2->object->velocity = Vec3::zero;
-                    }
-
-                    CalculateCollision(
-                        collisionInfo.minOverlapAxis,
-                        box1->object->mass,
-                        box2->object->mass,
-                        box1->object->velocity,
-                        box2->object->velocity,
-                        1.0
-                    );
-                }
+                collisionInfo.minOverlapAxis.Normalize();
+                ApplyCollision(*box1, *box2, collisionInfo.minOverlapAxis);
             }
         }
     }
@@ -831,7 +863,6 @@ void DetectCollisionsOctTree()
         auto volume = Cube(sphere1->TRS() * sphere1->mesh->bounds->min, sphere1->TRS() * sphere1->mesh->bounds->max);
         auto closestSpheres = OctTree<SphereCollider>::Search(volume, [&](Collider* collider) { return !collider->flagged; });
 
-        // SPHERE-SPHERE COLLISIONS
         for (size_t j = 0; j < closestSpheres->size(); j++)
         {
             // Next Collider
@@ -845,31 +876,7 @@ void DetectCollisionsOctTree()
             bool resolveIfNotTrigger = !(sphere1->isTrigger || sphere2->isTrigger);
             if (SpheresColliding(*sphere1, *sphere2, collisionInfo, resolveIfNotTrigger))
             {
-                sphere1->onCollision(sphere2);
-                sphere2->onCollision(sphere1);
-
-                if (Physics::dynamics)
-                {
-                    if (sphere1->object->isKinematic || sphere2->object->isKinematic) {
-                        continue;
-                    }
-                    if (sphere1->isStatic) {
-                        CalculateStaticCollision(collisionInfo.lineOfImpact, sphere2->object->velocity, sphere2->coefficientRestitution);
-                    }
-                    else if (sphere2->isStatic) {
-                        CalculateStaticCollision(collisionInfo.lineOfImpact, sphere1->object->velocity, sphere1->coefficientRestitution);
-                    }
-                    else {
-                        CalculateCollision(
-                            collisionInfo.lineOfImpact,
-                            sphere1->object->mass,
-                            sphere2->object->mass,
-                            sphere1->object->velocity,
-                            sphere2->object->velocity,
-                            1.0
-                        );
-                    }
-                }
+                ApplyCollision(*sphere1, *sphere2, collisionInfo.lineOfImpact);
             }
         }
     }
@@ -881,11 +888,10 @@ void DetectCollisionsOctTree()
     //-----------------------
     // SPHERE-BOX COLLISIONS
     //-----------------------
-
+    // Check if more cubes than boxes before determining algorithm. If there are more cubes than spheres
+    // it makes more sense to search for the closest cubes for each sphere than the other way around.
     if (ManagedObjectPool<SphereCollider>::count < ManagedObjectPool<BoxCollider>::count)
     {
-        //OctTree<SphereCollider>::Update();
-
         for (size_t i = 0; i < ManagedObjectPool<SphereCollider>::objects.size(); i++)
         {
             // Current Collider
@@ -909,31 +915,7 @@ void DetectCollisionsOctTree()
                 bool resolveIfNotTrigger = !(sphere->isTrigger || box->isTrigger);
                 if (SphereCubeColliding(*sphere, *box, collisionInfo, resolveIfNotTrigger))
                 {
-                    sphere->onCollision(box);
-                    box->onCollision(sphere);
-
-                    if (Physics::dynamics)
-                    {
-                        if (sphere->object->isKinematic || box->object->isKinematic) {
-                            continue;
-                        }
-                        if (sphere->isStatic) {
-                            CalculateStaticCollision(collisionInfo.lineOfImpact, box->object->velocity, box->coefficientRestitution);
-                        }
-                        else if (box->isStatic) {
-                            CalculateStaticCollision(collisionInfo.lineOfImpact, sphere->object->velocity, box->coefficientRestitution);
-                        }
-                        else {
-                            CalculateCollision(
-                                collisionInfo.lineOfImpact,
-                                sphere->object->mass,
-                                box->object->mass,
-                                sphere->object->velocity,
-                                box->object->velocity,
-                                1.0
-                            );
-                        }
-                    }
+                    ApplyCollision(*sphere, *box, collisionInfo.lineOfImpact);
                 }
             }
         }
@@ -943,6 +925,7 @@ void DetectCollisionsOctTree()
             ManagedObjectPool<SphereCollider>::objects[i]->flagged = false;
         }
     }
+    // Algorithm when more spheres than cubes at this point
     else 
     {
         for (size_t i = 0; i < ManagedObjectPool<BoxCollider>::objects.size(); i++)
@@ -968,31 +951,7 @@ void DetectCollisionsOctTree()
                 bool resolveIfNotTrigger = !(sphere->isTrigger || box->isTrigger);
                 if (SphereCubeColliding(*sphere, *box, collisionInfo, resolveIfNotTrigger))
                 {
-                    sphere->onCollision(box);
-                    box->onCollision(sphere);
-
-                    if (Physics::dynamics)
-                    {
-                        if (sphere->object->isKinematic || box->object->isKinematic) {
-                            continue;
-                        }
-                        if (sphere->isStatic) {
-                            CalculateStaticCollision(collisionInfo.lineOfImpact, box->object->velocity, box->coefficientRestitution);
-                        }
-                        else if (box->isStatic) {
-                            CalculateStaticCollision(collisionInfo.lineOfImpact, sphere->object->velocity, box->coefficientRestitution);
-                        }
-                        else {
-                            CalculateCollision(
-                                collisionInfo.lineOfImpact,
-                                sphere->object->mass,
-                                box->object->mass,
-                                sphere->object->velocity,
-                                box->object->velocity,
-                                1.0
-                            );
-                        }
-                    }
+                    ApplyCollision(*sphere, *box, collisionInfo.lineOfImpact);
                 }
             }
         }
