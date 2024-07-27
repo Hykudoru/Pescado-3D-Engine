@@ -205,6 +205,24 @@ void OnKeyPressEvent(GLFWwindow* window, int key, int scancode, int action, int 
                 return obj;
                 }; //= spawnCube;
         }
+        else if (glfwGetKey(window, GLFW_KEY_5) == GLFW_PRESS)
+        {
+            spawn = []() {
+                auto obj = new PhysicsObject(LoadMeshFromOBJFile("Sphere.obj"), new SphereCollider());
+                obj->isKinematic = true;
+                obj->mesh->SetColor(Color::blue);
+                return obj;
+                };
+        }
+        else if (glfwGetKey(window, GLFW_KEY_6) == GLFW_PRESS)
+        {
+            spawn = []() {
+                auto obj = new PhysicsObject(new CubeMesh(), new BoxCollider());
+                obj->isKinematic = true;
+                obj->mesh->SetColor(Color::blue);
+                return obj;
+                }; //= spawnCube;
+        }
         else if (glfwGetKey(window, GLFW_KEY_7) == GLFW_PRESS) {
             spawn = []() {
                 auto obj = new PhysicsObject(LoadMeshFromOBJFile("Diamond.obj"), new BoxCollider(false));
@@ -225,14 +243,16 @@ void OnKeyPressEvent(GLFWwindow* window, int key, int scancode, int action, int 
             obj->localPosition = Camera::main->Position() + (Camera::main->Forward() * 10);
             obj->localRotation = Camera::main->Rotation();
             obj->localScale *= massFactor;
-            obj->isKinematic = true;
 
             if (obj->collider->isStatic)
             {
                 obj->mesh->SetColor(Color::white);
             }
-            else {
+            else if(obj->isKinematic) {
                 obj->mesh->SetColor(Color::blue);
+            }
+            else {
+                obj->mesh->SetColor(Color::orange);
             }
         }
         else if (key == GLFW_KEY_DELETE) {
