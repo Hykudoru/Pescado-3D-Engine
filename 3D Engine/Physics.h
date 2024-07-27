@@ -784,9 +784,10 @@ void DetectCollisionsOctTree()
 
         if (Physics::dynamics)
         {
-            /*if (sphere->object->isKinematic || box->object->isKinematic) {
-                continue;
-            }*/
+            if (colliderA.object->isKinematic || colliderB.object->isKinematic)
+            {
+                return;
+            }
             if (colliderA.isStatic)
             {
                 //colliderA.object->velocity = Vec3::zero;
