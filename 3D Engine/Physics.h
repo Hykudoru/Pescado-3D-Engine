@@ -14,7 +14,6 @@ using namespace std;
 * 
 * // ISSUES
 * - Fix Physics Object collider parenting issue
-* - Box collisions not quite right
 */
 
 class PhysicsObject;
@@ -484,12 +483,7 @@ bool OBBSATColliding(BoxCollider& box1, BoxCollider& box2, BoxCollisionInfo& col
                 bool sameAxis = dot >= 1.0 || dot <= -1.0;
                 if (sameAxis)
                 {
-                    if ((j + 1) >= physObj2Normals.size()) {
-                        nB = physObj2Normals[j - 1];
-                    }
-                    else {
-                        nB = physObj2Normals[j + 1];
-                    }
+                    continue;
                 }
 
                 // Search for possible 3D Edge-Edge collision
@@ -501,26 +495,11 @@ bool OBBSATColliding(BoxCollider& box1, BoxCollider& box2, BoxCollisionInfo& col
                     collisionInfo.colliding = false;
                     return false;
                 }
-                /* To-Do...
-                 //Compare and cache minimum projection distance and axis for later use if needed for collision resolution.
-                 float potentialMinOverlap = 0;
-                 if (rangeA.max > rangeB.max) {
-                     potentialMinOverlap = rangeB.max - rangeA.min;
-                     axis *= -1.0;// Reverse push direction since object B is behind object A and we will always push A backwards and B forwards.
-                 }
-                 else {
-                     potentialMinOverlap = rangeA.max - rangeB.min;
-                 }
-
-                 if (potentialMinOverlap < collisionInfo.minOverlap)
-                 {
-                     collisionInfo.minOverlap = potentialMinOverlap;
-                     collisionInfo.minOverlapAxis = axis;
-                 }*/
+                //Do not overwrite minOverlapAxis with these axes. Allow boxes to always push from normals.
             }
         }
     }
-
+    
     collisionInfo.colliding = !gap;
 
     if (collisionInfo.colliding && resolve)
@@ -531,8 +510,8 @@ bool OBBSATColliding(BoxCollider& box1, BoxCollider& box2, BoxCollisionInfo& col
         if (neitherStatic)
         {
             offset *= 0.5;
-            box1.root->localPosition -= (offset * 1.01);
-            box2.root->localPosition += (offset * 1.01);
+            box1.root->localPosition -= offset;
+            box2.root->localPosition += offset;
         }
         //Only one is movable at this stage
         else if (box1.isStatic) {
@@ -840,6 +819,7 @@ void DetectCollisionsOctTree()
             if (OBBSATColliding(*box1, *box2, collisionInfo, resolveIfNotTrigger))
             {
                 collisionInfo.minOverlapAxis.Normalize();
+                Line::AddWorldLine(Line(box1->Position(), box1->Position() + collisionInfo.minOverlapAxis, Color::red));
                 ApplyCollision(*box1, *box2, collisionInfo.minOverlapAxis);
             }
         }
