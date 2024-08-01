@@ -211,12 +211,13 @@ struct Material
 
 class Transform
 {
+protected:
+    Transform* parent = nullptr;
+    Transform* root = nullptr;
 public:
     Vec3 localScale = Vec3(1, 1, 1);
     Vec3 localPosition = Vec3(0, 0, 0);
     Matrix3x3 localRotation = Matrix3x3::identity;
-    Transform* root = nullptr;
-    Transform* parent = nullptr;
 
     Transform(const float& scale = 1, const Vec3& position = Vec3(0, 0, 0), const Vec3& rotationEuler = Vec3(0, 0, 0))
     {
@@ -250,6 +251,10 @@ public:
     Vec3 Scale();
 
     void SetParent(Transform* newParent, bool changeOfBasisTransition = true);
+
+    Transform& Parent() { return *this->parent; }
+
+    Transform& Root() { return *this->root; }
 
     Matrix4x4 LocalScale4x4();
 
@@ -360,12 +365,13 @@ public:
 
 class Mesh : public Transform, public ManagedObjectPool<Mesh>
 {
+protected:
+    Color color = Color::white;
 public:
     static int worldTriangleDrawCount;
     List<Vec3> vertices;
     List<int>* indices;
     List<Triangle>* triangles;
-    Color color = Color::white;
     bool ignoreLighting = false;
     bool forceWireFrame = false;
     //Mesh(const Mesh& other) = delete;//disables copying
@@ -398,9 +404,10 @@ public:
     }
 
     bool SetVisibility(bool visible);
-    void SetColor(Color&& c);
 
+    void SetColor(Color&& c);
     void SetColor(Color& c);
+    Color GetColor() { return this->color; }
 
     virtual List<Triangle>* MapVertsToTriangles();
 

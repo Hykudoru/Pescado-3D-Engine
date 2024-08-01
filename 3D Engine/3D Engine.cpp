@@ -94,9 +94,7 @@ void Init(GLFWwindow* window)
     sun->ignoreLighting = true;
 
     Camera* sunCam = new Camera();
-    //sunCam->SetParent(sun, false);
-    sunCam->parent = sun;
-    sunCam->root = sun->root;
+    sunCam->SetParent(sun, false);
     sunCam->localScale = sun->LocalScale4x4Inverse() * sunCam->localScale;
     sunCam->localPosition = Vec3::zero;
     sunCam->localRotation = Matrix3x3::identity;
@@ -188,6 +186,22 @@ void Init(GLFWwindow* window)
         prev = t;
     }
     /*
+    Physics::dynamics = false;
+    for (size_t i = 0; i < 100; i++)
+    {
+        PhysicsObject* obj = new PhysicsObject(LoadMeshFromOBJFile("Sphere.obj"), new SphereCollider());
+        obj->mass = i*10;
+        obj->velocity = Direction::back * 1;
+        obj->localPosition = Direction::right * i * 5;
+        obj->collider->coefficientRestitution = 0.1;
+        PhysicsObject* obj2 = new PhysicsObject(LoadMeshFromOBJFile("Sphere.obj"), new SphereCollider());
+        obj2->mass = 100;
+        obj2->velocity = Direction::forward * 1;
+        obj2->localPosition = obj->Position() + Direction::back * 5;
+        obj2->collider->coefficientRestitution = 0.1;
+    }*/
+
+    /*
     PhysicsObject* ground = new PhysicsObject(100, Direction::down * 20, Matrix3x3::identity, new PlaneMesh(), new PlaneCollider(Direction::up, true));
     PhysicsObject* leftWall = new PhysicsObject(100, Direction::left * 50, Matrix3x3::RotZ(ToRad(-90)), new PlaneMesh(), new PlaneCollider(Direction::right, true));
     PhysicsObject* rightWall = new PhysicsObject(100, Direction::right * 50, Matrix3x3::RotZ(ToRad(90)), new PlaneMesh(), new PlaneCollider(Direction::left, true));
@@ -210,17 +224,17 @@ void Init(GLFWwindow* window)
         auto obj = new PhysicsObject(LoadMeshFromOBJFile("Sphere.obj"), new SphereCollider());
         obj->localPosition += Vec3::one * .1*i;
     }*/
-    /*
-    trigger = new PhysicsObject(LoadMeshFromOBJFile("Sphere.obj"), new SphereCollider());
+    
+    /* //trigger = new PhysicsObject(LoadMeshFromOBJFile("Sphere.obj"), new SphereCollider());
     trigger = new PhysicsObject(new CubeMesh(), new BoxCollider());
     trigger->IsTrigger(true);
-    trigger->localScale = Vec3::one * 10;
+    trigger->localScale = Vec3::one * 5;
     trigger->collider->mesh->SetVisibility(true);
 
     trigger->collider->onCollision = [&](Collider* other) {
         if (other != trigger->collider)
         {
-            Vec3 dir = (trigger->Position() - other->Position()).Normalized();
+           Vec3 dir = (trigger->Position() - other->Position()).Normalized();
             Vec3 a = dir * 100.0 * deltaTime;
             other->object->velocity += a;
             other->object->mesh->SetColor(Color::gray);
@@ -229,7 +243,8 @@ void Init(GLFWwindow* window)
             cout << a.Magnitude() << endl;
         }
     };
-    */
+
+    //*/
 }
 
 void Update()

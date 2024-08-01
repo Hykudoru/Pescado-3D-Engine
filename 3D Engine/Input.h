@@ -19,8 +19,8 @@ float massFactor = 1;
 
 Transform* grabbing;
 RaycastInfo<Mesh> grabInfo;
-Color grabbingOriginalTriColor; 
-Transform* grabbingsOriginalParent = NULL;
+Color grabbingsOriginalTriColor; 
+Transform* grabbingsOriginalParent = nullptr;
 float throwSpeed = 30;
 
 void OnMouseMoveEvent(GLFWwindow* window, double mouseX, double mouseY)
@@ -68,12 +68,12 @@ void OnMouseButtonEvent(GLFWwindow* window, int button, int action, int mods)
     if (action == GLFW_PRESS)
     {
         // Spawn Dynamic
-        if (button == 0) {
+        if (button == 0) 
+        {
             PhysicsObject* obj = spawn();// new PhysicsObject(new CubeMesh(), new BoxCollider());//LoadMeshFromOBJFile("Objects/Sphere.obj");
             Throw(*obj);
             obj->mass = massFactor;
-            obj->mass = massFactor;
-            obj->localScale *= massFactor;
+            //obj->localScale *= massFactor;
             if (obj->collider->isStatic)
             {
                 obj->mesh->SetColor(Color::white);
@@ -83,11 +83,12 @@ void OnMouseButtonEvent(GLFWwindow* window, int button, int action, int mods)
                 obj->mesh->SetColor(Color::blue);
             }
             else {
-                obj->mesh->SetColor(Color::orange);
+                obj->mesh->SetColor(Color::orange * (1.0/massFactor));
             }
         }
         // Raycast and Spawn a kinematic object beside and aligned with object intersecting the ray.
-        if (button == 2) {
+        else if (button == 2) 
+        {
             PhysicsObject* obj = spawn();// new PhysicsObject(new CubeMesh(), new BoxCollider());//LoadMeshFromOBJFile("Objects/Sphere.obj");
             obj->isKinematic = true;
 
@@ -97,7 +98,7 @@ void OnMouseButtonEvent(GLFWwindow* window, int button, int action, int mods)
             {
                 info.objectHit->mesh->SetVisibility(true);
                 Vec3 scale = info.objectHit->Scale();
-                Matrix3x3 rot = ExtractRotation(info.objectHit->parent->TRSInverse()*info.objectHit->LocalRotation4x4());
+                Matrix3x3 rot = ExtractRotation(info.objectHit->Parent().TRSInverse() * info.objectHit->LocalRotation4x4());
                 Vec3 pos = info.objectHit->Position() + info.triangleHit_w.Normal() * scale.x;// *2.0;
                 
                 obj->localScale = scale;
@@ -112,7 +113,8 @@ void OnMouseButtonEvent(GLFWwindow* window, int button, int action, int mods)
                 obj->mesh->SetColor(Color::blue);
             }
         }
-        else if (button == 1) {
+        else if (button == 1) 
+        {
             if (!grabbing)
             {
                 static int maxDist = 1000000;
@@ -121,9 +123,9 @@ void OnMouseButtonEvent(GLFWwindow* window, int button, int action, int mods)
                     cout << "RAYCAST HIT" <<'\n';
                     Line::AddWorldLine(Line(Camera::main->Position(), Camera::main->Position() + Camera::main->Forward() * maxDist, Color::green, 3));
                     Point::AddWorldPoint(Point(grabInfo.contactPoint, Color::green, 10));
-                    grabbing = grabInfo.objectHit->root;//grabInfo.objectHit;
-                    grabbingsOriginalParent = grabbing->parent;
-                    grabbingOriginalTriColor = grabInfo.triangleHit->color;
+                    grabbing = &grabInfo.objectHit->Root();//grabInfo.objectHit;
+                    grabbingsOriginalParent = &grabbing->Parent();
+                    grabbingsOriginalTriColor = grabInfo.triangleHit->color;
                     //grabInfo.objectHit->forceWireFrame = true;
                     //grabInfo.triangleHit->forceWireFrame = true;
                     grabInfo.triangleHit->color = Color::green;
@@ -132,12 +134,13 @@ void OnMouseButtonEvent(GLFWwindow* window, int button, int action, int mods)
             }
         }
     }
+
     if (action == GLFW_RELEASE)
     {
         if (button == 1) {
             if (grabbing) {
                 grabInfo.triangleHit->forceWireFrame = false;
-                grabInfo.triangleHit->color = grabbingOriginalTriColor;
+                grabInfo.triangleHit->color = grabbingsOriginalTriColor;
                 grabbing->SetParent(grabbingsOriginalParent);
                 grabbing = NULL;
                 grabbingsOriginalParent = NULL;
@@ -149,9 +152,8 @@ void OnMouseButtonEvent(GLFWwindow* window, int button, int action, int mods)
 
 void OnScrollEvent(GLFWwindow* window, double xOffset, double yOffset)
 {
-    FOV(fieldOfViewDeg - yOffset);
+    FOV(abs(fieldOfViewDeg - yOffset));
     std::cout << "FOV:" << ToDeg(fov) << "°" << std::endl;
-    massFactor += yOffset*0.25;
 }
 
 void OnKeyPressEvent(GLFWwindow* window, int key, int scancode, int action, int mods)
@@ -164,6 +166,7 @@ void OnKeyPressEvent(GLFWwindow* window, int key, int scancode, int action, int 
         if (key == GLFW_KEY_0 || key == GLFW_KEY_BACKSPACE) {
             Camera::main->localRotation = Matrix3x3::identity;
             Camera::main->localPosition = Vec3();
+            FOV(60);
         }
         // Switch between Cameras
         else if (key == GLFW_KEY_F2) {
@@ -242,7 +245,7 @@ void OnKeyPressEvent(GLFWwindow* window, int key, int scancode, int action, int 
             auto obj = spawn();
             obj->localPosition = Camera::main->Position() + (Camera::main->Forward() * 10);
             obj->localRotation = Camera::main->Rotation();
-            obj->localScale *= massFactor;
+            //obj->localScale *= massFactor;
 
             if (obj->collider->isStatic)
             {
@@ -252,7 +255,7 @@ void OnKeyPressEvent(GLFWwindow* window, int key, int scancode, int action, int 
                 obj->mesh->SetColor(Color::blue);
             }
             else {
-                obj->mesh->SetColor(Color::orange);
+                obj->mesh->SetColor(Color::orange * (1.0/massFactor));
             }
         }
         else if (key == GLFW_KEY_DELETE) {
@@ -353,6 +356,14 @@ void OnKeyPressEvent(GLFWwindow* window, int key, int scancode, int action, int 
         else if (key == GLFW_KEY_F9)
         {
             greatGrandchild->localRotation *= Matrix3x3::RotY(ToRad(10));
+        }
+        else if (key == GLFW_KEY_LEFT_ALT)
+        {
+            massFactor = Clamp(floor(massFactor) - 50, .1, 1000);
+        }
+        else if (key == GLFW_KEY_RIGHT_ALT)
+        {
+            massFactor = Clamp(floor(massFactor) + 50, .1, 1000);
         }
         else if (glfwGetKey(window, GLFW_KEY_CAPS_LOCK) == GLFW_PRESS) {
             Physics::octTree = !Physics::octTree;
