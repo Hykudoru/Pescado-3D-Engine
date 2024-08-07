@@ -223,7 +223,7 @@ void Init(GLFWwindow* window)
         obj2->localPosition = obj->Position() + Direction::back * 5;
         obj2->collider->coefficientRestitution = 0.1;
     }*/
-
+    /*
     Physics::dynamics = false;
     for (size_t i = 1; i < 100; i++)
     {
@@ -233,7 +233,7 @@ void Init(GLFWwindow* window)
         obj->localPosition = Direction::forward * i * 5;
         obj->collider->coefficientRestitution = 0.1;
     }
-
+    */
     /*
     PhysicsObject* ground = new PhysicsObject(100, Direction::down * 20, Matrix3x3::identity, new PlaneMesh(), new PlaneCollider(Direction::up, true));
     PhysicsObject* leftWall = new PhysicsObject(100, Direction::left * 50, Matrix3x3::RotZ(ToRad(-90)), new PlaneMesh(), new PlaneCollider(Direction::right, true));
