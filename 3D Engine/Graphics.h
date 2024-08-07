@@ -303,7 +303,7 @@ public:
         max = Vec3(0.5, 0.5, 0.5);
     }
 
-    Cube(Vec3 min, Vec3 max)
+    Cube(const Vec3& min, const Vec3& max)
     {
         vertices = List<Vec3>(8);
         //south
@@ -321,7 +321,7 @@ public:
         this->max = max;
     }
 
-    Cube(float min, float max)
+    Cube(const float& min, const float& max)
     {
         vertices = List<Vec3>(8);
 
@@ -363,7 +363,7 @@ public:
     void Draw();
 };
 
-class Mesh : public Transform, public ManagedObjectPool<Mesh>
+class Mesh : public Component, public Transform, public ManagedObjectPool<Mesh>
 {
 protected:
     Color color = Color::white;
@@ -1002,7 +1002,6 @@ public:
         return this->mesh;
     }
     
-
     std::string name;
 
     Camera(const const Vec3& position = Vec3(0, 0, 0), const Vec3& rotationEuler = Vec3(0, 0, 0))

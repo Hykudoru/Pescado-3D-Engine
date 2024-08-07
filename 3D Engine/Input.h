@@ -21,7 +21,7 @@ Transform* grabbing;
 RaycastInfo<Mesh> grabInfo;
 Color grabbingsOriginalTriColor; 
 Transform* grabbingsOriginalParent = nullptr;
-float throwSpeed = 30;
+float throwSpeed = 20;
 
 void OnMouseMoveEvent(GLFWwindow* window, double mouseX, double mouseY)
 {
@@ -73,6 +73,7 @@ void OnMouseButtonEvent(GLFWwindow* window, int button, int action, int mods)
             PhysicsObject* obj = spawn();// new PhysicsObject(new CubeMesh(), new BoxCollider());//LoadMeshFromOBJFile("Objects/Sphere.obj");
             Throw(*obj);
             obj->mass = massFactor;
+            obj->collider->coefficientRestitution = 1.0;
             //obj->localScale *= massFactor;
             if (obj->collider->isStatic)
             {
@@ -83,7 +84,7 @@ void OnMouseButtonEvent(GLFWwindow* window, int button, int action, int mods)
                 obj->mesh->SetColor(Color::blue);
             }
             else {
-                obj->mesh->SetColor(Color::orange * (1.0/massFactor));
+                obj->mesh->SetColor(Color::orange + Vec3::one * -massFactor);
             }
         }
         // Raycast and Spawn a kinematic object beside and aligned with object intersecting the ray.
@@ -255,7 +256,7 @@ void OnKeyPressEvent(GLFWwindow* window, int key, int scancode, int action, int 
                 obj->mesh->SetColor(Color::blue);
             }
             else {
-                obj->mesh->SetColor(Color::orange * (1.0/massFactor));
+                obj->mesh->SetColor(Color::orange + Vec3::one * -massFactor);
             }
         }
         else if (key == GLFW_KEY_DELETE) {
@@ -359,11 +360,11 @@ void OnKeyPressEvent(GLFWwindow* window, int key, int scancode, int action, int 
         }
         else if (key == GLFW_KEY_LEFT_ALT)
         {
-            massFactor = Clamp(floor(massFactor) - 50, .1, 1000);
+            massFactor = Clamp(floor(massFactor) - 10, .1, 1000);
         }
         else if (key == GLFW_KEY_RIGHT_ALT)
         {
-            massFactor = Clamp(floor(massFactor) + 50, .1, 1000);
+            massFactor = Clamp(floor(massFactor) + 10, .1, 1000);
         }
         else if (glfwGetKey(window, GLFW_KEY_CAPS_LOCK) == GLFW_PRESS) {
             Physics::octTree = !Physics::octTree;

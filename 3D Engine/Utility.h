@@ -27,6 +27,12 @@ Vec3 Direction::left = Vec3(-1, 0, 0);
 Vec3 Direction::up = Vec3(0, 1, 0);
 Vec3 Direction::down = Vec3(0, -1, 0);
 
+class PhysicsObject;
+class Component// : public Transform
+{
+public:
+    PhysicsObject* object;
+};
 
 template <typename T>
 void Foreach(List<T*>& objects, std::function<void(T*)>&& callback)

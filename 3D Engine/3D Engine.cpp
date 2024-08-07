@@ -52,8 +52,21 @@ Mesh* compass;
 //PhysicsObject temp = PhysicsObject(new CubeMesh(), new BoxCollider()); 
 Mesh* bender;
 
-
 PhysicsObject* trigger;
+
+void Init0(GLFWwindow* window)
+{
+    glfwSetCursorPosCallback(window, OnMouseMoveEvent);
+    glfwSetScrollCallback(window, OnScrollEvent);
+    glfwSetMouseButtonCallback(window, OnMouseButtonEvent);
+    glfwSetKeyCallback(window, OnKeyPressEvent);
+    glfwGetWindowSize(window, &screenWidth, &screenHeight);
+    glfwSetCursorPos(window, screenWidth / 2.0, screenHeight / 2.0);
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
+
+    glLineWidth(2);
+    glPointSize(2);
+}
 
 void Init(GLFWwindow* window)
 {
@@ -150,6 +163,16 @@ void Init(GLFWwindow* window)
         }
     }
 
+    /*PhysicsObject* obj = new PhysicsObject(LoadMeshFromOBJFile("Sphere.obj"), new BoxCollider());
+   obj->collider->onCollision = [&](Collider* other) mutable {
+        if (obj->mesh && other && other->mesh)
+        {
+            Color c = other->mesh->GetColor();
+            other->mesh->SetColor(obj->mesh->GetColor());
+            obj->mesh->SetColor(c);
+        }
+    };*/ 
+
     //2 X 2 X 2
     /*for (int width = -1; width <= 1; width += 2)
     {
@@ -200,6 +223,16 @@ void Init(GLFWwindow* window)
         obj2->localPosition = obj->Position() + Direction::back * 5;
         obj2->collider->coefficientRestitution = 0.1;
     }*/
+
+    Physics::dynamics = false;
+    for (size_t i = 1; i < 100; i++)
+    {
+        PhysicsObject* obj = new PhysicsObject(LoadMeshFromOBJFile("Sphere.obj"), new SphereCollider());
+        //obj->collider->OnCollision = [&](Collider* other) {cout << typeid(*other->object->mesh).name() << endl; };
+        //obj->mass = i;
+        obj->localPosition = Direction::forward * i * 5;
+        obj->collider->coefficientRestitution = 0.1;
+    }
 
     /*
     PhysicsObject* ground = new PhysicsObject(100, Direction::down * 20, Matrix3x3::identity, new PlaneMesh(), new PlaneCollider(Direction::up, true));
@@ -371,7 +404,6 @@ void Update()
         }
     }
     */
-    
 }
 
 int main(void)
