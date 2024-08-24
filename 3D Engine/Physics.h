@@ -503,8 +503,7 @@ bool OBBSATColliding(BoxCollider& box1, BoxCollider& box2, BoxCollisionInfo& col
     {
         if (resolve)
         {
-            Vec3 offset = collisionInfo.minOverlapAxis * collisionInfo.minOverlap;  
-            collisionInfo.lineOfImpact = offset;
+            Vec3 offset = collisionInfo.minOverlapAxis * collisionInfo.minOverlap;
             ResolveCollision(box1, box2, offset);
         }
     }
@@ -618,7 +617,6 @@ void DetectCollisions()
                 OnCollision(*sphere1, *sphere2, collisionInfo.lineOfImpact);
             }
         }
-
 
         // ****************************************************************************************************
         //                                      SPHERE-PLANE COLLISIONS
