@@ -176,16 +176,24 @@ public:
 
     PhysicsObject(Mesh* mesh, Collider* collider) : ManagedObjectPool<PhysicsObject>(this)
     { 
+        this->localPosition = mesh->localPosition;
+        this->localRotation = mesh->localRotation;
+        this->localScale = mesh->localScale;
+        mesh->localPosition = Vec3::zero;
+        mesh->localRotation = Matrix3x3::identity;
+        mesh->localScale = Vec3::one;
         SetCollider(collider);
         SetMesh(mesh);
     }
 
     PhysicsObject(float scale, Vec3 position, Matrix3x3 rotation, Mesh* mesh, Collider* collider) : ManagedObjectPool<PhysicsObject>(this)
     {
-        //this->scale = Vec3(scale, scale, scale);
         this->localPosition = position;
         this->localRotation = rotation;
         this->localScale = Vec3(scale, scale, scale);
+        mesh->localPosition = Vec3::zero;
+        mesh->localRotation = Matrix3x3::identity;
+        mesh->localScale = Vec3::one;
         SetCollider(collider);
         SetMesh(mesh);
     }
