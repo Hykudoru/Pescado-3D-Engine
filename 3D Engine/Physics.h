@@ -93,7 +93,7 @@ public:
     Mesh* mesh;
     bool isStatic = false;
     bool isTrigger = false;
-    float coefficientRestitution = 1.0;
+    float coefficientRestitution = 0;
     bool flagged = false;
     std::function<void(Collider*)> OnCollision = [](Collider* collider){};
 
@@ -254,37 +254,7 @@ struct BoxCollisionInfo : public CollisionInfo
     Vec3 minOverlapAxis = Vec3::zero;
 };
 
-void ResolveCollision(Collider& colliderA, Collider& colliderB, Vec3& offset)
-{
-    if (colliderA.isStatic) 
-    {
-        colliderB.Root().localPosition += offset * 1.01;
-    }
-    else if (colliderB.isStatic) 
-    {
-        colliderA.Root().localPosition -= offset * 1.01;
-    }
-    else
-    {
-        if (&colliderA.Root() != &colliderB.Root())
-        {
-            if (colliderA.object->velocity.SqrMagnitude() > 0.000001 || colliderB.object->velocity.SqrMagnitude() > 0.000001)
-            {
-                //colliderA.Root().localPosition += colliderA.object->velocity * -deltaTime;
-                //colliderB.Root().localPosition += colliderB.object->velocity * -deltaTime;
-                offset *= 0.52;//0.51 0.501
-                colliderA.Root().localPosition -= offset;
-                colliderB.Root().localPosition += offset;
-            }
-            else
-            {
-                offset *= 0.5;//0.51 0.501
-                colliderA.Root().localPosition -= offset;
-                colliderB.Root().localPosition += offset;
-            }
-        }
-    }
-}
+void ResolveCollision(Collider& colliderA, Collider& colliderB, Vec3& offset);
 
 void CalculateCollision(Vec3& lineOfImpact, float& m1, float& m2, Vec3& v1, Vec3& v2, float e = 1.0)
 {
@@ -519,6 +489,45 @@ bool OBBSATColliding(BoxCollider& box1, BoxCollider& box2, BoxCollisionInfo& col
     return collisionInfo.colliding;
 }
 
+// Collision influence precedence: Static = 3, Kinematic = 2, Dynamic = 1
+void ResolveCollision(Collider& colliderA, Collider& colliderB, Vec3& offset)
+{
+    if (&colliderA.Root() != &colliderB.Root())
+    {
+        if (colliderA.isStatic)
+        {
+            colliderB.Root().localPosition += offset * 1.01;
+        }
+        else if (colliderB.isStatic)
+        {
+            colliderA.Root().localPosition -= offset * 1.01;
+        }
+        else if (colliderA.object->isKinematic && !colliderA.isStatic)
+        {
+            colliderB.Root().localPosition += offset * 1.01;
+        }
+        else if (colliderB.object->isKinematic && !colliderB.isStatic)
+        {
+            colliderA.Root().localPosition -= offset * 1.01;
+        }
+        else
+        {
+            if (colliderA.object->velocity.SqrMagnitude() > 0.000001 || colliderB.object->velocity.SqrMagnitude() > 0.000001)
+            {
+                offset *= 0.52;//0.51 0.501
+                colliderA.Root().localPosition -= offset;
+                colliderB.Root().localPosition += offset;
+            }
+            else
+            {
+                offset *= 0.5;//0.51 0.501
+                colliderA.Root().localPosition -= offset;
+                colliderB.Root().localPosition += offset;
+            }
+        }
+    }
+}
+
 void OnCollision(Collider& colliderA, Collider& colliderB, Vec3& lineOfImpact) 
 {
     colliderA.OnCollision(&colliderB);
@@ -527,31 +536,29 @@ void OnCollision(Collider& colliderA, Collider& colliderB, Vec3& lineOfImpact)
     if (Physics::dynamics)
     {
         if (&colliderA.Root() != &colliderB.Root())
-        {
-            if (!(colliderA.object->isKinematic || colliderB.object->isKinematic))
+        {   
+            if (colliderA.isStatic || colliderA.object->isKinematic)
             {
-                if (colliderA.isStatic)
-                {
-                    CalculateStaticCollision(lineOfImpact, colliderB.object->velocity, colliderB.coefficientRestitution);
-                }
-                else if (colliderB.isStatic)
-                {
-                    CalculateStaticCollision(lineOfImpact, colliderA.object->velocity, colliderA.coefficientRestitution);
-                }
-                else 
-                {
-                    float e = colliderA.coefficientRestitution < colliderB.coefficientRestitution ? colliderA.coefficientRestitution : colliderB.coefficientRestitution;//((colliderA.coefficientRestitution + colliderB.coefficientRestitution) / 2.0)
-
-                    CalculateCollision(
-                        lineOfImpact,
-                        colliderA.object->mass,
-                        colliderB.object->mass,
-                        colliderA.object->velocity,
-                        colliderB.object->velocity,
-                        e
-                    );
-                }
+                CalculateStaticCollision(lineOfImpact, colliderB.object->velocity, colliderB.coefficientRestitution);
             }
+            else if (colliderB.isStatic || colliderB.object->isKinematic)
+            {
+                CalculateStaticCollision(lineOfImpact, colliderA.object->velocity, colliderA.coefficientRestitution);
+            }
+            else 
+            {
+                float e = colliderA.coefficientRestitution < colliderB.coefficientRestitution ? colliderA.coefficientRestitution : colliderB.coefficientRestitution;//((colliderA.coefficientRestitution + colliderB.coefficientRestitution) / 2.0)
+
+                CalculateCollision(
+                    lineOfImpact,
+                    colliderA.object->mass,
+                    colliderB.object->mass,
+                    colliderA.object->velocity,
+                    colliderB.object->velocity,
+                    e
+                );
+            }
+            
         }
     }
 };
