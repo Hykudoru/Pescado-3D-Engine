@@ -492,6 +492,11 @@ bool OBBSATColliding(BoxCollider& box1, BoxCollider& box2, BoxCollisionInfo& col
 // Collision influence precedence: Static = 3, Kinematic = 2, Dynamic = 1
 void ResolveCollision(Collider& colliderA, Collider& colliderB, Vec3& offset)
 {
+    if (colliderA.isStatic && colliderB.isStatic)
+    {
+        return;
+    }
+
     if (&colliderA.Root() != &colliderB.Root())
     {
         if (colliderA.isStatic)
@@ -591,11 +596,6 @@ void DetectCollisions()
             // Next Collider
             BoxCollider* box2 = ManagedObjectPool<BoxCollider>::objects[j];
 
-            if (box1->isStatic && box2->isStatic) 
-            {
-                continue;
-            }
-
             BoxCollisionInfo collisionInfo;
             bool resolveIfNotTrigger = !(box1->isTrigger || box2->isTrigger);
             if (OBBSATColliding(*box1, *box2, collisionInfo, resolveIfNotTrigger))
@@ -620,11 +620,6 @@ void DetectCollisions()
             // Next Collider
             SphereCollider* sphere2 = ManagedObjectPool<SphereCollider>::objects[j];
 
-            if (sphere1->isStatic && sphere2->isStatic)
-            {
-                continue;
-            }
-
             CollisionInfo collisionInfo;
             bool resolveIfNotTrigger = !(sphere1->isTrigger || sphere2->isTrigger);
             if (SpheresColliding(*sphere1, *sphere2, collisionInfo, resolveIfNotTrigger))
@@ -641,11 +636,6 @@ void DetectCollisions()
         {
             // Next Collider
             PlaneCollider* plane = ManagedObjectPool<PlaneCollider>::objects[ii];
-
-            if (sphere1->isStatic && plane->isStatic)
-            {
-                continue;
-            }
 
             CollisionInfo collisionInfo;
             bool resolveIfNotTrigger = !(sphere1->isTrigger || plane->isTrigger);
@@ -669,11 +659,6 @@ void DetectCollisions()
         {
             // Sphere Collider
             SphereCollider* sphere = ManagedObjectPool<SphereCollider>::objects[j];
-
-            if (sphere->isStatic && box->isStatic) 
-            {
-                continue;
-            }
 
             CollisionInfo collisionInfo;
             bool resolveIfNotTrigger = !(sphere->isTrigger || box->isTrigger);
@@ -707,10 +692,6 @@ void DetectCollisionsOctTree()
         {
             // Next Collider
             BoxCollider* box2 = (*closestBoxes)[j];
-
-            if (box1->isStatic && box2->isStatic) {
-                continue;
-            }
 
             BoxCollisionInfo collisionInfo;
             bool resolveIfNotTrigger = !(box1->isTrigger || box2->isTrigger);
@@ -746,11 +727,6 @@ void DetectCollisionsOctTree()
         {
             // Next Collider
             SphereCollider* sphere2 = (*closestSpheres)[j];
-
-            if (sphere1->isStatic && sphere2->isStatic) 
-            {
-                continue;
-            }
             
             CollisionInfo collisionInfo;
             bool resolveIfNotTrigger = !(sphere1->isTrigger || sphere2->isTrigger);
@@ -789,11 +765,6 @@ void DetectCollisionsOctTree()
                 // Next Collider
                 BoxCollider* box = (*closestObjects)[j];
 
-                if (sphere->isStatic && box->isStatic) 
-                {
-                    continue;
-                }
-
                 CollisionInfo collisionInfo;
                 bool resolveIfNotTrigger = !(sphere->isTrigger || box->isTrigger);
                 if (SphereCubeColliding(*sphere, *box, collisionInfo, resolveIfNotTrigger))
@@ -825,11 +796,6 @@ void DetectCollisionsOctTree()
             {
                 // Next Collider
                 SphereCollider* sphere = (*closestObjects)[j];
-
-                if (sphere->isStatic && box->isStatic) 
-                {
-                    continue;
-                }
 
                 CollisionInfo collisionInfo;
                 bool resolveIfNotTrigger = !(sphere->isTrigger || box->isTrigger);
