@@ -262,8 +262,8 @@ void ResolveCollision(Collider& colliderA, Collider& colliderB, Vec3& offset)
         {
             if (colliderA.object->velocity.SqrMagnitude() > 0.000001 || colliderB.object->velocity.SqrMagnitude() > 0.000001)
             {
-                //colliderA.object->localPosition += colliderA.object->velocity * -deltaTime;
-                //colliderB.object->localPosition += colliderB.object->velocity * -deltaTime;
+                //colliderA.Root().localPosition += colliderA.object->velocity * -deltaTime;
+                //colliderB.Root().localPosition += colliderB.object->velocity * -deltaTime;
                 offset *= 0.52;//0.51 0.501
                 colliderA.Root().localPosition -= offset;
                 colliderB.Root().localPosition += offset;
@@ -291,8 +291,8 @@ void CalculateCollision(Vec3& lineOfImpact, float& m1, float& m2, Vec3& v1, Vec3
     lineOfImpact = lineOfImpact.Normalized();
     Vec3 v1LineOfImpact = lineOfImpact * DotProduct(v1, lineOfImpact);
     Vec3 v2LineOfImpact = lineOfImpact * DotProduct(v2, lineOfImpact);
-    Vec3 v1LineOfImpactFinal = ((m1*v1LineOfImpact) + (2.0*m2*v2LineOfImpact) - (m2*v1LineOfImpact)) * (1.0 / (m1 + m2));
-    Vec3 v2LineOfImpactFinal = (e*(v1LineOfImpact - v2LineOfImpact)) + v1LineOfImpactFinal;// e(v1-v2)+v1' = v2'
+    Vec3 v1LineOfImpactFinal = ((m1 * v1LineOfImpact) + (2.0 * m2 * v2LineOfImpact) - (m2 * v1LineOfImpact)) * (1.0 / (m1 + m2));
+    Vec3 v2LineOfImpactFinal = e*(v1LineOfImpact - v2LineOfImpact + v1LineOfImpactFinal);// e(v1-v2)+v1' = v2'
     Vec3 v1PerpendicularFinal = (v1 - v1LineOfImpact);//Perpendicular Velocity is the same before and after impact
     Vec3 v2PerpendicularFinal = (v2 - v2LineOfImpact);//Perpendicular Velocity is the same before and after impact
     Vec3 v1Final = v1LineOfImpactFinal + v1PerpendicularFinal;
@@ -501,9 +501,10 @@ bool OBBSATColliding(BoxCollider& box1, BoxCollider& box2, BoxCollisionInfo& col
 
     if (collisionInfo.colliding)
     {
-        Vec3 offset = collisionInfo.minOverlapAxis * collisionInfo.minOverlap;
         if (resolve)
         {
+            Vec3 offset = collisionInfo.minOverlapAxis * collisionInfo.minOverlap;  
+            collisionInfo.lineOfImpact = offset;
             ResolveCollision(box1, box2, offset);
         }
     }
@@ -515,30 +516,34 @@ void OnCollision(Collider& colliderA, Collider& colliderB, Vec3& lineOfImpact)
 {
     colliderA.OnCollision(&colliderB);
     colliderB.OnCollision(&colliderA);
-
+    
     if (Physics::dynamics)
     {
-        if (!(colliderA.object->isKinematic || colliderB.object->isKinematic))
+        if (&colliderA.Root() != &colliderB.Root())
         {
-            if (colliderA.isStatic)
+            if (!(colliderA.object->isKinematic || colliderB.object->isKinematic))
             {
-                CalculateStaticCollision(lineOfImpact, colliderB.object->velocity, colliderB.coefficientRestitution);
-            }
-            else if (colliderB.isStatic)
-            {
-                CalculateStaticCollision(lineOfImpact, colliderA.object->velocity, colliderA.coefficientRestitution);
-            }
-            else {
-                float e = colliderA.coefficientRestitution < colliderB.coefficientRestitution ? colliderA.coefficientRestitution : colliderB.coefficientRestitution;//((colliderA.coefficientRestitution + colliderB.coefficientRestitution) / 2.0)
+                if (colliderA.isStatic)
+                {
+                    CalculateStaticCollision(lineOfImpact, colliderB.object->velocity, colliderB.coefficientRestitution);
+                }
+                else if (colliderB.isStatic)
+                {
+                    CalculateStaticCollision(lineOfImpact, colliderA.object->velocity, colliderA.coefficientRestitution);
+                }
+                else 
+                {
+                    float e = colliderA.coefficientRestitution < colliderB.coefficientRestitution ? colliderA.coefficientRestitution : colliderB.coefficientRestitution;//((colliderA.coefficientRestitution + colliderB.coefficientRestitution) / 2.0)
 
-                CalculateCollision(
-                    lineOfImpact,
-                    colliderA.object->mass,
-                    colliderB.object->mass,
-                    colliderA.object->velocity,
-                    colliderB.object->velocity,
-                    e
-                );
+                    CalculateCollision(
+                        lineOfImpact,
+                        colliderA.object->mass,
+                        colliderB.object->mass,
+                        colliderA.object->velocity,
+                        colliderB.object->velocity,
+                        e
+                    );
+                }
             }
         }
     }
