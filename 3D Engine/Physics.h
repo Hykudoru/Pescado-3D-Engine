@@ -8,10 +8,10 @@
 #include <OctTree.h>
 using namespace std;
 /*TO-DO
-* 
+*
 * // OPTIMIZATIONS
 * - Revisit sphere-plane collisions (possible performance optimization)
-* 
+*
 * // ISSUES
 * - Fix Physics Object collider parenting issue
 */
@@ -93,11 +93,11 @@ public:
     Mesh* mesh;
     bool isStatic = false;
     bool isTrigger = false;
-    float coefficientRestitution = 0;
+    float coefficientRestitution = 0.5;
     bool flagged = false;
-    std::function<void(Collider*)> OnCollision = [](Collider* collider){};
+    std::function<void(Collider*)> OnCollision = [](Collider* collider) {};
 
-    Collider(bool isStatic = false): ManagedObjectPool<Collider>(this)
+    Collider(bool isStatic = false) : ManagedObjectPool<Collider>(this)
     {
         this->isStatic = isStatic;
     }
@@ -111,7 +111,7 @@ public:
     {
         return mesh->MapVertsToTriangles();
     }
-    
+
     List<Vec3> WorldVertices()
     {
         return mesh->WorldVertices();
@@ -139,7 +139,7 @@ class SphereCollider : public Collider, public ManagedObjectPool<SphereCollider>
 {
     float radius = 1;
 public:
-    
+
     SphereCollider(bool isStatic = false) : Collider(isStatic), ManagedObjectPool<SphereCollider>(this)
     {
         mesh = LoadMeshFromOBJFile("Sphere.obj");
@@ -175,7 +175,7 @@ public:
     Mesh* mesh;
 
     PhysicsObject(Mesh* mesh, Collider* collider) : ManagedObjectPool<PhysicsObject>(this)
-    { 
+    {
         this->localPosition = mesh->localPosition;
         this->localRotation = mesh->localRotation;
         this->localScale = mesh->localScale;
@@ -254,7 +254,7 @@ struct BoxCollisionInfo : public CollisionInfo
     Vec3 minOverlapAxis = Vec3::zero;
 };
 
-void ResolveCollision(Collider& colliderA, Collider& colliderB, Vec3& offset);
+void ResolveCollision(Collider& colliderA, Collider& colliderB, Vec3& penDepth);
 
 void CalculateCollision(Vec3& lineOfImpact, float& m1, float& m2, Vec3& v1, Vec3& v2, float e = 1.0)
 {
@@ -270,12 +270,12 @@ void CalculateCollision(Vec3& lineOfImpact, float& m1, float& m2, Vec3& v1, Vec3
     Vec3 v1LineOfImpact = lineOfImpact * DotProduct(v1, lineOfImpact);
     Vec3 v2LineOfImpact = lineOfImpact * DotProduct(v2, lineOfImpact);
     Vec3 v1LineOfImpactFinal = ((m1 * v1LineOfImpact) + (2.0 * m2 * v2LineOfImpact) - (m2 * v1LineOfImpact)) * (1.0 / (m1 + m2));
-    Vec3 v2LineOfImpactFinal = e*(v1LineOfImpact - v2LineOfImpact + v1LineOfImpactFinal);// e(v1-v2)+v1' = v2'
+    Vec3 v2LineOfImpactFinal = e * (v1LineOfImpact - v2LineOfImpact + v1LineOfImpactFinal);// e(v1-v2)+v1' = v2'
     Vec3 v1PerpendicularFinal = (v1 - v1LineOfImpact);//Perpendicular Velocity is the same before and after impact
     Vec3 v2PerpendicularFinal = (v2 - v2LineOfImpact);//Perpendicular Velocity is the same before and after impact
     Vec3 v1Final = v1LineOfImpactFinal + v1PerpendicularFinal;
     Vec3 v2Final = v2LineOfImpactFinal + v2PerpendicularFinal;
-    
+
     v1 = v1Final;
     v2 = v2Final;
 }
@@ -285,7 +285,7 @@ void CalculateStaticCollision(Vec3& lineOfImpact, Vec3& v1, float e = 1.0)
     lineOfImpact = lineOfImpact.Normalized();
     Vec3 v1LineOfImpact = lineOfImpact * DotProduct(v1, lineOfImpact);
     Vec3 v1PerpendicularFinal = (v1 - v1LineOfImpact);//Perpendicular Velocity is the same before and after impact
-    v1 = (-e*v1LineOfImpact) + v1PerpendicularFinal;
+    v1 = (-e * v1LineOfImpact) + v1PerpendicularFinal;
 }
 
 bool SpherePlaneColliding(SphereCollider& sphere, PlaneCollider& plane, CollisionInfo& collisionInfo, bool resolve = true)
@@ -329,7 +329,7 @@ bool SpheresColliding(SphereCollider& sphere1, SphereCollider& sphere2, Collisio
     Vec3 sphere1Pos = sphere1.Position();
     Vec3 sphere2Pos = sphere2.Position();
     float sumRadii = (radius1 + radius2);
-    collisionInfo.colliding = (sphere2Pos - sphere1Pos).SqrMagnitude() < (sumRadii*sumRadii);
+    collisionInfo.colliding = (sphere2Pos - sphere1Pos).SqrMagnitude() < (sumRadii * sumRadii);
     if (collisionInfo.colliding)
     {
         Vec3 pointOnSphere1 = ClosestPointOnSphere(sphere1Pos, radius1, sphere2Pos);
@@ -337,7 +337,7 @@ bool SpheresColliding(SphereCollider& sphere1, SphereCollider& sphere2, Collisio
         Vec3 offset = (pointOnSphere1 - pointOnSphere2);
         collisionInfo.lineOfImpact = offset;
         collisionInfo.pointOfContact = (pointOnSphere1 + pointOnSphere2) * 0.5;
-        if (resolve) 
+        if (resolve)
         {
             ResolveCollision(sphere1, sphere2, offset);
         }
@@ -360,9 +360,9 @@ bool SphereCubeColliding(SphereCollider& sphere, BoxCollider& cube, CollisionInf
     collisionInfo.colliding = false;
     float radius = sphere.Radius();
     Vec3 sphereCenter = sphere.Position();
-    Vec3 sphereCenter_cubeCoords = cube.TRInverse()*sphereCenter;
-    Vec3 min = cube.Root().LocalScale4x4()*cube.mesh->bounds->min;
-    Vec3 max = cube.Root().LocalScale4x4()*cube.mesh->bounds->max;
+    Vec3 sphereCenter_cubeCoords = cube.TRInverse() * sphereCenter;
+    Vec3 min = cube.Root().LocalScale4x4() * cube.mesh->bounds->min;
+    Vec3 max = cube.Root().LocalScale4x4() * cube.mesh->bounds->max;
 
     Vec3 closestPointOnCube_cubeCoords;
     closestPointOnCube_cubeCoords.x = Clamp(sphereCenter_cubeCoords.x, min.x, max.x);
@@ -370,7 +370,7 @@ bool SphereCubeColliding(SphereCollider& sphere, BoxCollider& cube, CollisionInf
     closestPointOnCube_cubeCoords.z = Clamp(sphereCenter_cubeCoords.z, min.z, max.z);
 
     Vec3 disp_cubeCoords = closestPointOnCube_cubeCoords - sphereCenter_cubeCoords;
-    if (disp_cubeCoords.SqrMagnitude() < radius*radius)
+    if (disp_cubeCoords.SqrMagnitude() < radius * radius)
     {
         collisionInfo.colliding = true;
         Vec3 closestOnCube = cube.TR() * closestPointOnCube_cubeCoords;
@@ -383,7 +383,7 @@ bool SphereCubeColliding(SphereCollider& sphere, BoxCollider& cube, CollisionInf
             ResolveCollision(sphere, cube, offset);
         }
     }
-    
+
     return collisionInfo.colliding;
 }
 
@@ -393,7 +393,7 @@ bool OBBSATColliding(BoxCollider& box1, BoxCollider& box2, BoxCollisionInfo& col
     bool gap = true;
 
     collisionInfo = BoxCollisionInfo();
-    
+
     List<Vec3> physObj1Verts = box1.WorldVertices();
     List<Vec3> physObj2Verts = box2.WorldVertices();
     List<Vec3> physObj1Normals = List<Vec3>{ box1.Root().localRotation * Direction::right, box1.Root().localRotation * Direction::up, box1.Root().localRotation * Direction::forward };// mesh1.WorldXYZNormals();
@@ -474,7 +474,7 @@ bool OBBSATColliding(BoxCollider& box1, BoxCollider& box2, BoxCollisionInfo& col
             }
         }
     }
-    
+
     collisionInfo.colliding = !gap;
 
     if (collisionInfo.colliding)
@@ -490,8 +490,16 @@ bool OBBSATColliding(BoxCollider& box1, BoxCollider& box2, BoxCollisionInfo& col
 }
 
 // Collision influence precedence: Static = 3, Kinematic = 2, Dynamic = 1
-void ResolveCollision(Collider& colliderA, Collider& colliderB, Vec3& offset)
+void ResolveCollision(Collider& colliderA, Collider& colliderB, Vec3& penDepth)
 {
+    static float allowablePenDepth = 0.0055;
+    //static float sqrAllowablePenDepth = allowablePenDepth * allowablePenDepth;
+
+    if (penDepth.Magnitude() <= allowablePenDepth)
+    {
+        return;
+    }
+
     if (colliderA.isStatic && colliderB.isStatic)
     {
         return;
@@ -499,49 +507,44 @@ void ResolveCollision(Collider& colliderA, Collider& colliderB, Vec3& offset)
 
     if (&colliderA.Root() != &colliderB.Root())
     {
+        penDepth.x - allowablePenDepth;
+        penDepth.y - allowablePenDepth;
+        penDepth.z - allowablePenDepth;
+
         if (colliderA.isStatic)
         {
-            colliderB.Root().localPosition += offset * 1.01;
+            colliderB.Root().localPosition += penDepth * 1.0001;
         }
         else if (colliderB.isStatic)
         {
-            colliderA.Root().localPosition -= offset * 1.01;
+            colliderA.Root().localPosition -= penDepth * 1.0001;
         }
         else if (colliderA.object->isKinematic && !colliderA.isStatic)
         {
-            colliderB.Root().localPosition += offset * 1.01;
+            colliderB.Root().localPosition += penDepth * 1.0001;
         }
         else if (colliderB.object->isKinematic && !colliderB.isStatic)
         {
-            colliderA.Root().localPosition -= offset * 1.01;
+            colliderA.Root().localPosition -= penDepth * 1.0001;
         }
         else
         {
-            if (colliderA.object->velocity.SqrMagnitude() > 0.000001 || colliderB.object->velocity.SqrMagnitude() > 0.000001)
-            {
-                offset *= 0.52;//0.51 0.501
-                colliderA.Root().localPosition -= offset;
-                colliderB.Root().localPosition += offset;
-            }
-            else
-            {
-                offset *= 0.5;//0.51 0.501
-                colliderA.Root().localPosition -= offset;
-                colliderB.Root().localPosition += offset;
-            }
+            penDepth *= 0.50001;//0.51 0.501
+            colliderA.Root().localPosition -= penDepth;
+            colliderB.Root().localPosition += penDepth;
         }
     }
 }
 
-void OnCollision(Collider& colliderA, Collider& colliderB, Vec3& lineOfImpact) 
+void OnCollision(Collider& colliderA, Collider& colliderB, Vec3& lineOfImpact)
 {
     colliderA.OnCollision(&colliderB);
     colliderB.OnCollision(&colliderA);
-    
+
     if (Physics::dynamics)
     {
         if (&colliderA.Root() != &colliderB.Root())
-        {   
+        {
             if (colliderA.isStatic || colliderA.object->isKinematic)
             {
                 CalculateStaticCollision(lineOfImpact, colliderB.object->velocity, colliderB.coefficientRestitution);
@@ -550,7 +553,7 @@ void OnCollision(Collider& colliderA, Collider& colliderB, Vec3& lineOfImpact)
             {
                 CalculateStaticCollision(lineOfImpact, colliderA.object->velocity, colliderA.coefficientRestitution);
             }
-            else 
+            else
             {
                 float e = colliderA.coefficientRestitution < colliderB.coefficientRestitution ? colliderA.coefficientRestitution : colliderB.coefficientRestitution;//((colliderA.coefficientRestitution + colliderB.coefficientRestitution) / 2.0)
 
@@ -563,7 +566,8 @@ void OnCollision(Collider& colliderA, Collider& colliderB, Vec3& lineOfImpact)
                     e
                 );
             }
-            
+            Color c = colliderA.object->mesh->GetColor() * 1.1;
+            colliderA.object->mesh->SetColor(c);
         }
     }
 };
@@ -583,7 +587,7 @@ void DetectCollisions()
     for (size_t i = 0; i < ManagedObjectPool<BoxCollider>::count; i++)
     {
         // exit if this is the last Collider
-        if ((i + 1) >= ManagedObjectPool<BoxCollider>::count) 
+        if ((i + 1) >= ManagedObjectPool<BoxCollider>::count)
         {
             break;
         }
@@ -702,7 +706,7 @@ void DetectCollisionsOctTree()
         }
     }
 
-    for (size_t i = 0; i < ManagedObjectPool<BoxCollider>::objects.size(); i++) 
+    for (size_t i = 0; i < ManagedObjectPool<BoxCollider>::objects.size(); i++)
     {
         ManagedObjectPool<BoxCollider>::objects[i]->flagged = false;
     }
@@ -727,7 +731,7 @@ void DetectCollisionsOctTree()
         {
             // Next Collider
             SphereCollider* sphere2 = (*closestSpheres)[j];
-            
+
             CollisionInfo collisionInfo;
             bool resolveIfNotTrigger = !(sphere1->isTrigger || sphere2->isTrigger);
             if (SpheresColliding(*sphere1, *sphere2, collisionInfo, resolveIfNotTrigger))
@@ -737,7 +741,7 @@ void DetectCollisionsOctTree()
         }
     }
 
-    for (size_t i = 0; i < ManagedObjectPool<SphereCollider>::objects.size(); i++) 
+    for (size_t i = 0; i < ManagedObjectPool<SphereCollider>::objects.size(); i++)
     {
         ManagedObjectPool<SphereCollider>::objects[i]->flagged = false;
     }
@@ -774,13 +778,13 @@ void DetectCollisionsOctTree()
             }
         }
 
-        for (size_t i = 0; i < ManagedObjectPool<SphereCollider>::objects.size(); i++) 
+        for (size_t i = 0; i < ManagedObjectPool<SphereCollider>::objects.size(); i++)
         {
             ManagedObjectPool<SphereCollider>::objects[i]->flagged = false;
         }
     }
     // Algorithm when there are more spheres than cubes
-    else 
+    else
     {
         for (size_t i = 0; i < ManagedObjectPool<BoxCollider>::objects.size(); i++)
         {
@@ -789,7 +793,7 @@ void DetectCollisionsOctTree()
             box->flagged = true;
 
             // Search for nearby colliders
-            auto volume = Cube(box->TRS() * box->mesh->bounds->min, box->TRS()* box->mesh->bounds->max);
+            auto volume = Cube(box->TRS() * box->mesh->bounds->min, box->TRS() * box->mesh->bounds->max);
             auto closestObjects = OctTree<SphereCollider>::Search(volume, [&](Collider* collider) { return !collider->flagged; });
 
             for (size_t j = 0; j < closestObjects->size(); j++)
@@ -806,7 +810,7 @@ void DetectCollisionsOctTree()
             }
         }
 
-        for (size_t i = 0; i < ManagedObjectPool<BoxCollider>::objects.size(); i++) 
+        for (size_t i = 0; i < ManagedObjectPool<BoxCollider>::objects.size(); i++)
         {
             ManagedObjectPool<BoxCollider>::objects[i]->flagged = false;
         }
@@ -891,7 +895,7 @@ bool Raycast(Ray& ray, RaycastInfo<T>& raycastInfo, const std::function<void(Ray
     for (size_t i = 0; i < ManagedObjectPool<T>::objects.size(); i++)
     {
         auto obj = ManagedObjectPool<T>::objects[i];
-        
+
         List<Triangle>* triangles = obj->MapVertsToTriangles();
         for (size_t j = 0; j < triangles->size(); j++)
         {
@@ -931,7 +935,7 @@ bool Raycast(Ray& ray, RaycastInfo<T>& raycastInfo, const std::function<void(Ray
                             if (callback) {
                                 callback(raycastInfo);
                             }
-                         
+
                             // ---------- Debugging -----------
                             if (Physics::raycastDebugging)
                             {
@@ -963,7 +967,7 @@ bool Raycast(Vec3 from, Vec3 to, RaycastInfo<T>& raycastInfo, const std::functio
 }
 
 static void Physics()
-{    
+{
     Camera* cam;
     if (CameraSettings::outsiderViewPerspective)
     {
@@ -1046,7 +1050,7 @@ static void Physics()
     if (DEBUGGING)
     {
         std::cout << "--------PHYSICS-------" << endl;
-        
+
         string onoff = Physics::dynamics ? "On" : "Off";
         std::cout << "Physics: " << onoff << " (press p)" << endl;
 
@@ -1055,7 +1059,7 @@ static void Physics()
 
         onoff = Physics::collisionDetection ? "On" : "Off";
         std::cout << "Collisions: " << onoff << " (press \\)" << endl;
-        
+
         onoff = Physics::octTree ? "On" : "Off";
         std::cout << "OctTree Collisions: " << onoff << " (press Caps Lock)" << endl;
 
