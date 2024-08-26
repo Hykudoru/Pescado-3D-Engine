@@ -269,8 +269,9 @@ void CalculateCollision(Vec3& lineOfImpact, float& m1, float& m2, Vec3& v1, Vec3
     lineOfImpact = lineOfImpact.Normalized();
     Vec3 v1LineOfImpact = lineOfImpact * DotProduct(v1, lineOfImpact);
     Vec3 v2LineOfImpact = lineOfImpact * DotProduct(v2, lineOfImpact);
-    Vec3 v1LineOfImpactFinal = ((m1 * v1LineOfImpact) + (2.0 * m2 * v2LineOfImpact) - (m2 * v1LineOfImpact)) * (1.0 / (m1 + m2));
-    Vec3 v2LineOfImpactFinal = e * (v1LineOfImpact - v2LineOfImpact + v1LineOfImpactFinal);// e(v1-v2)+v1' = v2'
+    Vec3 _ = (m1 * v1LineOfImpact) + (m2 * v2LineOfImpact);
+    Vec3 v1LineOfImpactFinal = (_ - (m2 * e * (v1LineOfImpact - v2LineOfImpact))) * (1.0 / (m1 + m2));
+    Vec3 v2LineOfImpactFinal = (_ - (m1 * v1LineOfImpactFinal))* (1.0 / m2);
     Vec3 v1PerpendicularFinal = (v1 - v1LineOfImpact);//Perpendicular Velocity is the same before and after impact
     Vec3 v2PerpendicularFinal = (v2 - v2LineOfImpact);//Perpendicular Velocity is the same before and after impact
     Vec3 v1Final = v1LineOfImpactFinal + v1PerpendicularFinal;
@@ -566,8 +567,6 @@ void OnCollision(Collider& colliderA, Collider& colliderB, Vec3& lineOfImpact)
                     e
                 );
             }
-            Color c = colliderA.object->mesh->GetColor() * 1.1;
-            colliderA.object->mesh->SetColor(c);
         }
     }
 };
