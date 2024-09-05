@@ -78,6 +78,7 @@ public:
     float mass = 1;
     bool isKinematic = false;
     Vec3 velocity = Vec3::zero;
+    //Vec3 angVelocity = Vec3::zero;
     Vec3 angVelAxis = Vec3::zero;
     float angVelSpeed = 0;
 
@@ -243,6 +244,8 @@ public:
 
 struct CollisionInfo
 {
+    Collider* colliderA = nullptr;
+    Collider* colliderB = nullptr;
     bool colliding = false;
     Vec3 lineOfImpact = Vec3::zero;
     Vec3 pointOfContact = Vec3::zero;
@@ -256,7 +259,7 @@ struct BoxCollisionInfo : public CollisionInfo
 
 void ResolveCollision(Collider& colliderA, Collider& colliderB, Vec3& penDepth);
 
-void CalculateCollision(Vec3& lineOfImpact, float& m1, float& m2, Vec3& v1, Vec3& v2, float e = 1.0)
+void CalculateCollision(CollisionInfo& collisionInfo, float& m1, float& m2, Vec3& v1, Vec3& v2, float e = 1.0)
 {
     /* Elastic collision (conserves both momentum and kinetic energy)
     Conservation Momentum: m1*v1 + m2*v2 = m1*v1' + m2*v2'
@@ -266,7 +269,11 @@ void CalculateCollision(Vec3& lineOfImpact, float& m1, float& m2, Vec3& v1, Vec3
         0 < e < 1 inelastic
         e = 0 Perfectly inelastic
     */
-    lineOfImpact = lineOfImpact.Normalized();
+    Vec3 v1Init = v1;
+    Vec3 v2Init = v2;
+
+    //Apply impulse
+    Vec3 lineOfImpact = collisionInfo.lineOfImpact.Normalized();
     Vec3 v1LineOfImpact = lineOfImpact * DotProduct(v1, lineOfImpact);
     Vec3 v2LineOfImpact = lineOfImpact * DotProduct(v2, lineOfImpact);
     Vec3 _ = (m1 * v1LineOfImpact) + (m2 * v2LineOfImpact);
@@ -274,19 +281,87 @@ void CalculateCollision(Vec3& lineOfImpact, float& m1, float& m2, Vec3& v1, Vec3
     Vec3 v2LineOfImpactFinal = (_ - (m1 * v1LineOfImpactFinal))* (1.0 / m2);
     Vec3 v1PerpendicularFinal = (v1 - v1LineOfImpact);//Perpendicular Velocity is the same before and after impact
     Vec3 v2PerpendicularFinal = (v2 - v2LineOfImpact);//Perpendicular Velocity is the same before and after impact
-    Vec3 v1Final = v1LineOfImpactFinal + v1PerpendicularFinal;
-    Vec3 v2Final = v2LineOfImpactFinal + v2PerpendicularFinal;
 
-    v1 = v1Final;
-    v2 = v2Final;
+    v1 = v1LineOfImpactFinal + v1PerpendicularFinal;
+    v2 = v2LineOfImpactFinal + v2PerpendicularFinal;
+
+    //Calculate velocity at point of impact
+    Vec3 w1 = collisionInfo.colliderA->object->AngularVelocity();
+    Vec3 r1 = collisionInfo.pointOfContact - collisionInfo.colliderA->object->Position();
+    Vec3 u1 = v1Init + (CrossProduct(w1, r1));
+
+    //Calculate velocity at point of impact
+    Vec3 w2 = collisionInfo.colliderB->object->AngularVelocity();
+    Vec3 r2 = collisionInfo.pointOfContact - collisionInfo.colliderB->object->Position();
+    Vec3 u2 = v2Init + (CrossProduct(w2, r2));
+
+    //Calculate impulse at point of contact
+    Vec3 u1LineOfImpact = lineOfImpact * DotProduct(u1, lineOfImpact);
+    Vec3 u2LineOfImpact = lineOfImpact * DotProduct(u2, lineOfImpact);
+    Vec3 __ = (m1 * u1LineOfImpact) + (m2 * u2LineOfImpact);
+    Vec3 u1LineOfImpactFinal = (__ - (m2 * e * (u1LineOfImpact - v2LineOfImpact))) * (1.0 / (m1 + m2));
+    Vec3 u2LineOfImpactFinal = (__ - (m1 * u1LineOfImpactFinal)) * (1.0 / m2);
+    Vec3 u1PerpendicularFinal = (u1 - u1LineOfImpact);//Perpendicular Velocity is the same before and after impact
+    Vec3 u2PerpendicularFinal = (u2 - u2LineOfImpact);//Perpendicular Velocity is the same before and after impact
+
+    u1 = u1LineOfImpactFinal + u1PerpendicularFinal;
+    u2 = u2LineOfImpactFinal + u2PerpendicularFinal;
+
+    Vec3 impulseOnA = m1 * -u1;
+    Vec3 angAccelOnA = CrossProduct(r1, impulseOnA);
+    Vec3 impulseOnB = m2 * -u2;
+    Vec3 angAccelOnB = CrossProduct(r2, impulseOnB);
+
+    // Apply Angular Impulse
+    collisionInfo.colliderA->object->angVelAxis += angAccelOnA;
+    collisionInfo.colliderA->object->angVelAxis.Normalize();
+    collisionInfo.colliderA->object->angVelSpeed += angAccelOnA.Magnitude();
+    collisionInfo.colliderA->object->angVelSpeed *= 0.5;
+
+    collisionInfo.colliderB->object->angVelAxis += angAccelOnB;
+    collisionInfo.colliderB->object->angVelAxis.Normalize();
+    collisionInfo.colliderB->object->angVelSpeed += angAccelOnB.Magnitude();
+    collisionInfo.colliderB->object->angVelSpeed *= 0.5;
 }
 
-void CalculateStaticCollision(Vec3& lineOfImpact, Vec3& v1, float e = 1.0)
+void CalculateStaticCollision(CollisionInfo& collisionInfo, float& m, Vec3& v, float e = 1.0)
 {
-    lineOfImpact = lineOfImpact.Normalized();
-    Vec3 v1LineOfImpact = lineOfImpact * DotProduct(v1, lineOfImpact);
-    Vec3 v1PerpendicularFinal = (v1 - v1LineOfImpact);//Perpendicular Velocity is the same before and after impact
-    v1 = (-e * v1LineOfImpact) + v1PerpendicularFinal;
+    Vec3 vInit = v;
+    Collider* staticCol = collisionInfo.colliderB;
+    Collider* dynamicCol = collisionInfo.colliderA;
+    if (collisionInfo.colliderA->isStatic || collisionInfo.colliderA->object->isKinematic)
+    {
+        staticCol = collisionInfo.colliderA;
+        dynamicCol = collisionInfo.colliderB;
+    }
+
+    //Apply impulse
+    Vec3 lineOfImpact = collisionInfo.lineOfImpact.Normalized();
+    Vec3 vLineOfImpact = lineOfImpact * DotProduct(v, lineOfImpact);
+    Vec3 vPerpendicularFinal = (v - vLineOfImpact);//Perpendicular Velocity is the same before and after impact
+    
+    // Apply kinetic friction
+    vPerpendicularFinal -= vPerpendicularFinal * 0.1;
+
+    v = (-e * vLineOfImpact) + vPerpendicularFinal;
+
+    //Calculate velocity at point of impact
+    Vec3 w = dynamicCol->object->AngularVelocity();
+    Vec3 r = collisionInfo.pointOfContact - dynamicCol->object->Position();
+    Vec3 u = vInit + (CrossProduct(w, r));
+
+    //Calculate impulse at point of contact
+    Vec3 uLineOfImpact = lineOfImpact * DotProduct(u, lineOfImpact);
+    Vec3 uPerpendicularFinal = (u - uLineOfImpact);//Perpendicular Velocity is the same before and after impact
+    u = (-e * uLineOfImpact) + uPerpendicularFinal;
+    Vec3 impulseOnA = m * -u;
+    
+    // Apply Angular Impulse
+    Vec3 angAccel = CrossProduct(r, impulseOnA);
+    dynamicCol->object->angVelAxis += angAccel;
+    dynamicCol->object->angVelAxis.Normalize();
+    dynamicCol->object->angVelSpeed += angAccel.Magnitude();
+    dynamicCol->object->angVelSpeed *= 0.5;
 }
 
 bool SpherePlaneColliding(SphereCollider& sphere, PlaneCollider& plane, CollisionInfo& collisionInfo, bool resolve = true)
@@ -304,6 +379,9 @@ bool SpherePlaneColliding(SphereCollider& sphere, PlaneCollider& plane, Collisio
         Vec3 pointOnSphere = ClosestPointOnSphere(sphereCenter, radius, closestPointOnPlane);
         collisionInfo.pointOfContact = pointOnSphere;
         collisionInfo.lineOfImpact = normal * -1.0;
+        collisionInfo.colliderA = &sphere;
+        collisionInfo.colliderB = &plane;
+
         if (resolve)
         {
             Vec3 offset = pointOnSphere - closestPointOnPlane;//overlapping
@@ -338,6 +416,8 @@ bool SpheresColliding(SphereCollider& sphere1, SphereCollider& sphere2, Collisio
         Vec3 offset = (pointOnSphere1 - pointOnSphere2);
         collisionInfo.lineOfImpact = offset;
         collisionInfo.pointOfContact = (pointOnSphere1 + pointOnSphere2) * 0.5;
+        collisionInfo.colliderA = &sphere1;
+        collisionInfo.colliderB = &sphere2;
         if (resolve)
         {
             ResolveCollision(sphere1, sphere2, offset);
@@ -379,6 +459,8 @@ bool SphereCubeColliding(SphereCollider& sphere, BoxCollider& cube, CollisionInf
         Vec3 offset = closestOnSphere - closestOnCube;
         collisionInfo.lineOfImpact = offset;
         collisionInfo.pointOfContact = (closestOnCube + closestOnSphere) * 0.5; // check this
+        collisionInfo.colliderA = &sphere;
+        collisionInfo.colliderB = &cube;
         if (resolve)
         {
             ResolveCollision(sphere, cube, offset);
@@ -433,13 +515,11 @@ bool OBBSATColliding(BoxCollider& box1, BoxCollider& box2, BoxCollisionInfo& col
             {
                 collisionInfo.minOverlap = potentialMinOverlap;
                 collisionInfo.minOverlapAxis = axis;
-                collisionInfo.lineOfImpact = axis;
             }
             else if (potentialMinOverlap < collisionInfo.minOverlap)
             {
                 collisionInfo.minOverlap = potentialMinOverlap;
                 collisionInfo.minOverlapAxis = axis;
-                collisionInfo.lineOfImpact = axis;
             }
         }
     }
@@ -480,10 +560,12 @@ bool OBBSATColliding(BoxCollider& box1, BoxCollider& box2, BoxCollisionInfo& col
 
     if (collisionInfo.colliding)
     {
+        collisionInfo.colliderA = &box1;
+        collisionInfo.colliderB = &box2;
+        collisionInfo.lineOfImpact = collisionInfo.minOverlapAxis * collisionInfo.minOverlap;
         if (resolve)
         {
-            Vec3 offset = collisionInfo.minOverlapAxis * collisionInfo.minOverlap;
-            ResolveCollision(box1, box2, offset);
+            ResolveCollision(box1, box2, collisionInfo.lineOfImpact);
         }
     }
 
@@ -491,6 +573,7 @@ bool OBBSATColliding(BoxCollider& box1, BoxCollider& box2, BoxCollisionInfo& col
 }
 
 // Collision influence precedence: Static = 3, Kinematic = 2, Dynamic = 1
+// Allowable penetration depth is meant so that colliders may still be in contact when friction is applied post collision. 
 void ResolveCollision(Collider& colliderA, Collider& colliderB, Vec3& penDepth)
 {
     static float allowablePenDepth = 0.0055;
@@ -514,30 +597,45 @@ void ResolveCollision(Collider& colliderA, Collider& colliderB, Vec3& penDepth)
 
         if (colliderA.isStatic)
         {
-            colliderB.Root().localPosition += penDepth * 1.0001;
+            colliderB.Root().localPosition += penDepth * 1.000001;
         }
         else if (colliderB.isStatic)
         {
-            colliderA.Root().localPosition -= penDepth * 1.0001;
+            colliderA.Root().localPosition -= penDepth * 1.000001;
         }
         else if (colliderA.object->isKinematic && !colliderA.isStatic)
         {
-            colliderB.Root().localPosition += penDepth * 1.0001;
+            colliderB.Root().localPosition += penDepth * 1.000001;
         }
         else if (colliderB.object->isKinematic && !colliderB.isStatic)
         {
-            colliderA.Root().localPosition -= penDepth * 1.0001;
+            colliderA.Root().localPosition -= penDepth * 1.000001;
         }
+        /* Offset one or both depending on the mass.
+         * Reason is because momentum is still zero for a massive body at rest. 
+         * If a body of lesser mass collides into a massive body at rest, the offset will be greatly noticeable and unrealistic. */
         else
         {
-            penDepth *= 0.50001;//0.51 0.501
-            colliderA.Root().localPosition -= penDepth;
-            colliderB.Root().localPosition += penDepth;
+            //Reduced for dynamic colliders since momentum may have changed even slightly for dynamic bodies.
+            if (colliderA.object->mass > colliderB.object->mass)
+            {
+                colliderB.Root().localPosition += penDepth;
+            }
+            else if (colliderB.object->mass > colliderA.object->mass)
+            {
+                colliderA.Root().localPosition -= penDepth;
+            }
+            else // offset both if equal mass
+            {
+                penDepth *= 0.500001;//.50001;//0.51 0.501
+                colliderA.Root().localPosition -= penDepth;
+                colliderB.Root().localPosition += penDepth;
+            }
         }
     }
 }
 
-void OnCollision(Collider& colliderA, Collider& colliderB, Vec3& lineOfImpact)
+void OnCollision(Collider& colliderA, Collider& colliderB, CollisionInfo& collisionInfo)
 {
     colliderA.OnCollision(&colliderB);
     colliderB.OnCollision(&colliderA);
@@ -548,18 +646,18 @@ void OnCollision(Collider& colliderA, Collider& colliderB, Vec3& lineOfImpact)
         {
             if (colliderA.isStatic || colliderA.object->isKinematic)
             {
-                CalculateStaticCollision(lineOfImpact, colliderB.object->velocity, colliderB.coefficientRestitution);
+                CalculateStaticCollision(collisionInfo, colliderB.object->mass, colliderB.object->velocity, colliderB.coefficientRestitution);
             }
             else if (colliderB.isStatic || colliderB.object->isKinematic)
             {
-                CalculateStaticCollision(lineOfImpact, colliderA.object->velocity, colliderA.coefficientRestitution);
+                CalculateStaticCollision(collisionInfo, colliderA.object->mass, colliderA.object->velocity, colliderA.coefficientRestitution);
             }
             else
             {
                 float e = colliderA.coefficientRestitution < colliderB.coefficientRestitution ? colliderA.coefficientRestitution : colliderB.coefficientRestitution;//((colliderA.coefficientRestitution + colliderB.coefficientRestitution) / 2.0)
 
                 CalculateCollision(
-                    lineOfImpact,
+                    collisionInfo,
                     colliderA.object->mass,
                     colliderB.object->mass,
                     colliderA.object->velocity,
@@ -567,6 +665,9 @@ void OnCollision(Collider& colliderA, Collider& colliderB, Vec3& lineOfImpact)
                     e
                 );
             }
+
+            Color c = colliderA.object->mesh->GetColor() * 1.1;
+            colliderA.object->mesh->SetColor(c);
         }
     }
 };
@@ -603,7 +704,7 @@ void DetectCollisions()
             bool resolveIfNotTrigger = !(box1->isTrigger || box2->isTrigger);
             if (OBBSATColliding(*box1, *box2, collisionInfo, resolveIfNotTrigger))
             {
-                OnCollision(*box1, *box2, collisionInfo.minOverlapAxis);
+                OnCollision(*box1, *box2, collisionInfo);
             }
         }
     }
@@ -627,7 +728,7 @@ void DetectCollisions()
             bool resolveIfNotTrigger = !(sphere1->isTrigger || sphere2->isTrigger);
             if (SpheresColliding(*sphere1, *sphere2, collisionInfo, resolveIfNotTrigger))
             {
-                OnCollision(*sphere1, *sphere2, collisionInfo.lineOfImpact);
+                OnCollision(*sphere1, *sphere2, collisionInfo);
             }
         }
 
@@ -644,7 +745,7 @@ void DetectCollisions()
             bool resolveIfNotTrigger = !(sphere1->isTrigger || plane->isTrigger);
             if (SpherePlaneColliding(*sphere1, *plane, collisionInfo, resolveIfNotTrigger))
             {
-                OnCollision(*sphere1, *plane, collisionInfo.lineOfImpact);
+                OnCollision(*sphere1, *plane, collisionInfo);
             }
         }
     }
@@ -667,7 +768,7 @@ void DetectCollisions()
             bool resolveIfNotTrigger = !(sphere->isTrigger || box->isTrigger);
             if (SphereCubeColliding(*sphere, *box, collisionInfo, resolveIfNotTrigger))
             {
-                OnCollision(*sphere, *box, collisionInfo.lineOfImpact);
+                OnCollision(*sphere, *box, collisionInfo);
             }
         }
     }
@@ -700,7 +801,7 @@ void DetectCollisionsOctTree()
             bool resolveIfNotTrigger = !(box1->isTrigger || box2->isTrigger);
             if (OBBSATColliding(*box1, *box2, collisionInfo, resolveIfNotTrigger))
             {
-                OnCollision(*box1, *box2, collisionInfo.lineOfImpact);//collisionInfo.minOverlapAxis);
+                OnCollision(*box1, *box2, collisionInfo);//collisionInfo.minOverlapAxis);
             }
         }
     }
@@ -735,7 +836,7 @@ void DetectCollisionsOctTree()
             bool resolveIfNotTrigger = !(sphere1->isTrigger || sphere2->isTrigger);
             if (SpheresColliding(*sphere1, *sphere2, collisionInfo, resolveIfNotTrigger))
             {
-                OnCollision(*sphere1, *sphere2, collisionInfo.lineOfImpact);
+                OnCollision(*sphere1, *sphere2, collisionInfo);
             }
         }
     }
@@ -772,7 +873,7 @@ void DetectCollisionsOctTree()
                 bool resolveIfNotTrigger = !(sphere->isTrigger || box->isTrigger);
                 if (SphereCubeColliding(*sphere, *box, collisionInfo, resolveIfNotTrigger))
                 {
-                    OnCollision(*sphere, *box, collisionInfo.lineOfImpact);
+                    OnCollision(*sphere, *box, collisionInfo);
                 }
             }
         }
@@ -804,7 +905,7 @@ void DetectCollisionsOctTree()
                 bool resolveIfNotTrigger = !(sphere->isTrigger || box->isTrigger);
                 if (SphereCubeColliding(*sphere, *box, collisionInfo, resolveIfNotTrigger))
                 {
-                    OnCollision(*sphere, *box, collisionInfo.lineOfImpact);
+                    OnCollision(*sphere, *box, collisionInfo);
                 }
             }
         }

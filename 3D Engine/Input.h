@@ -62,7 +62,6 @@ void OnMouseButtonEvent(GLFWwindow* window, int button, int action, int mods)
         obj.localPosition = Camera::main->Position() + (Camera::main->Forward() * 10);
         obj.localRotation = Camera::main->Rotation();
         obj.velocity = velocity + Camera::main->Forward() * throwSpeed;
-        
         };
 
     if (action == GLFW_PRESS)
@@ -73,7 +72,9 @@ void OnMouseButtonEvent(GLFWwindow* window, int button, int action, int mods)
             PhysicsObject* obj = spawn();// new PhysicsObject(new CubeMesh(), new BoxCollider());//LoadMeshFromOBJFile("Objects/Sphere.obj");
             Throw(*obj);
             obj->mass = massFactor;
-            obj->collider->coefficientRestitution = 1.0;
+            obj->collider->coefficientRestitution = 0.2;// RandomFloat(0, 1);
+            //obj->angVelAxis = RandomDirection();
+            //obj->angVelSpeed = RandomFloat();
             //obj->localScale *= massFactor;
             if (obj->collider->isStatic)
             {
@@ -247,6 +248,8 @@ void OnKeyPressEvent(GLFWwindow* window, int key, int scancode, int action, int 
             obj->localPosition = Camera::main->Position() + (Camera::main->Forward() * 10);
             obj->localRotation = Camera::main->Rotation();
             //obj->localScale *= massFactor;
+            obj->collider->coefficientRestitution = RandomFloat();
+            obj->mass = RandomFloat(1, 20);
 
             if (obj->collider->isStatic)
             {
@@ -268,8 +271,8 @@ void OnKeyPressEvent(GLFWwindow* window, int key, int scancode, int action, int 
         }
         //------------------Physics-------------------
 
-        // Toggle Player's Momentum
         else if (key == GLFW_KEY_X) {
+        // Toggle Player's Momentum
             velocity = Vec3(0, 0, 0);//Reset every toggle state
             isKinematic = !isKinematic;
         }

@@ -234,6 +234,11 @@ Vec3 RandomDirection()
     return vec;
 }
 
+float RandomFloat(float min = 0.0, float max = 1.0)
+{
+    return Clamp((float)rand() / (float)rand(), min, max);
+}
+
 float ToDeg(float rad) {
     return rad * 180.0 / PI;
 }

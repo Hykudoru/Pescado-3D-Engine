@@ -114,6 +114,7 @@ void Init(GLFWwindow* window)
 
     planet = new PhysicsObject(500.0, Direction::forward * 1200, Matrix3x3::identity, LoadMeshFromOBJFile("Planet.obj"), new SphereCollider());
     planet->mass = 100000;
+    planet->isKinematic = true;
 
     moon = LoadMeshFromOBJFile("Moon-Lowpoly.obj");
     //moon->localPosition += Direction::forward * 500;
@@ -223,7 +224,7 @@ void Init(GLFWwindow* window)
         obj2->localPosition = obj->Position() + Direction::back * 5;
         obj2->collider->coefficientRestitution = 0.1;
     }*/
-    /*
+    
     Physics::dynamics = false;
     for (size_t i = 1; i < 100; i++)
     {
@@ -231,9 +232,24 @@ void Init(GLFWwindow* window)
         //obj->collider->OnCollision = [&](Collider* other) {cout << typeid(*other->object->mesh).name() << endl; };
         //obj->mass = i;
         obj->localPosition = Direction::forward * i * 5;
-        obj->collider->coefficientRestitution = 0.1;
+        obj->collider->coefficientRestitution = 0.5;
     }
-    */
+    
+    
+    /*//Tiled Ground
+    for (size_t i = 0; i < 50; i++)
+    {
+        for (size_t j = 0; j < 50; j++)
+        {
+            PhysicsObject* block = new PhysicsObject(1, Direction::forward * i + Direction::right * j, Matrix3x3::identity, new CubeMesh(), new BoxCollider());
+            block->collider->isStatic = true;
+        }
+    }*/
+
+    PhysicsObject* block = new PhysicsObject(40, Direction::up * -80 + Direction::forward * 10, Matrix3x3::identity, new CubeMesh(), new BoxCollider());
+    block->collider->isStatic = true;
+    PhysicsObject* block2 = new PhysicsObject(40, Direction::up * -40 + Direction::forward * 10, Matrix3x3::identity, new CubeMesh(), new BoxCollider());
+    block2->mass = 100000000;
     /*
     PhysicsObject* ground = new PhysicsObject(100, Direction::down * 20, Matrix3x3::identity, new PlaneMesh(), new PlaneCollider(Direction::up, true));
     PhysicsObject* leftWall = new PhysicsObject(100, Direction::left * 50, Matrix3x3::RotZ(ToRad(-90)), new PlaneMesh(), new PlaneCollider(Direction::right, true));
@@ -264,7 +280,7 @@ void Init(GLFWwindow* window)
     trigger->localScale = Vec3::one * 5;
     trigger->collider->mesh->SetVisibility(true);
 
-    trigger->collider->onCollision = [&](Collider* other) {
+    trigger->collider->OnCollision = [&](Collider* other) {
         if (other != trigger->collider)
         {
            Vec3 dir = (trigger->Position() - other->Position()).Normalized();
@@ -275,9 +291,7 @@ void Init(GLFWwindow* window)
             cout << typeid(*other).name() << endl;
             cout << a.Magnitude() << endl;
         }
-    };
-
-    //*/
+    };*/
 }
 
 void Update()
