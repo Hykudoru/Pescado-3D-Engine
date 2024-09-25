@@ -378,18 +378,22 @@ public:
 
     static List<T*>* Search(Cube& volume, const std::function<void(T*)>& action = NULL)
     {
-        static List<T*> tempList = List<T*>();
-        tempList.clear();
+        static List<T*> contents = List<T*>();
+        contents.clear();
 
         //Extract contents from root which contains any objects too big or not encapsulated
-        Tree()->Extract(tempList);
+        Tree()->Extract(contents);
+        
+        static auto conditional = [&](T* obj) mutable { 
+                return !obj->flagged; 
+            };
 
         List<TreeNode<T>*> nodesFlagged;
         static auto func = [&](TreeNode<T>* thisNode) mutable {
             if (!thisNode->flagged) {
                 nodesFlagged.emplace_back(thisNode);
             }};
-        
+
         Vec3 center = volume.Position();
         for (size_t i = 0; i < volume.vertices.size(); i++)
         {
@@ -399,10 +403,8 @@ public:
             for (size_t ii = 0; ii < 8; ii++)
             {
                 auto zone = (*tree->children)[ii];
-                //zone->Query(center, list, NULL, func);
-                auto n = zone->Query(point, tempList, NULL, func);
-                if (n)
-                {
+                auto node = zone->Query(point, contents, conditional, func);
+                if (node) {
                     break;
                 }
             }
@@ -412,56 +414,45 @@ public:
         {
             nodesFlagged[i]->flagged = false;
         }
-        
-        static List<T*> listContents = List<T*>();
-        listContents.clear();
-        for (size_t i = 0; i < tempList.size(); i++)
-        {
-            if (!tempList[i]->flagged)
-            {
-                listContents.emplace_back(tempList[i]);
-            }
-        }
 
         if (action)
         {
-            for (size_t i = 0; i < tempList.size(); i++)
+            for (size_t i = 0; i < contents.size(); i++)
             {
-                action(listContents[i]);
+                action(contents[i]);
             }
         }
 
-        return &listContents;
+        return &contents;
     }
     
+    // Possible Bug
     static List<T*>* Search(Vec3&& point, const std::function<void(T*)>& action = NULL)
     {
-        static List<T*> list = List<T*>();
-        list.clear();
+        static List<T*> contents = List<T*>();
+        contents.clear();
 
         //Extract contents from root which contains any objects too big or not encapsulated
-        Tree()->Extract(list);
+        Tree()->Extract(contents);
 
         //Query subnodes
         for (size_t i = 0; i < 8; i++)
         {
-            auto node = (*tree->children)[i]->Query(point, list);
+            auto node = (*tree->children)[i]->Query(point, contents);
             if (node) {
-                //cout << endl;
                 break;
             }
         }
 
-        
         if (action)
         {
-            for (size_t i = 0; i < list.size(); i++)
+            for (size_t i = 0; i < contents.size(); i++)
             {
-                action(list[i]);
+                action(contents[i]);
             }
         }
 
-        return &list;
+        return &contents;
     }
 
     static List<T*> ExtractZone(int zoneID)
