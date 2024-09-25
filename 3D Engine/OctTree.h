@@ -378,11 +378,11 @@ public:
 
     static List<T*>* Search(Cube& volume, const std::function<void(T*)>& action = NULL)
     {
-        static List<T*> list = List<T*>();
-        list.clear();
+        static List<T*> tempList = List<T*>();
+        tempList.clear();
 
         //Extract contents from root which contains any objects too big or not encapsulated
-        Tree()->Extract(list);
+        Tree()->Extract(tempList);
 
         List<TreeNode<T>*> nodesFlagged;
         static auto func = [&](TreeNode<T>* thisNode) mutable {
@@ -400,28 +400,38 @@ public:
             {
                 auto zone = (*tree->children)[ii];
                 //zone->Query(center, list, NULL, func);
-                auto n = zone->Query(point, list, NULL, func);
+                auto n = zone->Query(point, tempList, NULL, func);
                 if (n)
                 {
                     break;
                 }
             }
         }
-        //Fix later since may contain duplicates
+
         for (size_t i = 0; i < nodesFlagged.size(); i++)
         {
             nodesFlagged[i]->flagged = false;
         }
         
-        if (action)
+        static List<T*> listContents = List<T*>();
+        listContents.clear();
+        for (size_t i = 0; i < tempList.size(); i++)
         {
-            for (size_t i = 0; i < list.size(); i++)
+            if (!tempList[i]->flagged)
             {
-                action(list[i]);
+                listContents.emplace_back(tempList[i]);
             }
         }
 
-        return &list;
+        if (action)
+        {
+            for (size_t i = 0; i < tempList.size(); i++)
+            {
+                action(listContents[i]);
+            }
+        }
+
+        return &listContents;
     }
     
     static List<T*>* Search(Vec3&& point, const std::function<void(T*)>& action = NULL)
@@ -442,7 +452,7 @@ public:
             }
         }
 
-       
+        
         if (action)
         {
             for (size_t i = 0; i < list.size(); i++)

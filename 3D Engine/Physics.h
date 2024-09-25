@@ -88,6 +88,74 @@ public:
     }
 };
 
+class Ray
+{
+protected:
+    Transform transform = Transform();
+    Vec3 endPosition;
+    Vec3 direction;
+public:
+
+    float distance = 1;
+
+    Ray(Vec3 start, Vec3 end)
+    {
+        Set(start, end);
+    }
+
+    Ray(Vec3 start, Vec3 dir, float dist)
+    {
+        Set(start, start + dir * dist);
+    }
+
+    void Set(Vec3 start, Vec3 end)
+    {
+        Vec3 disp = (end - start);
+        distance = disp.Magnitude();
+        direction = disp.Normalized();
+        transform.localRotation = OrthogonalMatrixLookAt(direction);
+        transform.localPosition = start;
+        endPosition = end;
+    }
+
+    Vec3 StartPosition()
+    {
+        return transform.Position();
+    }
+
+    Vec3 EndPosition()
+    {
+        return endPosition;
+    }
+
+    Vec3 Direction()
+    {
+        return direction;
+    }
+
+    Matrix4x4 WorldToRaySpaceMatrix()
+    {
+        return transform.TRInverse();
+    }
+};
+
+template <typename T>
+struct RaycastInfo
+{
+    T* objectHit = nullptr;
+    Triangle* triangleHit = nullptr;
+    Triangle triangleHit_w = Triangle();
+    Vec3 contactPoint = Vec3::zero;
+    RaycastInfo() {};
+    RaycastInfo(T* objHit, Triangle* triHit, Vec3& contactPoint, Triangle& worldSpaceTri)
+    {
+        this->objectHit = objHit;
+        this->triangleHit = triHit;
+        this->contactPoint = contactPoint;
+        this->triangleHit_w = worldSpaceTri;
+    }
+};
+
 class Collider : public Component, public Transform, public  ManagedObjectPool<Collider>
 {
 public:
@@ -133,6 +201,16 @@ public:
         mesh->SetColor(Color::red);
         mesh->SetParent(this);
         mesh->SetVisibility(false);
+    }
+
+    List<Line> WorldEdges()
+    {
+        return *mesh->bounds->WorldEdges();
+    }
+
+    List<Triangle> WorldFaces()
+    {
+        return *mesh->bounds->WorldFaces();
     }
 };
 
@@ -461,6 +539,7 @@ bool SphereCubeColliding(SphereCollider& sphere, BoxCollider& cube, CollisionInf
         collisionInfo.pointOfContact = (closestOnCube + closestOnSphere) * 0.5; // check this
         collisionInfo.colliderA = &sphere;
         collisionInfo.colliderB = &cube;
+
         if (resolve)
         {
             ResolveCollision(sphere, cube, offset);
@@ -563,6 +642,85 @@ bool OBBSATColliding(BoxCollider& box1, BoxCollider& box2, BoxCollisionInfo& col
         collisionInfo.colliderA = &box1;
         collisionInfo.colliderB = &box2;
         collisionInfo.lineOfImpact = collisionInfo.minOverlapAxis * collisionInfo.minOverlap;
+        
+        // Calculate contact points
+
+        List<Line> box1Edges = box1.WorldEdges();
+        List<Line> box2Edges = box2.WorldEdges();
+        List<Triangle> box1Faces = box1.WorldFaces();
+        List<Triangle> box2Faces = box2.WorldFaces();
+        Matrix4x4 box1TR4x4 = box1.TR();
+        Matrix4x4 box1TRInverse4x4 = box1.TRInverse();
+        Matrix4x4 box2TR4x4 = box2.TR();
+        Matrix4x4 box2TRInverse4x4 = box2.TRInverse();
+        int iter = 0;
+        BoxCollider* box = &box1;
+        List<Line>* edges = &box1Edges;
+        List<Triangle>* othersFaces = &box2Faces;
+        List<Vec3> intersectingPoints = List<Vec3>();
+        while (iter < 2)
+        {
+            if (iter > 0) {
+                box = &box2;
+                edges = &box2Edges;
+                othersFaces = &box1Faces;
+            }
+            for (size_t e = 0; e < 12; e++)
+            {
+                Line edge = (*edges)[e];
+                for (size_t f = 0; f < 6; f++)
+                {
+                    Triangle face = (*othersFaces)[f];
+                    Vec3 intersection;
+                    if (LinePlaneIntersecting(edge.from, edge.to, face, &intersection))
+                    {
+                        if ((intersection - edge.from).SqrMagnitude() <= (edge.to - edge.from).SqrMagnitude())
+                        {
+                            intersectingPoints.emplace_back(intersection);
+                        }
+                    }
+                }
+            }
+            iter++;
+        }
+
+        List<Vec3> contactPoints = List<Vec3>();
+        for (size_t i = 0; i < intersectingPoints.size(); i++)
+        {
+            Vec3 p = intersectingPoints[i];
+            Vec3 clamped = box1TRInverse4x4 * p;
+            clamped.x = Clamp(clamped.x, box1.mesh->bounds->min.x, box1.mesh->bounds->max.x);
+            clamped.y = Clamp(clamped.y, box1.mesh->bounds->min.y, box1.mesh->bounds->max.y);
+            clamped.z = Clamp(clamped.z, box1.mesh->bounds->min.z, box1.mesh->bounds->max.z);
+            clamped = box1TR4x4 * clamped;
+
+            Vec3 clamped2 = box2TRInverse4x4 * p;
+            clamped2.x = Clamp(clamped2.x, box2.mesh->bounds->min.x, box2.mesh->bounds->max.x);
+            clamped2.y = Clamp(clamped2.y, box2.mesh->bounds->min.y, box2.mesh->bounds->max.y);
+            clamped2.z = Clamp(clamped2.z, box2.mesh->bounds->min.z, box2.mesh->bounds->max.z);
+            clamped2 = box2TR4x4 * clamped2;
+
+            // if both boxes contain them, then we know these are contact points
+            if (((p - box1.Position()).SqrMagnitude() <= (clamped - box1.Position()).SqrMagnitude())
+                && ((p - box2.Position()).SqrMagnitude() <= (clamped2 - box2.Position()).SqrMagnitude()))
+            {
+                contactPoints.emplace_back(p);
+            }
+        }
+        
+        Vec3 pointOnCollisionPlane = ((box1.Position() + box2.Position()) * 0.5);
+        Vec3 normal = collisionInfo.lineOfImpact.Normalized();
+        for (size_t i = 0; i < contactPoints.size(); i++)
+        {
+            Point::AddWorldPoint(Point(contactPoints[i], Color::white, 7));
+
+            Vec3 contactPointProj = ProjectOnPlane(contactPoints[i] - pointOnCollisionPlane, normal);
+            Point::AddWorldPoint(Point(pointOnCollisionPlane + contactPointProj, Color::pink, 6));
+            Line::AddWorldLine(Line(pointOnCollisionPlane, pointOnCollisionPlane + contactPointProj, Color::pink, 2));
+        }
+        Line::AddWorldLine(Line(pointOnCollisionPlane, pointOnCollisionPlane+normal, Color::white, 2));
+        Point::AddWorldPoint(Point(pointOnCollisionPlane, Color::blue, 5));
+
         if (resolve)
         {
             ResolveCollision(box1, box2, collisionInfo.lineOfImpact);
@@ -684,10 +842,10 @@ void DetectCollisions()
     // ****************************************************************************************************
     //                                      BOX-BOX COLLISIONS
     // ****************************************************************************************************
-    for (size_t i = 0; i < ManagedObjectPool<BoxCollider>::count; i++)
+    for (size_t i = 0; i < ManagedObjectPool<BoxCollider>::objects.size(); i++)
     {
         // exit if this is the last Collider
-        if ((i + 1) >= ManagedObjectPool<BoxCollider>::count)
+        if ((i + 1) >= ManagedObjectPool<BoxCollider>::objects.size())
         {
             break;
         }
@@ -695,7 +853,7 @@ void DetectCollisions()
         // Current Collider
         BoxCollider* box1 = ManagedObjectPool<BoxCollider>::objects[i];
 
-        for (size_t j = i + 1; j < ManagedObjectPool<BoxCollider>::count; j++)
+        for (size_t j = i + 1; j < ManagedObjectPool<BoxCollider>::objects.size(); j++)
         {
             // Next Collider
             BoxCollider* box2 = ManagedObjectPool<BoxCollider>::objects[j];
@@ -713,13 +871,13 @@ void DetectCollisions()
     //                                  SPHERE-SPHERE COLLISIONS
     // ****************************************************************************************************
 
-    for (size_t i = 0; i < ManagedObjectPool<SphereCollider>::count; i++)
+    for (size_t i = 0; i < ManagedObjectPool<SphereCollider>::objects.size(); i++)
     {
         // Current Collider
         SphereCollider* sphere1 = ManagedObjectPool<SphereCollider>::objects[i];
 
         // SPHERE-SPHERE COLLISIONS
-        for (size_t j = i + 1; j < ManagedObjectPool<SphereCollider>::count; j++)
+        for (size_t j = i + 1; j < ManagedObjectPool<SphereCollider>::objects.size(); j++)
         {
             // Next Collider
             SphereCollider* sphere2 = ManagedObjectPool<SphereCollider>::objects[j];
@@ -736,7 +894,7 @@ void DetectCollisions()
         //                                      SPHERE-PLANE COLLISIONS
         // ****************************************************************************************************
 
-        for (size_t ii = 0; ii < ManagedObjectPool<PlaneCollider>::count; ii++)
+        for (size_t ii = 0; ii < ManagedObjectPool<PlaneCollider>::objects.size(); ii++)
         {
             // Next Collider
             PlaneCollider* plane = ManagedObjectPool<PlaneCollider>::objects[ii];
@@ -782,15 +940,16 @@ void DetectCollisionsOctTree()
 
     OctTree<BoxCollider>::Update();
 
-    for (size_t i = 0; i < ManagedObjectPool<BoxCollider>::count; i++)
+    for (size_t i = 0; i < ManagedObjectPool<BoxCollider>::objects.size(); i++)
     {
         // Current Collider
         BoxCollider* box1 = ManagedObjectPool<BoxCollider>::objects[i];
         box1->flagged = true;
+        Matrix4x4 box1TRS4x4 = box1->TRS();
 
         // Search for nearby colliders
-        auto volume = Cube(box1->TRS() * box1->mesh->bounds->min, box1->TRS() * box1->mesh->bounds->max);
-        auto closestBoxes = OctTree<BoxCollider>::Search(volume, [&](Collider* collider) { return !collider->flagged; });
+        auto volume = Cube(box1TRS4x4 * box1->mesh->bounds->min, box1TRS4x4 * box1->mesh->bounds->max);
+        auto closestBoxes = OctTree<BoxCollider>::Search(volume);
 
         for (size_t j = 0; j < closestBoxes->size(); j++)
         {
@@ -823,9 +982,10 @@ void DetectCollisionsOctTree()
         SphereCollider* sphere1 = ManagedObjectPool<SphereCollider>::objects[i];
         sphere1->flagged = true;
 
+        Matrix4x4 sphere1TRS4x4 = sphere1->TRS();
         // Search for nearby colliders
-        auto volume = Cube(sphere1->TRS() * sphere1->mesh->bounds->min, sphere1->TRS() * sphere1->mesh->bounds->max);
-        auto closestSpheres = OctTree<SphereCollider>::Search(volume, [&](Collider* collider) { return !collider->flagged; });
+        auto volume = Cube(sphere1TRS4x4 * sphere1->mesh->bounds->min, sphere1TRS4x4 * sphere1->mesh->bounds->max);
+        auto closestSpheres = OctTree<SphereCollider>::Search(volume);
 
         for (size_t j = 0; j < closestSpheres->size(); j++)
         {
@@ -852,7 +1012,7 @@ void DetectCollisionsOctTree()
     // 
     // Check if more cubes than boxes before determining algorithm. If there are more cubes than spheres
     // it makes more sense to search for the closest cubes for each sphere than the other way around.
-    if (ManagedObjectPool<SphereCollider>::count < ManagedObjectPool<BoxCollider>::count)
+    if (ManagedObjectPool<SphereCollider>::objects.size() < ManagedObjectPool<BoxCollider>::objects.size())
     {
         for (size_t i = 0; i < ManagedObjectPool<SphereCollider>::objects.size(); i++)
         {
@@ -861,8 +1021,9 @@ void DetectCollisionsOctTree()
             sphere->flagged = true;
 
             // Search for nearby colliders
-            auto volume = Cube(sphere->TRS() * sphere->mesh->bounds->min, sphere->TRS() * sphere->mesh->bounds->max);
-            auto closestObjects = OctTree<BoxCollider>::Search(volume, [&](Collider* collider) { return !collider->flagged; });
+            Matrix4x4 sphereTRS4x4 = sphere->TRS();
+            auto volume = Cube(sphereTRS4x4 * sphere->mesh->bounds->min, sphereTRS4x4 * sphere->mesh->bounds->max);
+            auto closestObjects = OctTree<BoxCollider>::Search(volume);
 
             for (size_t j = 0; j < closestObjects->size(); j++)
             {
@@ -891,10 +1052,10 @@ void DetectCollisionsOctTree()
             // Current Collider
             BoxCollider* box = ManagedObjectPool<BoxCollider>::objects[i];
             box->flagged = true;
-
+            Matrix4x4 boxTRS4x4 = box->TRS();
             // Search for nearby colliders
-            auto volume = Cube(box->TRS() * box->mesh->bounds->min, box->TRS() * box->mesh->bounds->max);
-            auto closestObjects = OctTree<SphereCollider>::Search(volume, [&](Collider* collider) { return !collider->flagged; });
+            auto volume = Cube(boxTRS4x4 * box->mesh->bounds->min, boxTRS4x4 * box->mesh->bounds->max);
+            auto closestObjects = OctTree<SphereCollider>::Search(volume);
 
             for (size_t j = 0; j < closestObjects->size(); j++)
             {
@@ -916,74 +1077,6 @@ void DetectCollisionsOctTree()
         }
     }
 }
-
-class Ray
-{
-protected:
-    Transform transform = Transform();
-    Vec3 endPosition;
-    Vec3 direction;
-public:
-
-    float distance = 1;
-
-    Ray(Vec3 start, Vec3 end)
-    {
-        Set(start, end);
-    }
-
-    Ray(Vec3 start, Vec3 dir, float dist)
-    {
-        Set(start, start + dir * dist);
-    }
-
-    void Set(Vec3 start, Vec3 end)
-    {
-        Vec3 disp = (end - start);
-        distance = disp.Magnitude();
-        direction = disp.Normalized();
-        transform.localRotation = OrthogonalMatrixLookAt(direction);
-        transform.localPosition = start;
-        endPosition = end;
-    }
-
-    Vec3 StartPosition()
-    {
-        return transform.Position();
-    }
-
-    Vec3 EndPosition()
-    {
-        return endPosition;
-    }
-
-    Vec3 Direction()
-    {
-        return direction;
-    }
-
-    Matrix4x4 WorldToRaySpaceMatrix()
-    {
-        return transform.TRInverse();
-    }
-};
-
-template <typename T>
-struct RaycastInfo
-{
-    T* objectHit = nullptr;
-    Triangle* triangleHit = nullptr;
-    Triangle triangleHit_w = Triangle();
-    Vec3 contactPoint = Vec3::zero;
-    RaycastInfo() {};
-    RaycastInfo(T* objHit, Triangle* triHit, Vec3& contactPoint, Triangle& worldSpaceTri)
-    {
-        this->objectHit = objHit;
-        this->triangleHit = triHit;
-        this->contactPoint = contactPoint;
-        this->triangleHit_w = worldSpaceTri;
-    }
-};
 
 template <typename T>
 bool Raycast(Ray& ray, RaycastInfo<T>& raycastInfo, const std::function<void(RaycastInfo<T>&)>& callback = NULL)
@@ -1098,7 +1191,7 @@ static void Physics()
 
     if (Physics::dynamics)
     {
-        for (size_t i = 0; i < ManagedObjectPool<PhysicsObject>::count; i++)
+        for (size_t i = 0; i < ManagedObjectPool<PhysicsObject>::objects.size(); i++)
         {
             PhysicsObject* obj = ManagedObjectPool<PhysicsObject>::objects[i];
             if (!obj->collider->isStatic && !obj->isKinematic)
@@ -1107,7 +1200,10 @@ static void Physics()
                     obj->velocity += gravity * deltaTime;
                 }
                 obj->localPosition += obj->velocity * deltaTime;
-                obj->localRotation = Matrix3x3::RotAxisAngle(obj->angVelAxis, obj->angVelSpeed * deltaTime) * obj->localRotation;
+                if (obj->angVelSpeed > 0.0)
+                {
+                    obj->localRotation = Matrix3x3::RotAxisAngle(obj->angVelAxis, obj->angVelSpeed * deltaTime) * obj->localRotation;
+                }
             }
         }
     }
@@ -1163,10 +1259,10 @@ static void Physics()
         onoff = Physics::octTree ? "On" : "Off";
         std::cout << "OctTree Collisions: " << onoff << " (press Caps Lock)" << endl;
 
-        std::cout << "Colliders: " << Collider::count << endl;
-        std::cout << "Sphere Colliders: " << ManagedObjectPool<SphereCollider>::count << endl;
-        std::cout << "Box Colliders: " << ManagedObjectPool <BoxCollider>::count << endl;
-        std::cout << "Plane Colliders: " << ManagedObjectPool<PlaneCollider>::count << endl;
+        std::cout << "Colliders: " << Collider::objects.size() << endl;
+        std::cout << "Sphere Colliders: " << ManagedObjectPool<SphereCollider>::objects.size() << endl;
+        std::cout << "Box Colliders: " << ManagedObjectPool <BoxCollider>::objects.size() << endl;
+        std::cout << "Plane Colliders: " << ManagedObjectPool<PlaneCollider>::objects.size() << endl;
 
         std::cout << "--------PLAYER-------" << endl;
 

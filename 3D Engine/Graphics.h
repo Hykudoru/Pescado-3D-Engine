@@ -209,6 +209,83 @@ struct Material
     }
 };
 
+struct Point
+{
+    Vec3 position;
+    Color color;
+    int size;
+
+    Point(Vec3 position, Color color = Color::white, int size = 2)
+    {
+        this->position = position;
+        this->color = color;
+        this->size = size;
+    }
+
+    void Draw();
+
+    static void AddPoint(Point point);
+
+    static void AddWorldPoint(Point point);
+};
+
+struct Line
+{
+    Vec3 from;
+    Vec3 to;
+    Color color;
+    int width;
+
+    Line(Vec3 from = Vec3::zero, Vec3 to = Vec3::zero, Color color = Color::white, int width = 2)
+    {
+        this->from = from;
+        this->to = to;
+        this->color = color;
+        this->width = width;
+    }
+
+    void Draw();
+
+    static void AddLine(Line line);
+
+    static void AddWorldLine(Line line);
+};
+
+struct Triangle : Plane
+{
+    Vec4 centroid = Vec4();
+    Color color = Color::white;
+    bool forceWireFrame = false;
+    Mesh* mesh = nullptr;
+
+    Triangle() : Plane()
+    {
+        centroid = Vec4();
+        color = Color::white;
+        mesh = nullptr;
+    }
+    Triangle(Vec3 p1, Vec3 p2, Vec3 p3, Mesh* owner = nullptr) : Plane(p1, p2, p3)
+    {
+        color = Color::white;
+        centroid = Centroid();
+        mesh = owner;
+    }
+
+    Vec4 Centroid()
+    {
+        centroid = Vec4(
+            (verts[0].x + verts[1].x + verts[2].x) / 3.0,
+            (verts[0].y + verts[1].y + verts[2].y) / 3.0,
+            (verts[0].z + verts[1].z + verts[2].z) / 3.0,
+            centroid.w
+        );
+
+        return centroid;
+    }
+
+    void Draw();
+};
+
 class Transform
 {
 protected:
@@ -281,13 +358,52 @@ public:
 
 class Cube : public Transform
 {
+private:
+    void createEdges()
+    {
+        edges = List<Line>{
+            Line(vertices[0], vertices[1]),
+            Line(vertices[1], vertices[2]),
+            Line(vertices[2], vertices[3]),
+            Line(vertices[3], vertices[0]),
+            Line(vertices[4], vertices[5]),
+            Line(vertices[5], vertices[6]),
+            Line(vertices[6], vertices[7]),
+            Line(vertices[7], vertices[4]),
+            Line(vertices[0], vertices[4]),
+            Line(vertices[1], vertices[5]),
+            Line(vertices[2], vertices[6]),
+            Line(vertices[3], vertices[7])
+        };
+    }
+
+    void createFaces()
+    {
+        faces = List<Triangle>{
+            //South Face
+            Triangle(vertices[0], vertices[1], vertices[2]),
+            //North Face
+            Triangle(vertices[7], vertices[6], vertices[5]),
+            //Right Face
+            Triangle(vertices[3], vertices[2], vertices[6]),
+            //Left Face
+            Triangle(vertices[4], vertices[5], vertices[1]),
+            //Top Face
+            Triangle(vertices[1], vertices[5], vertices[6]),
+            //Bottom Face  
+            Triangle(vertices[3], vertices[7], vertices[4])
+        };
+    }
 public:
     List<Vec3> vertices;
+    List<Line> edges;
+    List<Triangle> faces;
     Vec3 min;
     Vec3 max;
+    
     Cube()
     {
-        vertices = List<Vec3>({//new Vec3[8] {
+        vertices = List<Vec3> {
             //south
             Vec3(-0.5, -0.5, 0.5),
             Vec3(-0.5, 0.5, 0.5),
@@ -298,9 +414,12 @@ public:
             Vec3(-0.5, 0.5, -0.5),
             Vec3(0.5, 0.5, -0.5),
             Vec3(0.5, -0.5, -0.5)
-        });
+        };
         min = Vec3(-0.5, -0.5, -0.5);
         max = Vec3(0.5, 0.5, 0.5);
+
+        createEdges();
+        createFaces();
     }
 
     Cube(const Vec3& min, const Vec3& max)
@@ -319,6 +438,9 @@ public:
 
         this->min = min;
         this->max = max;
+
+        createEdges();
+        createFaces();
     }
 
     Cube(const float& min, const float& max)
@@ -338,6 +460,9 @@ public:
 
         this->min = Vec3(min, min, min);
         this->max = Vec3(max, max, max);
+
+        createEdges();
+        createFaces();
     }
 };
 
@@ -359,6 +484,8 @@ public:
     void CreateBounds(Mesh* mesh);
 
     List<Vec3>* WorldVertices();
+    List<Line>* WorldEdges();
+    List<Triangle>* WorldFaces();
 
     void Draw();
 };
@@ -578,146 +705,83 @@ Matrix4x4 ProjectionMatrix()
 Matrix4x4 worldToViewMatrix;
 Matrix4x4 projectionMatrix;
 
-struct Point
+void Point::Draw()
 {
-    Vec3 position;
-    Color color;
-    int size;
+    Graphics::SetPointSize(size);
+    Graphics::SetDrawColor(color);
+    Graphics::DrawPoint(position);
+}
 
-    Point(Vec3 position, Color color = Color::white, int size = 2)
-    {
-        this->position = position;
-        this->color = color;
-        this->size = size;
-    }
-
-    void Draw()
-    {
-        Graphics::SetPointSize(size);
-        Graphics::SetDrawColor(color);
-        Graphics::DrawPoint(position);
-    }
-
-    static void AddPoint(Point point)
-    {
-        pointBuffer->emplace_back(point);
-    }
-
-    static void AddWorldPoint(Point point)
-    {
-        auto matrix = ProjectionMatrix() * worldToViewMatrix;
-        point.position = matrix * point.position;
-        pointBuffer->emplace_back(point);
-    }
-};
-
-struct Line
+void Point::AddPoint(Point point)
 {
-    Vec3 from;
-    Vec3 to;
-    Color color;
-    int width;
+    pointBuffer->emplace_back(point);
+}
 
-    Line(Vec3 from, Vec3 to, Color color = Color::white, int width = 2)
+void Point::AddWorldPoint(Point point)
+{
+    auto matrix = ProjectionMatrix() * worldToViewMatrix;
+    point.position = matrix * point.position;
+    pointBuffer->emplace_back(point);
+}
+
+void Line::Draw()
+{
+    Graphics::SetLineWidth(width);
+    Graphics::SetDrawColor(color.r, color.g, color.b);
+    Graphics::DrawLine(from, to);
+}
+
+void Line::AddLine(Line line)
+{
+    lineBuffer->emplace_back(line);
+}
+
+void Line::AddWorldLine(Line line)
+{
+    auto matrix = ProjectionMatrix() * worldToViewMatrix;
+    line.from = matrix * line.from;
+    line.to = matrix * line.to;
+    lineBuffer->emplace_back(line);
+}
+
+void Triangle::Draw()
+{
+    Vec4 p1 = verts[0];
+    Vec4 p2 = verts[1];
+    Vec4 p3 = verts[2];
+
+    if (Graphics::fillTriangles == false)
     {
-        this->from = from;
-        this->to = to;
-        this->color = color;
-        this->width = width;
+        Graphics::displayWireFrames = true;
     }
 
-    void Draw()
+    //glColor3ub(255, 255, 255);
+    if (Graphics::matrixMode)
     {
-        Graphics::SetLineWidth(width);
+        Graphics::SetDrawColor(0, 255, 0);
+    }
+
+    if (Graphics::fillTriangles)
+    {
         Graphics::SetDrawColor(color.r, color.g, color.b);
-        Graphics::DrawLine(from, to);
+        Graphics::DrawTriangleFilled(p1, p2, p3);
     }
 
-    static void AddLine(Line line)
+    bool drawWireFrame = Graphics::displayWireFrames || forceWireFrame || (mesh != nullptr ? mesh->forceWireFrame : false);
+    if (drawWireFrame)
     {
-        lineBuffer->emplace_back(line);
-    }
-
-    static void AddWorldLine(Line line)
-    {
-        auto matrix = ProjectionMatrix() * worldToViewMatrix;
-        line.from = matrix * line.from;
-        line.to = matrix * line.to;
-        lineBuffer->emplace_back(line);
-    }
-};
-
-struct Triangle : Plane
-{
-    Vec4 centroid = Vec4();
-    Color color = Color::white;
-    bool forceWireFrame = false;
-    Mesh* mesh = nullptr;
-    
-    Triangle() : Plane()
-    {
-        centroid = Vec4();
-        color = Color::white;
-        mesh = nullptr;
-    }
-    Triangle(Vec3 p1, Vec3 p2, Vec3 p3, Mesh* owner = nullptr) : Plane(p1, p2, p3)
-    {
-        color = Color::white;
-        centroid = Centroid();
-        mesh = owner;
-    }
-
-    Vec4 Centroid()
-    {
-        centroid = Vec4(
-            (verts[0].x + verts[1].x + verts[2].x) / 3.0,
-            (verts[0].y + verts[1].y + verts[2].y) / 3.0,
-            (verts[0].z + verts[1].z + verts[2].z) / 3.0,
-            centroid.w
-        );
-
-        return centroid;
-    }
-
-    void Draw()
-    {
-        Vec4 p1 = verts[0];
-        Vec4 p2 = verts[1];
-        Vec4 p3 = verts[2];
-
-        if (Graphics::fillTriangles == false)
-        {
-            Graphics::displayWireFrames = true;
-        }
-
-        //glColor3ub(255, 255, 255);
-        if (Graphics::matrixMode)
-        {
-            Graphics::SetDrawColor(0, 255, 0);
-        }
-
         if (Graphics::fillTriangles)
         {
-            Graphics::SetDrawColor(color.r, color.g, color.b);
-            Graphics::DrawTriangleFilled(p1, p2, p3);
+            float c = Clamp(1.0 / (0.000001 + (color.r + color.g + color.b) / 3), 0, 255);
+            Graphics::SetDrawColor(c, c, c);
         }
-
-        bool drawWireFrame = Graphics::displayWireFrames || forceWireFrame || (mesh != nullptr ? mesh->forceWireFrame : false);
-        if (drawWireFrame)
-        {
-            if (Graphics::fillTriangles)
-            {
-                float c = Clamp(1.0 / (0.000001 + (color.r + color.g + color.b) / 3), 0, 255);
-                Graphics::SetDrawColor(c, c, c);
-            }
-            Graphics::DrawLine(p1, p2);
-            Graphics::DrawLine(p2, p3);
-            Graphics::DrawLine(p3, p1);
-        }
-
-        Graphics::SetDrawColor(255, 255, 255);
+        Graphics::DrawLine(p1, p2);
+        Graphics::DrawLine(p2, p3);
+        Graphics::DrawLine(p3, p1);
     }
-};
+
+    Graphics::SetDrawColor(255, 255, 255);
+}
 
 //-------------------------------TRANSFORM---------------------------------------------
 
@@ -1345,25 +1409,57 @@ List<Vec3>* BoundingBox::WorldVertices()
 
     return &verts;
 }
+
+List<Line>* BoundingBox::WorldEdges()
+{
+    if (!this->mesh)
+    {
+        return nullptr;
+    }
+
+    static List<Line> edges = List<Line>(12);
+
+    auto trs4x4 = mesh->TRS();
+    for (size_t i = 0; i < 12; i++)
+    {
+        edges[i].from = trs4x4 * bounds.edges[i].from;
+        edges[i].to = trs4x4 * bounds.edges[i].to;
+        edges[i].color = color;
+    }
+
+    return &edges;
+}
+
+List<Triangle>* BoundingBox::WorldFaces()
+{
+    if (!this->mesh)
+    {
+        return nullptr;
+    }
+
+    static List<Triangle> faces = List<Triangle>(12);
+    
+    auto trs4x4 = mesh->TRS();
+    for (size_t i = 0; i < 8; i++)
+    {
+        Triangle* face = &bounds.faces[i];
+        faces[i].verts[0] = trs4x4 * face->verts[0];
+        faces[i].verts[1] = trs4x4 * face->verts[1];
+        faces[i].verts[2] = trs4x4 * face->verts[2];
+    }
+
+    return &faces;
+}
+
 void BoundingBox::Draw()
 {
     if (this->mesh)
     {
-        auto vertices_w = WorldVertices();
-        //Point::AddWorldPoint(Point(mesh->TRS() * min, Color::orange, 10));
-        //Point::AddWorldPoint(Point(mesh->TRS() * max, Color::yellow, 10));
-        Line::AddWorldLine(Line((*vertices_w)[0], (*vertices_w)[1], color));
-        Line::AddWorldLine(Line((*vertices_w)[1], (*vertices_w)[2], color));
-        Line::AddWorldLine(Line((*vertices_w)[2], (*vertices_w)[3], color));
-        Line::AddWorldLine(Line((*vertices_w)[3], (*vertices_w)[0], color));
-        Line::AddWorldLine(Line((*vertices_w)[4], (*vertices_w)[5], color));
-        Line::AddWorldLine(Line((*vertices_w)[5], (*vertices_w)[6], color));
-        Line::AddWorldLine(Line((*vertices_w)[6], (*vertices_w)[7], color));
-        Line::AddWorldLine(Line((*vertices_w)[7], (*vertices_w)[4], color));
-        Line::AddWorldLine(Line((*vertices_w)[0], (*vertices_w)[4], color));
-        Line::AddWorldLine(Line((*vertices_w)[1], (*vertices_w)[5], color));
-        Line::AddWorldLine(Line((*vertices_w)[2], (*vertices_w)[6], color));
-        Line::AddWorldLine(Line((*vertices_w)[3], (*vertices_w)[7], color));
+        List<Line>* edges = this->WorldEdges();
+        for (size_t i = 0; i < 12; i++)
+        {
+            Line::AddWorldLine(Line((*edges)[i].from, (*edges)[i].to, color));
+        }
     }
 }
 
@@ -1546,7 +1642,7 @@ void Draw()
     }
     */
     // ---------- Transform -----------
-    for (int i = 0; i < Mesh::count; i++)
+    for (int i = 0; i < Mesh::objects.size(); i++)
     {
         Mesh* mesh = Mesh::objects[i];
         BoundingBox* bounds = mesh->bounds;
