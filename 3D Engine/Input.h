@@ -478,9 +478,12 @@ static void Input()
         Log2("View OctTree (Press T)");
         Log2("Visualize Sphere Collision Checks (Press [)");
 
+        Log2("\nFast-Forward Time (Hold PageUP)");
+        Log2("Reverse Time (Hold PageDown)");
+
         Log2("\n--------MOUSE CONTROLS--------");
         Log2("Change FOV (Scroll)");
-        Log2("Grab (Hold Right Mouse Button)");
+        Log2("Grab (Right Mouse Button)");
     }
 
     if (CameraSettings::outsiderViewPerspective)

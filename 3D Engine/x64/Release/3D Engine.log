@@ -533,6 +533,6 @@ C:\Users\Hykudo\Documents\3D Engine\3D Engine\OctTree.h(75,197): warning C4244: 
   Generating code
   2 of 3913 functions (<0.1%) were compiled, the rest were copied from previous compilation.
     0 functions were new in current compilation
-    40 functions had inline decision re-evaluated but remain unchanged
+    38 functions had inline decision re-evaluated but remain unchanged
   Finished generating code
   3D Engine.vcxproj -> C:\Users\Hykudo\Documents\3D Engine\x64\Release\3D Engine.exe
