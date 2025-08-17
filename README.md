@@ -8,4 +8,7 @@ Points and lines are grouped into triangles. Triangles are grouped into meshes (
 ## Camera
 The camera itself is just a position and a rotation transformation that gets transformed into the world the same way meshes are. To see the world from the cameras view, each point in the world is repositioned or converted to a position relative to the camera using the camera's Inverse TR matrix ( R^-1\*T^-1 or R^T\*T^T). Everything outside the camera's view is then algorithmically discarded.
 
+## One small step for GUI
+![GUI](https://github.com/Hykudoru/Pescado-3D-Engine/blob/main/GUI_Preview_1.0.gif)
+
 All praise to Jehovah for creating the real 3D world which no man could do.
