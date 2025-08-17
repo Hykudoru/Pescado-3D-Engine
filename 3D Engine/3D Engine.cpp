@@ -451,7 +451,7 @@ int main(void)
     //glewInit();
     
     Init(window);
-    InitUI();
+    InitGUI();
 
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
@@ -466,7 +466,7 @@ int main(void)
             Physics();
             Update();
             Draw();
-            UI();
+            GUI();
         }
         
 

@@ -10,19 +10,17 @@ extern CubeMesh* parent;
 extern CubeMesh* child;
 extern CubeMesh* grandchild;
 extern CubeMesh* greatGrandchild;
-//-----------------Input----------------------
-static double deltaMouseX;
-static double deltaMouseY;
-float mouseSensitivity = .1;
-bool mouseCameraControlEnabled = true;
-
 float massFactor = 1;
-
 Transform* grabbing;
 RaycastInfo<Mesh> grabInfo;
 Color grabbingsOriginalTriColor; 
 Transform* grabbingsOriginalParent = nullptr;
 float throwSpeed = 20;
+//-----------------Input----------------------
+static double deltaMouseX;
+static double deltaMouseY;
+float mouseSensitivity = .1;
+bool mouseCameraControlEnabled = true;
 
 void OnMouseMoveEvent(GLFWwindow* window, double mouseX, double mouseY)
 {
@@ -52,99 +50,101 @@ void OnMouseMoveEvent(GLFWwindow* window, double mouseX, double mouseY)
     }
 }
 
-
 std::function<PhysicsObject* ()> spawn = []() { return new PhysicsObject(LoadMeshFromOBJFile("Sphere.obj"), new SphereCollider()); };
 
 void OnMouseButtonEvent(GLFWwindow* window, int button, int action, int mods)
 {
-     auto Throw = [&](PhysicsObject &obj) mutable {
-        obj.localPosition = Camera::main->Position() + (Camera::main->Forward() * 10);
-        obj.localRotation = Camera::main->Rotation();
-        obj.velocity = velocity + Camera::main->Forward() * throwSpeed;
-        
-        };
-
-    if (action == GLFW_PRESS)
+    if (mouseCameraControlEnabled)
     {
-        // Spawn Dynamic
-        if (button == 0) 
-        {
-            PhysicsObject* obj = spawn();// new PhysicsObject(new CubeMesh(), new BoxCollider());//LoadMeshFromOBJFile("Objects/Sphere.obj");
-            Throw(*obj);
-            obj->mass = massFactor;
-            obj->collider->coefficientRestitution = 1.0;
-            //obj->localScale *= massFactor;
-            if (obj->collider->isStatic)
-            {
-                obj->mesh->SetColor(Color::white);
-            }
-            else if (obj->isKinematic) 
-            {
-                obj->mesh->SetColor(Color::blue);
-            }
-            else {
-                obj->mesh->SetColor(Color::orange + Vec3::one * -massFactor);
-            }
-        }
-        // Raycast and Spawn a kinematic object beside and aligned with object intersecting the ray.
-        else if (button == 2) 
-        {
-            PhysicsObject* obj = spawn();// new PhysicsObject(new CubeMesh(), new BoxCollider());//LoadMeshFromOBJFile("Objects/Sphere.obj");
-            obj->isKinematic = true;
+        auto Throw = [&](PhysicsObject& obj) mutable {
+            obj.localPosition = Camera::main->Position() + (Camera::main->Forward() * 10);
+            obj.localRotation = Camera::main->Rotation();
+            obj.velocity = velocity + Camera::main->Forward() * throwSpeed;
 
-            static int maxDist = 1000000;
-            RaycastInfo<Collider> info;
-            if (Raycast(Camera::main->Position(), Camera::main->Position() + Camera::main->Forward() * maxDist, info))
-            {
-                info.objectHit->mesh->SetVisibility(true);
-                Vec3 scale = info.objectHit->Scale();
-                Matrix3x3 rot = ExtractRotation(info.objectHit->Parent().TRSInverse() * info.objectHit->LocalRotation4x4());
-                Vec3 pos = info.objectHit->Position() + info.triangleHit_w.Normal() * scale.x;// *2.0;
-                
-                obj->localScale = scale;
-                obj->localRotation = rot;
-                obj->localPosition = pos;
-                obj->mesh->SetColor(Color::yellow);
-            }   
-            else {
-                obj->localPosition = Camera::main->Position() + (Camera::main->Forward() * 10);
-                obj->localRotation = Camera::main->Rotation();
-                obj->localScale *= massFactor;
-                obj->mesh->SetColor(Color::blue);
-            }
-        }
-        else if (button == 1) 
+            };
+
+        if (action == GLFW_PRESS)
         {
-            if (!grabbing)
+            // Spawn Dynamic
+            if (button == 0)
             {
-                static int maxDist = 1000000;
-                if (Raycast<Mesh>(Camera::main->Position(), Camera::main->Position() + Camera::main->Forward() * maxDist, grabInfo))
+                PhysicsObject* obj = spawn();// new PhysicsObject(new CubeMesh(), new BoxCollider());//LoadMeshFromOBJFile("Objects/Sphere.obj");
+                Throw(*obj);
+                obj->mass = massFactor;
+                obj->collider->coefficientRestitution = 1.0;
+                //obj->localScale *= massFactor;
+                if (obj->collider->isStatic)
                 {
-                    cout << "RAYCAST HIT" <<'\n';
-                    Line::AddWorldLine(Line(Camera::main->Position(), Camera::main->Position() + Camera::main->Forward() * maxDist, Color::green, 3));
-                    Point::AddWorldPoint(Point(grabInfo.contactPoint, Color::green, 10));
-                    grabbing = &grabInfo.objectHit->Root();//grabInfo.objectHit;
-                    grabbingsOriginalParent = &grabbing->Parent();
-                    grabbingsOriginalTriColor = grabInfo.triangleHit->color;
-                    //grabInfo.objectHit->forceWireFrame = true;
-                    //grabInfo.triangleHit->forceWireFrame = true;
-                    grabInfo.triangleHit->color = Color::green;
-                    grabbing->SetParent(Camera::main);
+                    obj->mesh->SetColor(Color::white);
+                }
+                else if (obj->isKinematic)
+                {
+                    obj->mesh->SetColor(Color::blue);
+                }
+                else {
+                    obj->mesh->SetColor(Color::orange + Vec3::one * -massFactor);
+                }
+            }
+            // Raycast and Spawn a kinematic object beside and aligned with object intersecting the ray.
+            else if (button == 2)
+            {
+                PhysicsObject* obj = spawn();// new PhysicsObject(new CubeMesh(), new BoxCollider());//LoadMeshFromOBJFile("Objects/Sphere.obj");
+                obj->isKinematic = true;
+
+                static int maxDist = 1000000;
+                RaycastInfo<Collider> info;
+                if (Raycast(Camera::main->Position(), Camera::main->Position() + Camera::main->Forward() * maxDist, info))
+                {
+                    info.objectHit->mesh->SetVisibility(true);
+                    Vec3 scale = info.objectHit->Scale();
+                    Matrix3x3 rot = ExtractRotation(info.objectHit->Parent().TRSInverse() * info.objectHit->LocalRotation4x4());
+                    Vec3 pos = info.objectHit->Position() + info.triangleHit_w.Normal() * scale.x;// *2.0;
+
+                    obj->localScale = scale;
+                    obj->localRotation = rot;
+                    obj->localPosition = pos;
+                    obj->mesh->SetColor(Color::yellow);
+                }
+                else {
+                    obj->localPosition = Camera::main->Position() + (Camera::main->Forward() * 10);
+                    obj->localRotation = Camera::main->Rotation();
+                    obj->localScale *= massFactor;
+                    obj->mesh->SetColor(Color::blue);
+                }
+            }
+            else if (button == 1)
+            {
+                if (!grabbing)
+                {
+                    static int maxDist = 1000000;
+                    if (Raycast<Mesh>(Camera::main->Position(), Camera::main->Position() + Camera::main->Forward() * maxDist, grabInfo))
+                    {
+                        cout << "RAYCAST HIT" << '\n';
+                        Line::AddWorldLine(Line(Camera::main->Position(), Camera::main->Position() + Camera::main->Forward() * maxDist, Color::green, 3));
+                        Point::AddWorldPoint(Point(grabInfo.contactPoint, Color::green, 10));
+                        grabbing = &grabInfo.objectHit->Root();//grabInfo.objectHit;
+                        grabbingsOriginalParent = &grabbing->Parent();
+                        grabbingsOriginalTriColor = grabInfo.triangleHit->color;
+                        //grabInfo.objectHit->forceWireFrame = true;
+                        //grabInfo.triangleHit->forceWireFrame = true;
+                        grabInfo.triangleHit->color = Color::green;
+                        grabbing->SetParent(Camera::main);
+                    }
                 }
             }
         }
-    }
 
-    if (action == GLFW_RELEASE)
-    {
-        if (button == 1) {
-            if (grabbing) {
-                grabInfo.triangleHit->forceWireFrame = false;
-                grabInfo.triangleHit->color = grabbingsOriginalTriColor;
-                grabbing->SetParent(grabbingsOriginalParent);
-                grabbing = NULL;
-                grabbingsOriginalParent = NULL;
-                grabInfo = RaycastInfo<Mesh>();
+        if (action == GLFW_RELEASE)
+        {
+            if (button == 1) {
+                if (grabbing) {
+                    grabInfo.triangleHit->forceWireFrame = false;
+                    grabInfo.triangleHit->color = grabbingsOriginalTriColor;
+                    grabbing->SetParent(grabbingsOriginalParent);
+                    grabbing = NULL;
+                    grabbingsOriginalParent = NULL;
+                    grabInfo = RaycastInfo<Mesh>();
+                }
             }
         }
     }
@@ -152,11 +152,15 @@ void OnMouseButtonEvent(GLFWwindow* window, int button, int action, int mods)
 
 void OnScrollEvent(GLFWwindow* window, double xOffset, double yOffset)
 {
-    FOV(abs(fieldOfViewDeg - yOffset));
+    if (mouseCameraControlEnabled)
+    {
+        FOV(abs(fieldOfViewDeg - yOffset));
+    }
 }
 
 void OnKeyPressEvent(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
+
     if (action == GLFW_PRESS)
     {
         static int mainCamIndex = 1;
@@ -291,23 +295,11 @@ void OnKeyPressEvent(GLFWwindow* window, int key, int scancode, int action, int 
         }
         
         //-------------------Debugging------------------------
-        else if (key == GLFW_KEY_I) {
-            Graphics::invertNormals = !Graphics::invertNormals;
-        }
-        else if (key == GLFW_KEY_N) {
-            Graphics::debugNormals = !Graphics::debugNormals;
-        }
-        else if (key == GLFW_KEY_V) {
-            Graphics::backFaceCulling = !Graphics::backFaceCulling;
-        }
-        else if (key == GLFW_KEY_F) {
-            Graphics::fillTriangles = !Graphics::fillTriangles;
-        }
-        else if (key == GLFW_KEY_M) {
-            Graphics::displayWireFrames = !Graphics::displayWireFrames;
-        }
-        else if (key == GLFW_KEY_COMMA) {
-            Graphics::debugAxes = !Graphics::debugAxes;
+        
+        
+        if (key == GLFW_KEY_ESCAPE)
+        {
+            mouseCameraControlEnabled = !mouseCameraControlEnabled;
         }
         else if (key == GLFW_KEY_LEFT_BRACKET) {
                 Physics::collisionDetection = true;
@@ -321,10 +313,6 @@ void OnKeyPressEvent(GLFWwindow* window, int key, int scancode, int action, int 
         else if (key == GLFW_KEY_L) {
             Graphics::lighting = !Graphics::lighting;
         }
-        else if (key == GLFW_KEY_ESCAPE)
-        {
-            mouseCameraControlEnabled = !mouseCameraControlEnabled;
-        }
         else if (key == GLFW_KEY_F4)
         {
             Graphics::vfx = !Graphics::vfx;
@@ -333,28 +321,8 @@ void OnKeyPressEvent(GLFWwindow* window, int key, int scancode, int action, int 
         {
             Graphics::matrixMode = !Graphics::matrixMode;
         }
-        else if (key == GLFW_KEY_B)
-        {
-            Graphics::debugBounds = !Graphics::debugBounds;
-        }
         else if (key == GLFW_KEY_R) {
             Physics::raycastDebugging = !Physics::raycastDebugging;
-        }
-        else if (key == GLFW_KEY_F6)
-        {
-            parent->localRotation *= Matrix3x3::RotY(ToRad(10));
-        }
-        else if (key == GLFW_KEY_F7)
-        {
-            child->localRotation *= Matrix3x3::RotY(ToRad(10));
-        }
-        else if (key == GLFW_KEY_F8)
-        {
-            grandchild->localRotation *= Matrix3x3::RotY(ToRad(10));
-        }
-        else if (key == GLFW_KEY_F9)
-        {
-            greatGrandchild->localRotation *= Matrix3x3::RotY(ToRad(10));
         }
         else if (key == GLFW_KEY_LEFT_ALT)
         {
@@ -370,10 +338,6 @@ void OnKeyPressEvent(GLFWwindow* window, int key, int scancode, int action, int 
         else if (key == GLFW_KEY_TAB)
         {
             Physics::raycasting = !Physics::raycasting;
-        }
-        else if (key == GLFW_KEY_T)
-        {
-            Graphics::debugTree = !Graphics::debugTree;
         }
     }
 }
@@ -458,34 +422,6 @@ static void CameraControl(Camera* cam)
 
 static void Input()
 {
-    if (DEBUGGING)
-    {
-        Log2("\n--------KEYBOARD CONTROLS--------");
-        Log2("Move Forward/Back/Left/Right (W,A,S,D)");
-        Log2("Move Up (Spacebar)");
-        Log2("Move Down (C)");
-        Log2("Rotate (Q and E)");
-        Log2("Sprint (Left Shift)");
-        Log2("Insane Sprint (Right Ctrl)");
-        Log2("Reset Camera (Press 0)");
-
-        Log2("\nX-ray mode (Press F)");
-        Log2("View Wireframe (Press M)");
-        Log2("View Normals (Press N)");
-        Log2("Invert Normals (Press I)");
-        Log2("View Local Axes (Press ,)");
-        Log2("View Bounding Box (Press B)");
-        Log2("View OctTree (Press T)");
-        Log2("Visualize Sphere Collision Checks (Press [)");
-
-        Log2("\nFast-Forward Time (Hold PageUP)");
-        Log2("Reverse Time (Hold PageDown)");
-
-        Log2("\n--------MOUSE CONTROLS--------");
-        Log2("Change FOV (Scroll)");
-        Log2("Grab (Right Mouse Button)");
-    }
-
     if (CameraSettings::outsiderViewPerspective)
     {
         CameraControl(Camera::projector);
