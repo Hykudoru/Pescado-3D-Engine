@@ -4,6 +4,7 @@
 #include <GLFW/glfw3.h>
 #include <Graphics.h>
 #include <Physics.h>
+#include <Utility.h>
 #include <functional>
 extern CubeMesh* parent;
 extern CubeMesh* child;
@@ -56,8 +57,6 @@ std::function<PhysicsObject* ()> spawn = []() { return new PhysicsObject(LoadMes
 
 void OnMouseButtonEvent(GLFWwindow* window, int button, int action, int mods)
 {
-    std::cout << "Mouse button:" << button << std::endl;
-
      auto Throw = [&](PhysicsObject &obj) mutable {
         obj.localPosition = Camera::main->Position() + (Camera::main->Forward() * 10);
         obj.localRotation = Camera::main->Rotation();
@@ -154,7 +153,6 @@ void OnMouseButtonEvent(GLFWwindow* window, int button, int action, int mods)
 void OnScrollEvent(GLFWwindow* window, double xOffset, double yOffset)
 {
     FOV(abs(fieldOfViewDeg - yOffset));
-    std::cout << "FOV:" << ToDeg(fov) << "°" << std::endl;
 }
 
 void OnKeyPressEvent(GLFWwindow* window, int key, int scancode, int action, int mods)
@@ -460,6 +458,31 @@ static void CameraControl(Camera* cam)
 
 static void Input()
 {
+    if (DEBUGGING)
+    {
+        Log2("\n--------KEYBOARD CONTROLS--------");
+        Log2("Move Forward/Back/Left/Right (W,A,S,D)");
+        Log2("Move Up (Spacebar)");
+        Log2("Move Down (C)");
+        Log2("Rotate (Q and E)");
+        Log2("Sprint (Left Shift)");
+        Log2("Insane Sprint (Right Ctrl)");
+        Log2("Reset Camera (Press 0)");
+
+        Log2("\nX-ray mode (Press F)");
+        Log2("View Wireframe (Press M)");
+        Log2("View Normals (Press N)");
+        Log2("Invert Normals (Press I)");
+        Log2("View Local Axes (Press ,)");
+        Log2("View Bounding Box (Press B)");
+        Log2("View OctTree (Press T)");
+        Log2("Visualize Sphere Collision Checks (Press [)");
+
+        Log2("\n--------MOUSE CONTROLS--------");
+        Log2("Change FOV (Scroll)");
+        Log2("Grab (Hold Right Mouse Button)");
+    }
+
     if (CameraSettings::outsiderViewPerspective)
     {
         CameraControl(Camera::projector);

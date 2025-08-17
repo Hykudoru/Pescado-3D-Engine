@@ -11,6 +11,29 @@ const float PI = 3.14159265359f;
 const float TAO = 2.0 * PI;
 typedef void (*Callback)();
 
+List<std::string> debugLog = List<std::string>();
+List<std::string> debugLog2 = List<std::string>();
+
+void Log(const std::string& str)
+{
+    debugLog.emplace_back(str);
+}
+
+void Log2(const std::string& str)
+{
+    debugLog2.emplace_back(str);
+}
+
+void ClearLog()
+{
+    debugLog.clear();
+}
+
+void ClearLog2()
+{
+    debugLog2.clear();
+}
+
 struct Direction
 {
     static Vec3 forward;

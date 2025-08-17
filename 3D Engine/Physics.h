@@ -1045,38 +1045,5 @@ static void Physics()
             info2.objectHit->object->mesh->SetColor(Color::red);
         }*/
     }
-
-    if (DEBUGGING)
-    {
-        std::cout << "--------PHYSICS-------" << endl;
-
-        string onoff = Physics::dynamics ? "On" : "Off";
-        std::cout << "Physics: " << onoff << " (press p)" << endl;
-
-        onoff = Physics::gravity ? "On" : "Off";
-        std::cout << "Gravity: " << onoff << " (press G)" << endl;
-
-        onoff = Physics::collisionDetection ? "On" : "Off";
-        std::cout << "Collisions: " << onoff << " (press \\)" << endl;
-
-        onoff = Physics::octTree ? "On" : "Off";
-        std::cout << "OctTree Collisions: " << onoff << " (press Caps Lock)" << endl;
-
-        std::cout << "Colliders: " << Collider::count << endl;
-        std::cout << "Sphere Colliders: " << ManagedObjectPool<SphereCollider>::count << endl;
-        std::cout << "Box Colliders: " << ManagedObjectPool <BoxCollider>::count << endl;
-        std::cout << "Plane Colliders: " << ManagedObjectPool<PlaneCollider>::count << endl;
-
-        std::cout << "--------PLAYER-------" << endl;
-
-        onoff = isKinematic ? "On" : "Off";
-        std::cout << "Kinematic: " << onoff << " (press X)" << endl;
-
-        onoff = dampenersActive ? "On" : "Off";
-        std::cout << "Inertial Dampeners: " << onoff << " (press Z)" << endl;
-
-        std::cout << "Position: (" << Camera::main->Position().x << ", " << Camera::main->Position().y << ", " << Camera::main->Position().z << ")" << endl;
-        std::cout << "Velocity: <" << velocity.x << ", " << velocity.y << ", " << velocity.z << ">" << endl;
-    }
 }
 #endif
