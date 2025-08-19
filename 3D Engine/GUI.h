@@ -17,6 +17,19 @@ void InitGUI()
     ImGui::StyleColorsDark();
 }
 
+void ToolTip(const char* description)
+{
+    ImGui::SameLine();
+    ImGui::TextDisabled("(?)");
+    if (ImGui::BeginItemTooltip()) 
+    {
+        //ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+        ImGui::TextUnformatted(description);
+        //ImGui::PopTextWrapPos();
+        ImGui::EndTooltip();
+    }
+}
+
 void GUI()
 {
     ImGui_ImplOpenGL3_NewFrame();
@@ -70,7 +83,9 @@ void GUI()
             FOV(val);
         }
         ImGui::Checkbox("Kinematic (Press X)", &isKinematic);
+        ToolTip("Gives the camera unrealistic instantaneous movement.");
         ImGui::Checkbox("Inertial Dampeners (Press Z)", &dampenersActive);
+        ToolTip("When Kinematic is disabled, the camera will slowly come to a stop over time.");
         
 
         ImGui::SeparatorText("GRAPHICS");
@@ -90,6 +105,7 @@ void GUI()
         }
         ImGui::Checkbox("Wireframe", &Graphics::displayWireFrames);
         ImGui::Checkbox("Enable Backface Culling", &Graphics::backFaceCulling);
+        ToolTip("Backface culling will ignore any triangles not facing the camera. \nDisable this while in x-ray mode to see both the front and back of wireframes.");
         ImGui::Checkbox("Normals", &Graphics::debugNormals);
         ImGui::Checkbox("Invert Normals", &Graphics::invertNormals);
         ImGui::Checkbox("Axes", &Graphics::debugAxes);
@@ -99,9 +115,13 @@ void GUI()
 
         ImGui::SeparatorText("PHYSICS");
         ImGui::Checkbox("Gravity", &Physics::gravity);
-        ImGui::Checkbox("Physics Dynamics", &Physics::dynamics);
+        ImGui::Checkbox("Rigidbody Physics", &Physics::dynamics);
+        ToolTip("When disabled, objects will not be affected by gravity, collision impulses, or acceleration.");
         ImGui::Checkbox("Collision Detection", &Physics::collisionDetection);
+        ToolTip("When disabled, collisions will be ignored.");
         ImGui::Checkbox("OctTree Collisions", &Physics::octTree);
+        ToolTip("When enabled, may result in better CPU performance if there are too many colliders.");
+
     }
     ImGui::End();
 
