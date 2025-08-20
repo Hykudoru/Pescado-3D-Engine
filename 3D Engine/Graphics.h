@@ -1610,8 +1610,8 @@ void Draw()
             if (bounds)
             {
                 // Check if behind camera
-                List<Vec3> verts_v = *bounds->ViewspaceVertices();
-                Range range = ProjectVertsOntoAxis(verts_v.data(), verts_v.size(), Direction::forward);
+                List<Vec3>* verts_v = bounds->ViewspaceVertices();
+                Range range = ProjectVertsOntoAxis(verts_v->data(), verts_v->size(), Direction::forward);
                 if (range.max < 0)
                 {
                     continue;
