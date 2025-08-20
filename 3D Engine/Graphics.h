@@ -359,6 +359,7 @@ public:
     void CreateBounds(Mesh* mesh);
 
     List<Vec3>* WorldVertices();
+    List<Vec3>* ViewspaceVertices();
     List<Vec3>* ProjectedVertices();
 
     void Draw();
@@ -1347,6 +1348,24 @@ List<Vec3>* BoundingBox::WorldVertices()
     return &verts;
 }
 
+List<Vec3>* BoundingBox::ViewspaceVertices()
+{
+    if (!this->mesh)
+    {
+        return nullptr;
+    }
+
+    static List<Vec3> verts = List<Vec3>(8);
+
+    auto mat4x4 = Camera::main->TRInverse() * mesh->TRS();
+    for (size_t i = 0; i < 8; i++)
+    {
+        verts[i] = mat4x4 * bounds.vertices[i];
+    }
+
+    return &verts;
+}
+
 List<Vec3>* BoundingBox::ProjectedVertices()
 {
     if (!this->mesh)
@@ -1590,22 +1609,34 @@ void Draw()
 */
             if (bounds)
             {
-                auto verts = bounds->ProjectedVertices();
-                if (!Camera::InsideViewScreen(verts->data(), 8))
+                // Check if behind camera
+                List<Vec3> verts_v = *bounds->ViewspaceVertices();
+                Range range = ProjectVertsOntoAxis(verts_v.data(), verts_v.size(), Direction::forward);
+                if (range.max < 0)
                 {
                     continue;
                 }
 
-                if (Graphics::debugBounds)
+                // Check if visible
+                List<Vec3>* verts_p = bounds->ProjectedVertices();
+                if (!Camera::InsideViewScreen(verts_p->data(), 8))
                 {
-                    if (mesh != Camera::main->GetMesh() && DotProduct(mesh->Position() - Camera::main->Position(), Camera::main->Forward()) > 0)
-                    {
-                        bounds->Draw();
-                    }
+                    continue;
                 }
             }
         }
-        
+
+        if (bounds)
+        {
+            if (Graphics::debugBounds)
+            {
+                if (mesh != Camera::main->GetMesh() && DotProduct(mesh->Position() - Camera::main->Position(), Camera::main->Forward()) > 0)
+                {
+                    bounds->Draw();
+                }
+            }
+        }
+
         if (Graphics::debugAxes)
         {
             if (DotProduct(mesh->Position() - Camera::main->Position(), Camera::main->Forward()) > 0)

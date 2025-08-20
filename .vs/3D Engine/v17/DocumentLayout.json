@@ -7,16 +7,16 @@
       "RelativeMoniker": "D:0:0:{CF081055-ADCC-4747-B081-95BED8F3A00A}|3D Engine\\3D Engine.vcxproj|solutionrelative:3D Engine\\Graphics.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\Hykudo\\Documents\\3D Engine\\3D Engine\\OctTree.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:3D Engine\\OctTree.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+      "AbsoluteMoniker": "D:0:0:{CF081055-ADCC-4747-B081-95BED8F3A00A}|3D Engine\\3D Engine.vcxproj|C:\\Users\\Hykudo\\Documents\\3D Engine\\3D Engine\\GUI.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{CF081055-ADCC-4747-B081-95BED8F3A00A}|3D Engine\\3D Engine.vcxproj|solutionrelative:3D Engine\\GUI.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{CF081055-ADCC-4747-B081-95BED8F3A00A}|3D Engine\\3D Engine.vcxproj|C:\\Users\\Hykudo\\Documents\\3D Engine\\3D Engine\\3D Engine.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
       "RelativeMoniker": "D:0:0:{CF081055-ADCC-4747-B081-95BED8F3A00A}|3D Engine\\3D Engine.vcxproj|solutionrelative:3D Engine\\3D Engine.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{CF081055-ADCC-4747-B081-95BED8F3A00A}|3D Engine\\3D Engine.vcxproj|C:\\Users\\Hykudo\\Documents\\3D Engine\\3D Engine\\GUI.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
-      "RelativeMoniker": "D:0:0:{CF081055-ADCC-4747-B081-95BED8F3A00A}|3D Engine\\3D Engine.vcxproj|solutionrelative:3D Engine\\GUI.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\Hykudo\\Documents\\3D Engine\\3D Engine\\OctTree.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:3D Engine\\OctTree.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{CF081055-ADCC-4747-B081-95BED8F3A00A}|3D Engine\\3D Engine.vcxproj|C:\\Users\\Hykudo\\Documents\\3D Engine\\3D Engine\\Physics.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
@@ -42,7 +42,7 @@
           "Children": [
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 3,
               "Title": "OctTree.h",
               "DocumentMoniker": "C:\\Users\\Hykudo\\Documents\\3D Engine\\3D Engine\\OctTree.h",
               "RelativeDocumentMoniker": "3D Engine\\OctTree.h",
@@ -51,8 +51,7 @@
               "ViewState": "AgIAAH8AAAAAAAAAAAAewIsAAAA4AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
               "WhenOpened": "2025-08-17T04:11:41.489Z",
-              "IsPinned": true,
-              "EditorCaption": ""
+              "IsPinned": true
             },
             {
               "$type": "Document",
@@ -75,7 +74,7 @@
               "RelativeDocumentMoniker": "3D Engine\\3D Engine.cpp",
               "ToolTip": "C:\\Users\\Hykudo\\Documents\\3D Engine\\3D Engine\\3D Engine.cpp",
               "RelativeToolTip": "3D Engine\\3D Engine.cpp",
-              "ViewState": "AgIAACIAAAAAAAAAAAAuwDkAAAB3AAAAAAAAAA==",
+              "ViewState": "AgIAABoAAAAAAAAAAAAwwDAAAAAkAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
               "WhenOpened": "2024-02-24T11:48:11.578Z",
               "IsPinned": true,
@@ -87,13 +86,13 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 1,
               "Title": "GUI.h",
               "DocumentMoniker": "C:\\Users\\Hykudo\\Documents\\3D Engine\\3D Engine\\GUI.h",
               "RelativeDocumentMoniker": "3D Engine\\GUI.h",
               "ToolTip": "C:\\Users\\Hykudo\\Documents\\3D Engine\\3D Engine\\GUI.h",
               "RelativeToolTip": "3D Engine\\GUI.h",
-              "ViewState": "AgIAAGIAAAAAAAAAAAAUwG4AAAA2AAAAAAAAAA==",
+              "ViewState": "AgIAAEoAAAAAAAAAAAAUwFcAAAA8AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
               "WhenOpened": "2025-08-17T03:59:40.259Z",
               "EditorCaption": ""
@@ -106,7 +105,7 @@
               "RelativeDocumentMoniker": "3D Engine\\Graphics.h",
               "ToolTip": "C:\\Users\\Hykudo\\Documents\\3D Engine\\3D Engine\\Graphics.h",
               "RelativeToolTip": "3D Engine\\Graphics.h",
-              "ViewState": "AgIAAD0GAAAAAAAAAAAAAEYGAAAJAAAAAAAAAA==",
+              "ViewState": "AgIAAEYGAAAAAAAAAAAgwFkGAAANAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
               "WhenOpened": "2024-02-24T11:48:11.599Z",
               "EditorCaption": ""

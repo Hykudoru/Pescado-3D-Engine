@@ -78,7 +78,7 @@ void GUI()
         ImGui::Text(("Position: (" + to_string(Camera::main->Position().x) + ", " + to_string(Camera::main->Position().y) + ", " + to_string(Camera::main->Position().z) + ")").c_str());
         ImGui::Text(("Velocity: <" + to_string(velocity.x) + ", " + to_string(velocity.y) + ", " + to_string(velocity.z) + ">").c_str());
         static float val = fieldOfViewDeg;
-        if (ImGui::SliderFloat("FOV", &val, 30, 90))
+        if (ImGui::SliderFloat("FOV", &val, 1, 179))
         {
             FOV(val);
         }
@@ -103,14 +103,22 @@ void GUI()
                 mode = "Enable Normal Mode"; // actually means we are currently in x-ray mode
             }
         }
-        ImGui::Checkbox("Wireframe", &Graphics::displayWireFrames);
-        ImGui::Checkbox("Enable Backface Culling", &Graphics::backFaceCulling);
-        ToolTip("Backface culling will ignore any triangles not facing the camera. \nDisable this while in x-ray mode to see both the front and back of wireframes.");
-        ImGui::Checkbox("Normals", &Graphics::debugNormals);
+        ImGui::Checkbox("View Wireframe", &Graphics::displayWireFrames);
+        bool ignore = !Graphics::lighting;
+        ImGui::Checkbox("Ignore Lighting", &ignore);
+        Graphics::lighting = !ignore;
+        ImGui::Checkbox("View Normals", &Graphics::debugNormals);
         ImGui::Checkbox("Invert Normals", &Graphics::invertNormals);
-        ImGui::Checkbox("Axes", &Graphics::debugAxes);
-        ImGui::Checkbox("Bounding Box", &Graphics::debugBounds);
-        ImGui::Checkbox("OctTree", &Graphics::debugTree);
+        ToolTip("This will flip triangle faces making meshes appear inside out or visible within.");
+        ImGui::Checkbox("View Axes", &Graphics::debugAxes);
+        ImGui::Checkbox("View Bounding Box", &Graphics::debugBounds);
+        ImGui::Checkbox("View OctTree", &Graphics::debugTree);
+        ImGui::Checkbox("Backface Culling", &Graphics::backFaceCulling);
+        ToolTip("Backface culling will ignore any triangles not facing the camera. \nDisable this while in x-ray mode to see both the front and back of wireframes.");
+        bool disable = !Graphics::frustumCulling;
+        ImGui::Checkbox("Disable Frustum Culling", &disable);
+        Graphics::frustumCulling = !disable;
+        ToolTip("Not recommended. Fun to experiment with though if you're learning how a graphics engine works.");
 
 
         ImGui::SeparatorText("PHYSICS");
