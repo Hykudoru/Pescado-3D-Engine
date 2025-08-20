@@ -359,6 +359,7 @@ public:
     void CreateBounds(Mesh* mesh);
 
     List<Vec3>* WorldVertices();
+    List<Vec3>* ProjectedVertices();
 
     void Draw();
 };
@@ -1019,7 +1020,7 @@ public:
         }
         Range yRange = ProjectVertsOntoAxis(verts_proj, size, Direction::up);
         if ((yRange.min > 1.0f || yRange.max < -1.0f)) {
-                return false;
+            return false;
         }
 
         return true;
@@ -1199,9 +1200,9 @@ void Mesh::TransformTriangles()
             Vec3 screenLeftSide = Vec3(-1, 0, 0);
             Vec3 screenRightSide = Vec3(1, 0, 0);
             Range range = ProjectVertsOntoAxis(projectedTri.verts, 3, screenRightSide);
-            bool leftHalfScreenX = range.min > 0 && range.max > 0;
+            bool rightHalfScreenX = range.min > 0;// && range.max < 1;
 
-            if (leftHalfScreenX) {
+            if (rightHalfScreenX) {
                 projectedTri.color = Color(0, 0, 255);// std::cout << "Inside" << std::endl;
             }
             else {
@@ -1345,6 +1346,25 @@ List<Vec3>* BoundingBox::WorldVertices()
 
     return &verts;
 }
+
+List<Vec3>* BoundingBox::ProjectedVertices()
+{
+    if (!this->mesh)
+    {
+        return nullptr;
+    }
+
+    static List<Vec3> verts = List<Vec3>(8);
+
+    auto mat4x4 = projectionMatrix * Camera::main->TRInverse() * mesh->TRS();
+    for (size_t i = 0; i < 8; i++)
+    {
+        verts[i] = mat4x4 * bounds.vertices[i];
+    }
+
+    return &verts;
+}
+
 void BoundingBox::Draw()
 {
     if (this->mesh)
@@ -1570,13 +1590,12 @@ void Draw()
 */
             if (bounds)
             {
-                Matrix4x4 trs4x4 = vpMatrix * mesh->TRS();
-                Cube box = Cube(trs4x4 * bounds->min, trs4x4 * bounds->max);
-                if (!Camera::InsideViewScreen(box.vertices.data(), 8))
+                auto verts = bounds->ProjectedVertices();
+                if (!Camera::InsideViewScreen(verts->data(), 8))
                 {
                     continue;
                 }
-                
+
                 if (Graphics::debugBounds)
                 {
                     if (mesh != Camera::main->GetMesh() && DotProduct(mesh->Position() - Camera::main->Position(), Camera::main->Forward()) > 0)
@@ -1585,28 +1604,26 @@ void Draw()
                     }
                 }
             }
-
-            if (Graphics::debugAxes)
+        }
+        
+        if (Graphics::debugAxes)
+        {
+            if (DotProduct(mesh->Position() - Camera::main->Position(), Camera::main->Forward()) > 0)
             {
-                if (DotProduct(mesh->Position() - Camera::main->Position(), Camera::main->Forward()) > 0)
-                {
-                    Matrix4x4 mvp = vpMatrix * mesh->TRS();
+                Matrix4x4 mvp = vpMatrix * mesh->TRS();
 
-                    Vec2 center_p = mvp * Vec4(0, 0, 0, 1);
-                    Vec2 xAxis_p = mvp * Vec4(0.5, 0, 0, 1); 
-                    Vec2 yAxis_p = mvp * Vec4(0, 0.5, 0, 1);
-                    Vec2 zAxis_p = mvp * Vec4(0, 0, 0.5, 1);
-                    Vec2 forward_p = mvp * (Direction::forward);
+                Vec2 center_p = mvp * Vec4(0, 0, 0, 1);
+                Vec2 xAxis_p = mvp * Vec4(0.5, 0, 0, 1); 
+                Vec2 yAxis_p = mvp * Vec4(0, 0.5, 0, 1);
+                Vec2 zAxis_p = mvp * Vec4(0, 0, 0.5, 1);
+                Vec2 forward_p = mvp * (Direction::forward);
 
-                    Point::AddPoint(Point(center_p, Color::red, 4));
-                    Line::AddLine(Line(center_p, xAxis_p, Color::red));
-                    Line::AddLine(Line(center_p, yAxis_p, Color::yellow));
-                    Line::AddLine(Line(center_p, zAxis_p, Color::blue));
-                    Line::AddLine(Line(center_p, mvp * (Direction::forward), Color::turquoise, 3));
-                }
+                Point::AddPoint(Point(center_p, Color::red, 4));
+                Line::AddLine(Line(center_p, xAxis_p, Color::red));
+                Line::AddLine(Line(center_p, yAxis_p, Color::yellow));
+                Line::AddLine(Line(center_p, zAxis_p, Color::blue));
+                Line::AddLine(Line(center_p, mvp * (Direction::forward), Color::turquoise, 3));
             }
-
-            
         }
 
         mesh->TransformTriangles();
