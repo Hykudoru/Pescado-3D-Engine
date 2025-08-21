@@ -2,8 +2,35 @@
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
-#include <Utility.h>
-extern GLFWwindow* window;
+#include <string>
+#include <iostream>
+#include <filesystem>
+#include "Utility.h"
+using namespace std;
+namespace fs = std::filesystem;
+
+static List<const char*> assetFiles = {};
+void LoadAssets()
+{
+    static List<string> files;
+    files.clear();
+    assetFiles.clear();
+    assetFiles.emplace_back("Cube");
+    
+    fs::path path("./Objects");
+    for (const auto& name : fs::directory_iterator(path))
+    {
+        files.emplace_back(name.path().filename().string());
+    }
+    for (const auto& name : files)
+    {
+        assetFiles.emplace_back(name.c_str());
+    }
+    for (string& s : files)
+    {
+        cout << s << endl;
+    }
+}
 
 void ToolTip(const char* description)
 {
@@ -119,8 +146,8 @@ void AssetWindow()
     ImGui::Begin("Assets");
     {
         ImGui::SeparatorText("SPAWN");
-        const char* assets[] = { "Cube", "Sphere", "SpaceShip_2.2.obj", "SpaceShip_3.obj", "SpaceShip_5.obj" };
-        int numAssets = sizeof(assets) / sizeof(char*);
+        const char** assets = assetFiles.data();  //{ "Cube", "Sphere", "SpaceShip_2.2.obj", "SpaceShip_3.obj", "SpaceShip_5.obj" };
+        int numAssets = assetFiles.size();//sizeof(assets) / sizeof(char*);
         static int currentAssetIndex = 0;
         if (ImGui::ListBox("", &currentAssetIndex, assets, numAssets))
         {
@@ -151,6 +178,8 @@ void InitGUI()
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 460");
     ImGui::StyleColorsDark();
+
+    LoadAssets();
 }
 
 void GUI()

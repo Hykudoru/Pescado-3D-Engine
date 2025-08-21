@@ -57,7 +57,7 @@ void OnMouseButtonEvent(GLFWwindow* window, int button, int action, int mods)
     if (mouseCameraControlEnabled)
     {
         auto Throw = [&](PhysicsObject& obj) mutable {
-            obj.localPosition = Camera::main->Position() + (Camera::main->Forward() * 10);
+            obj.localPosition = Camera::main->Position() + (Camera::main->Forward() * 8 * obj.mesh->bounds->max.Magnitude() * 0.5);
             obj.localRotation = Camera::main->Rotation();
             obj.velocity = velocity + Camera::main->Forward() * throwSpeed;
             };

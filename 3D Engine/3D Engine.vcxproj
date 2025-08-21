@@ -89,6 +89,7 @@
       <PreprocessorDefinitions>GLEW_STATIC;WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(SolutionDir)3D Engine;$(SolutionDir)Dependencies\glew-2.1.0-win32\glew-2.1.0\include;$(SolutionDir)imgui;$(SolutionDir)Dependencies\glfw-3.3.8.bin.WIN32\glfw-3.3.8.bin.WIN32\include;$(SolutionDir)Dependencies;$(SolutionDir)imgui;C:\Users\Hykudo\Documents\3D Engine\imgui</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -106,6 +107,7 @@
       <PreprocessorDefinitions>GLEW_STATIC;WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(SolutionDir)3D Engine;$(SolutionDir)Dependencies\glew-2.1.0-win32\glew-2.1.0\include;$(SolutionDir)imgui;$(SolutionDir)Dependencies\glfw-3.3.8.bin.WIN32\glfw-3.3.8.bin.WIN32\include;$(SolutionDir)Dependencies;$(SolutionDir)imgui;C:\Users\Hykudo\Documents\3D Engine\imgui</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -124,6 +126,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile />
       <AdditionalIncludeDirectories>$(SolutionDir)3D Engine;$(SolutionDir)Dependencies\glew-2.1.0-win32\glew-2.1.0\include;$(SolutionDir)imgui;$(SolutionDir)Dependencies\glfw-3.3.8.bin.WIN64\glfw-3.3.8.bin.WIN64\include;$(SolutionDir)Dependencies;$(SolutionDir)imgui;C:\Users\Hykudo\Documents\3D Engine\imgui</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -141,6 +144,7 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(SolutionDir)3D Engine;$(SolutionDir)Dependencies\glew-2.1.0-win32\glew-2.1.0\include;$(SolutionDir)imgui;$(SolutionDir)Dependencies\glfw-3.3.8.bin.WIN64\glfw-3.3.8.bin.WIN64\include;$(SolutionDir)Dependencies;$(SolutionDir)imgui;C:\Users\Hykudo\Documents\3D Engine\imgui</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -163,6 +167,7 @@
     <ClCompile Include="Graphics.cpp" />
     <ClCompile Include="Input.cpp" />
     <ClCompile Include="Matrix.cpp" />
+    <ClCompile Include="OctTree.cpp" />
     <ClCompile Include="Physics.cpp" />
     <ClCompile Include="GUI.cpp" />
     <ClCompile Include="Utility.cpp" />
@@ -181,6 +186,7 @@
     <ClInclude Include="Graphics.h" />
     <ClInclude Include="Input.h" />
     <ClInclude Include="Matrix.h" />
+    <ClInclude Include="OctTree.h" />
     <ClInclude Include="Physics.h" />
     <ClInclude Include="GUI.h" />
     <ClInclude Include="Utility.h" />
