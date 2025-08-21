@@ -15,50 +15,6 @@
 using namespace std;
 GLFWwindow* window;
 bool DEBUGGING = true;
-void Debug()
-{
-    if (DEBUGGING)
-    {
-        Log("\n--------GRAPHICS-------");
-        Log("FPS:" + to_string(fps));
-        Log("Frame Time:" + to_string(1.0 / (double)fps));
-        Log("Meshes:" + to_string(Mesh::count));
-        Log("Triangles Drawn:" + to_string(Mesh::worldTriangleDrawCount));
-
-        string onoff = Graphics::backFaceCulling ? "ON" : "OFF";
-        Log("Backface Culling " + onoff + " (Press V)");
-
-        Log("\n--------PHYSICS-------");
-        Log("Colliders: " + to_string(Collider::count));
-        Log("Sphere Colliders: " + to_string(ManagedObjectPool<SphereCollider>::count));
-        Log("Box Colliders: " + to_string(ManagedObjectPool<BoxCollider>::count));
-        Log("Plane Colliders: " + to_string(ManagedObjectPool<PlaneCollider>::count));
-
-        onoff = Physics::dynamics ? "ON" : "OFF";
-        Log("Physics: " + onoff + " (Press P)");
-
-        onoff = Physics::gravity ? "ON" : "OFF";
-        Log("Gravity: " + onoff + " (Press G)");
-
-        onoff = Physics::collisionDetection ? "ON" : "OFF";
-        Log("Collisions: " + onoff + " (Press \\)");
-
-        onoff = Physics::octTree ? "ON" : "OFF";
-        Log("OctTree Collisions: " + onoff + " (Press Caps Lock)");
-
-        Log("\n--------CAMERA-------");
-        Log("FOV:" + to_string((int)ToDeg(fov)));
-        onoff = isKinematic ? "ON" : "OFF";
-        Log("Kinematic: " + onoff + " (Press X)");
-
-        onoff = dampenersActive ? "ON" : "OFF";
-        Log("Inertial Dampeners: " + onoff + " (Press Z)");
-
-        Log("Position: (" + to_string(Camera::main->Position().x) + ", " + to_string(Camera::main->Position().y) + ", " + to_string(Camera::main->Position().z) + ")");
-        Log("Velocity: <" + to_string(velocity.x) + ", " + to_string(velocity.y) + ", " + to_string(velocity.z) + ">");
-    }
-}
-
 
 Mesh* giantText;
 PhysicsObject* planet;
@@ -460,7 +416,6 @@ int main(void)
         glClear(GL_COLOR_BUFFER_BIT);
 
         {
-            Debug();
             Time();
             Input();
             Physics();

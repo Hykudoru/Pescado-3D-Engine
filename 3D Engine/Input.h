@@ -296,7 +296,6 @@ void OnKeyPressEvent(GLFWwindow* window, int key, int scancode, int action, int 
         
         //-------------------Debugging------------------------
         
-        
         if (key == GLFW_KEY_ESCAPE)
         {
             mouseCameraControlEnabled = !mouseCameraControlEnabled;
@@ -309,9 +308,6 @@ void OnKeyPressEvent(GLFWwindow* window, int key, int scancode, int action, int 
         else if (key == GLFW_KEY_RIGHT_BRACKET) {
             Physics::collisionDetection = true;
             Graphics::debugPlaneCollisions = !Graphics::debugPlaneCollisions;
-        }
-        else if (key == GLFW_KEY_L) {
-            Graphics::lighting = !Graphics::lighting;
         }
         else if (key == GLFW_KEY_F4)
         {

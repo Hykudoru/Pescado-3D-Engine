@@ -5,23 +5,11 @@
 #include <Utility.h>
 extern GLFWwindow* window;
 
-void InitGUI()
-{
-    // IMGUI
-    IMGUI_CHECKVERSION();
-    ImGui::CreateContext();
-    ImGuiIO& io = ImGui::GetIO(); (void)io;
-    io.Fonts->AddFontDefault();
-    ImGui_ImplGlfw_InitForOpenGL(window, true);
-    ImGui_ImplOpenGL3_Init("#version 460");
-    ImGui::StyleColorsDark();
-}
-
 void ToolTip(const char* description)
 {
     ImGui::SameLine();
     ImGui::TextDisabled("(?)");
-    if (ImGui::BeginItemTooltip()) 
+    if (ImGui::BeginItemTooltip())
     {
         //ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
         ImGui::TextUnformatted(description);
@@ -30,17 +18,8 @@ void ToolTip(const char* description)
     }
 }
 
-void GUI()
+void DebuggerWindow()
 {
-    ImGui_ImplOpenGL3_NewFrame();
-    ImGui_ImplGlfw_NewFrame();
-    ImGui::NewFrame();
-
-    if (mouseCameraControlEnabled)
-    {
-        ImGui::SetMouseCursor(ImGuiMouseCursor_None);
-    }
-
     ImGui::Begin("Debugger");
     {
         ImGui::SeparatorText("GRAPHICS");
@@ -68,10 +47,10 @@ void GUI()
         ImGui::Text("Reverse Time (Hold PageDown)");
     }
     ImGui::End();
-    
+}
 
-    
-
+void ControlsWindow()
+{
     ImGui::Begin("Controls");
     {
         ImGui::SeparatorText("CAMERA");
@@ -86,7 +65,7 @@ void GUI()
         ToolTip("Gives the camera unrealistic instantaneous movement.");
         ImGui::Checkbox("Inertial Dampeners (Press Z)", &dampenersActive);
         ToolTip("When Kinematic is disabled, the camera will slowly come to a stop over time.");
-        
+
 
         ImGui::SeparatorText("GRAPHICS");
         static string mode = "Enable X-Ray Mode";
@@ -132,6 +111,36 @@ void GUI()
 
     }
     ImGui::End();
+}
+
+void InitGUI()
+{
+    // IMGUI
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO();
+    io.Fonts->AddFontDefault();
+    ImGui_ImplGlfw_InitForOpenGL(window, true);
+    ImGui_ImplOpenGL3_Init("#version 460");
+    ImGui::StyleColorsDark();
+}
+
+void GUI()
+{
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplGlfw_NewFrame();
+    ImGui::NewFrame();
+
+    if (mouseCameraControlEnabled)
+    {
+        ImGui::SetMouseCursor(ImGuiMouseCursor_None);
+    }
+    if (!ImGui::IsWindowHovered(ImGuiFocusedFlags_AnyWindow) && !ImGui::IsAnyItemHovered() && ImGui::IsAnyMouseDown()) {
+        mouseCameraControlEnabled = true;
+    }
+
+    DebuggerWindow();
+    ControlsWindow();
 
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
