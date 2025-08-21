@@ -42,13 +42,16 @@ void DebuggerWindow()
         ImGui::Text("Sprint (Left Shift)");
         ImGui::Text("Insane Sprint (Right Ctrl)");
         ImGui::Text("Reset Camera (Press 0)");
+        ImGui::Text("Switch Camera (Press F2)");
         ImGui::Text("Grab (Right Mouse Button)");
+
         ImGui::Text("\nFast-Forward Time (Hold PageUP)");
         ImGui::Text("Reverse Time (Hold PageDown)");
     }
     ImGui::End();
 }
 
+extern std::function<PhysicsObject* ()> spawn;
 void ControlsWindow()
 {
     ImGui::Begin("Controls");
@@ -99,7 +102,6 @@ void ControlsWindow()
         Graphics::frustumCulling = !disable;
         ToolTip("Not recommended. Fun to experiment with though if you're learning how a graphics engine works.");
 
-
         ImGui::SeparatorText("PHYSICS");
         ImGui::Checkbox("Gravity", &Physics::gravity);
         ImGui::Checkbox("Rigidbody Physics", &Physics::dynamics);
@@ -108,7 +110,33 @@ void ControlsWindow()
         ToolTip("When disabled, collisions will be ignored.");
         ImGui::Checkbox("OctTree Collisions", &Physics::octTree);
         ToolTip("When enabled, may result in better CPU performance if there are too many colliders.");
+    }
+    ImGui::End();
+}
 
+void AssetWindow()
+{
+    ImGui::Begin("Assets");
+    {
+        ImGui::SeparatorText("SPAWN");
+        const char* assets[] = { "Cube", "Sphere", "SpaceShip_2.2.obj", "SpaceShip_3.obj", "SpaceShip_5.obj" };
+        int numAssets = sizeof(assets) / sizeof(char*);
+        static int currentAssetIndex = 0;
+        if (ImGui::ListBox("", &currentAssetIndex, assets, numAssets))
+        {
+            std::string objName = assets[currentAssetIndex];
+            if (objName == "Cube")
+            {
+                spawn = []() { return new PhysicsObject(new CubeMesh(), new BoxCollider()); };
+            }
+            else if (objName == "Sphere")
+            {
+                spawn = []() { return new PhysicsObject(LoadMeshFromOBJFile("Sphere.obj"), new SphereCollider()); };
+            }
+            else {
+                spawn = [objName]() { return new PhysicsObject(LoadMeshFromOBJFile(objName), new BoxCollider()); };
+            }
+        }
     }
     ImGui::End();
 }
@@ -135,12 +163,16 @@ void GUI()
     {
         ImGui::SetMouseCursor(ImGuiMouseCursor_None);
     }
-    if (!ImGui::IsWindowHovered(ImGuiFocusedFlags_AnyWindow) && !ImGui::IsAnyItemHovered() && ImGui::IsAnyMouseDown()) {
+    if (!ImGui::IsWindowHovered(ImGuiFocusedFlags_AnyWindow) 
+        && !ImGui::IsAnyItemHovered()
+        && !ImGui::IsWindowFocused(ImGuiFocusedFlags_AnyWindow)
+        && ImGui::IsAnyMouseDown()) {
         mouseCameraControlEnabled = true;
     }
 
     DebuggerWindow();
     ControlsWindow();
+    AssetWindow();
 
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());

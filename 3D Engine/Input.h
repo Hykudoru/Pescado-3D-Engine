@@ -60,7 +60,6 @@ void OnMouseButtonEvent(GLFWwindow* window, int button, int action, int mods)
             obj.localPosition = Camera::main->Position() + (Camera::main->Forward() * 10);
             obj.localRotation = Camera::main->Rotation();
             obj.velocity = velocity + Camera::main->Forward() * throwSpeed;
-
             };
 
         if (action == GLFW_PRESS)
@@ -68,22 +67,10 @@ void OnMouseButtonEvent(GLFWwindow* window, int button, int action, int mods)
             // Spawn Dynamic
             if (button == 0)
             {
-                PhysicsObject* obj = spawn();// new PhysicsObject(new CubeMesh(), new BoxCollider());//LoadMeshFromOBJFile("Objects/Sphere.obj");
+                PhysicsObject* obj = spawn();
                 Throw(*obj);
                 obj->mass = massFactor;
                 obj->collider->coefficientRestitution = 1.0;
-                //obj->localScale *= massFactor;
-                if (obj->collider->isStatic)
-                {
-                    obj->mesh->SetColor(Color::white);
-                }
-                else if (obj->isKinematic)
-                {
-                    obj->mesh->SetColor(Color::blue);
-                }
-                else {
-                    obj->mesh->SetColor(Color::orange + Vec3::one * -massFactor);
-                }
             }
             // Raycast and Spawn a kinematic object beside and aligned with object intersecting the ray.
             else if (button == 2)

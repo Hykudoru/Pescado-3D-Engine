@@ -174,7 +174,7 @@ public:
     Collider* collider;
     Mesh* mesh;
 
-    PhysicsObject(Mesh* mesh, Collider* collider) : ManagedObjectPool<PhysicsObject>(this)
+    PhysicsObject(Mesh* mesh, BoxCollider* collider) : ManagedObjectPool<PhysicsObject>(this)
     {
         this->localPosition = mesh->localPosition;
         this->localRotation = mesh->localRotation;
@@ -184,9 +184,27 @@ public:
         mesh->localScale = Vec3::one;
         SetCollider(collider);
         SetMesh(mesh);
+        delete collider->mesh;
+        collider->mesh = mesh;
+        collider->mesh->bounds->color = Color::red;
+        mesh->bounds->color = Color::red;
     }
 
-    PhysicsObject(float scale, Vec3 position, Matrix3x3 rotation, Mesh* mesh, Collider* collider) : ManagedObjectPool<PhysicsObject>(this)
+    PhysicsObject(Mesh* mesh, SphereCollider* collider) : ManagedObjectPool<PhysicsObject>(this)
+    {
+        this->localPosition = mesh->localPosition;
+        this->localRotation = mesh->localRotation;
+        this->localScale = mesh->localScale;
+        mesh->localPosition = Vec3::zero;
+        mesh->localRotation = Matrix3x3::identity;
+        mesh->localScale = Vec3::one;
+        SetCollider(collider);
+        SetMesh(mesh);
+        collider->mesh->bounds->color = Color::red;
+        mesh->bounds->color = Color::red;
+    }
+
+    PhysicsObject(float scale, Vec3 position, Matrix3x3 rotation, Mesh* mesh, BoxCollider* collider) : ManagedObjectPool<PhysicsObject>(this)
     {
         this->localPosition = position;
         this->localRotation = rotation;
@@ -196,6 +214,24 @@ public:
         mesh->localScale = Vec3::one;
         SetCollider(collider);
         SetMesh(mesh);
+        delete collider->mesh;
+        collider->mesh = mesh;
+        collider->mesh->bounds->color = Color::red;
+        mesh->bounds->color = Color::red;
+    }
+
+    PhysicsObject(float scale, Vec3 position, Matrix3x3 rotation, Mesh* mesh, SphereCollider* collider) : ManagedObjectPool<PhysicsObject>(this)
+    {
+        this->localPosition = position;
+        this->localRotation = rotation;
+        this->localScale = Vec3(scale, scale, scale);
+        mesh->localPosition = Vec3::zero;
+        mesh->localRotation = Matrix3x3::identity;
+        mesh->localScale = Vec3::one;
+        SetCollider(collider);
+        SetMesh(mesh);
+        collider->mesh->bounds->color = Color::red;
+        mesh->bounds->color = Color::red;
     }
 
     virtual ~PhysicsObject()

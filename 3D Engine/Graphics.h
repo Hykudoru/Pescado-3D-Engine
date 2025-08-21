@@ -347,7 +347,7 @@ public:
     Cube bounds;
     Vec3 min;
     Vec3 max;
-    Color color = Color::red;
+    Color color = Color::blue;
     Mesh* mesh;
 
     BoundingBox(Mesh* mesh) : ManagedObjectPool<BoundingBox>(this)
