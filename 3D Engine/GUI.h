@@ -18,17 +18,17 @@ void LoadAssets()
     assetFiles.emplace_back("Cube");
     
     fs::path path("./Objects");
-    for (const auto& name : fs::directory_iterator(path))
+    for (const auto& file : fs::directory_iterator(path))
     {
-        files.emplace_back(name.path().filename().string());
+        string fullFileName = file.path().filename().string();
+        string fileExt = fullFileName.substr(fullFileName.length() - 3, 3);
+        if (fileExt == "obj") {
+            files.emplace_back(fullFileName);
+        }
     }
     for (const auto& name : files)
     {
         assetFiles.emplace_back(name.c_str());
-    }
-    for (string& s : files)
-    {
-        cout << s << endl;
     }
 }
 
