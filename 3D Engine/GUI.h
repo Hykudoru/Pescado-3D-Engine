@@ -5,18 +5,20 @@
 #include <string>
 #include <iostream>
 #include <filesystem>
+#include <vector>
 #include "Utility.h"
 using namespace std;
 namespace fs = std::filesystem;
 
 static List<const char*> assetFiles = {};
+static List<string> files;
+static List<string> filesCopy;
 void LoadAssets()
 {
-    static List<string> files;
     files.clear();
+    filesCopy.clear();
     assetFiles.clear();
     assetFiles.emplace_back("Cube");
-    
     fs::path path("./Objects");
     for (const auto& file : fs::directory_iterator(path))
     {
@@ -24,12 +26,19 @@ void LoadAssets()
         string fileExt = fullFileName.substr(fullFileName.length() - 3, 3);
         if (fileExt == "obj") {
             files.emplace_back(fullFileName);
+            filesCopy.emplace_back(fullFileName);
         }
     }
     for (const auto& name : files)
     {
         assetFiles.emplace_back(name.c_str());
     }
+}
+
+void RenameFile(string original, string newName)
+{
+    fs::path path("./Objects");
+    fs::rename(path / original, path / newName);
 }
 
 void ToolTip(const char* description)
@@ -141,6 +150,7 @@ void ControlsWindow()
     ImGui::End();
 }
 
+string strName;
 void AssetWindow()
 {
     ImGui::Begin("Assets");
@@ -149,6 +159,7 @@ void AssetWindow()
         const char** assets = assetFiles.data();  //{ "Cube", "Sphere", "SpaceShip_2.2.obj", "SpaceShip_3.obj", "SpaceShip_5.obj" };
         int numAssets = assetFiles.size();//sizeof(assets) / sizeof(char*);
         static int currentAssetIndex = 0;
+
         if (ImGui::ListBox("", &currentAssetIndex, assets, numAssets))
         {
             std::string objName = assets[currentAssetIndex];
@@ -162,6 +173,26 @@ void AssetWindow()
             }
             else {
                 spawn = [objName]() { return new PhysicsObject(LoadMeshFromOBJFile(objName), new BoxCollider()); };
+            }
+            ImGui::EndListBox();
+        }
+        
+        // Nightmare
+        string original;
+        for (int i = 0; i < files.size(); i++)
+        {
+            if (assets[currentAssetIndex] == assetFiles[i]) {
+                if (i > 0)
+                    original = filesCopy[i-1];
+            }
+        }
+        if (assets[currentAssetIndex] != "Cube")
+        {
+            ImGui::InputTextWithHint("", (char*)original.c_str(), (char*)assets[currentAssetIndex], 32);
+            if (ImGui::Button("Save"))
+            {
+                RenameFile(original, assets[currentAssetIndex]);
+                LoadAssets();
             }
         }
     }
