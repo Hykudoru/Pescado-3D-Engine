@@ -51,17 +51,15 @@ void OnMouseMoveEvent(GLFWwindow* window, double mouseX, double mouseY)
 }
 
 std::function<PhysicsObject* ()> spawn = []() { return new PhysicsObject(LoadMeshFromOBJFile("Sphere.obj"), new SphereCollider()); };
-
+auto Throw = [&](PhysicsObject& obj) mutable {
+    obj.localPosition = Camera::main->Position() + (Camera::main->Forward() * 8 * obj.mesh->bounds->max.Magnitude() * 0.5);
+    obj.localRotation = Camera::main->Rotation();
+    obj.velocity = velocity + Camera::main->Forward() * throwSpeed;
+    };
 void OnMouseButtonEvent(GLFWwindow* window, int button, int action, int mods)
 {
     if (mouseCameraControlEnabled)
     {
-        auto Throw = [&](PhysicsObject& obj) mutable {
-            obj.localPosition = Camera::main->Position() + (Camera::main->Forward() * 8 * obj.mesh->bounds->max.Magnitude() * 0.5);
-            obj.localRotation = Camera::main->Rotation();
-            obj.velocity = velocity + Camera::main->Forward() * throwSpeed;
-            };
-
         if (action == GLFW_PRESS)
         {
             // Spawn Dynamic

@@ -7,24 +7,16 @@
       "RelativeMoniker": "D:0:0:{CF081055-ADCC-4747-B081-95BED8F3A00A}|3D Engine\\3D Engine.vcxproj|solutionrelative:3D Engine\\GUI.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.42.34433\\include\\filesystem||{3B902123-F8A7-4915-9F01-361F908088D0}|"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{CF081055-ADCC-4747-B081-95BED8F3A00A}|3D Engine\\3D Engine.vcxproj|C:\\Users\\Hykudo\\Documents\\3D Engine\\3D Engine\\Graphics.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
-      "RelativeMoniker": "D:0:0:{CF081055-ADCC-4747-B081-95BED8F3A00A}|3D Engine\\3D Engine.vcxproj|solutionrelative:3D Engine\\Graphics.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.42.34433\\include\\xmemory||{3B902123-F8A7-4915-9F01-361F908088D0}|"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.42.34433\\include\\__msvc_string_view.hpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.42.34433\\include\\xstring||{3B902123-F8A7-4915-9F01-361F908088D0}|"
+      "AbsoluteMoniker": "D:0:0:{CF081055-ADCC-4747-B081-95BED8F3A00A}|3D Engine\\3D Engine.vcxproj|C:\\Users\\Hykudo\\Documents\\3D Engine\\3D Engine\\Input.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{CF081055-ADCC-4747-B081-95BED8F3A00A}|3D Engine\\3D Engine.vcxproj|solutionrelative:3D Engine\\Input.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{CF081055-ADCC-4747-B081-95BED8F3A00A}|3D Engine\\3D Engine.vcxproj|C:\\Users\\Hykudo\\Documents\\3D Engine\\3D Engine\\Physics.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
       "RelativeMoniker": "D:0:0:{CF081055-ADCC-4747-B081-95BED8F3A00A}|3D Engine\\3D Engine.vcxproj|solutionrelative:3D Engine\\Physics.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{CF081055-ADCC-4747-B081-95BED8F3A00A}|3D Engine\\3D Engine.vcxproj|C:\\Users\\Hykudo\\Documents\\3D Engine\\3D Engine\\Graphics.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{CF081055-ADCC-4747-B081-95BED8F3A00A}|3D Engine\\3D Engine.vcxproj|solutionrelative:3D Engine\\Graphics.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{CF081055-ADCC-4747-B081-95BED8F3A00A}|3D Engine\\3D Engine.vcxproj|C:\\Users\\Hykudo\\Documents\\3D Engine\\3D Engine\\Utility.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
@@ -48,7 +40,7 @@
               "RelativeDocumentMoniker": "3D Engine\\GUI.h",
               "ToolTip": "C:\\Users\\Hykudo\\Documents\\3D Engine\\3D Engine\\GUI.h",
               "RelativeToolTip": "3D Engine\\GUI.h",
-              "ViewState": "AgIAAJcAAAAAAAAAAAAiwLIAAAAIAAAAAAAAAA==",
+              "ViewState": "AgIAAHUAAAAAAAAAAAAAAIUAAABFAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
               "WhenOpened": "2025-08-17T03:59:40.259Z",
               "IsPinned": true,
@@ -56,34 +48,34 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 3,
               "Title": "Graphics.h",
               "DocumentMoniker": "C:\\Users\\Hykudo\\Documents\\3D Engine\\3D Engine\\Graphics.h",
               "RelativeDocumentMoniker": "3D Engine\\Graphics.h",
               "ToolTip": "C:\\Users\\Hykudo\\Documents\\3D Engine\\3D Engine\\Graphics.h",
               "RelativeToolTip": "3D Engine\\Graphics.h",
-              "ViewState": "AgIAAIUDAAAAAAAAAAAtwJcDAAABAAAAAAAAAA==",
+              "ViewState": "AgIAAJ4BAAAAAAAAAAAIwKsBAAAeAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
               "WhenOpened": "2024-02-24T11:48:11.599Z",
-              "IsPinned": true,
-              "EditorCaption": ""
+              "IsPinned": true
             },
             {
               "$type": "Document",
-              "DocumentIndex": 6,
+              "DocumentIndex": 2,
               "Title": "Physics.h",
               "DocumentMoniker": "C:\\Users\\Hykudo\\Documents\\3D Engine\\3D Engine\\Physics.h",
               "RelativeDocumentMoniker": "3D Engine\\Physics.h",
               "ToolTip": "C:\\Users\\Hykudo\\Documents\\3D Engine\\3D Engine\\Physics.h",
               "RelativeToolTip": "3D Engine\\Physics.h",
-              "ViewState": "AgIAAMAAAAAAAAAAAAAAAM0AAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAAJMAAAAAAAAAAAAAAM0AAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
               "WhenOpened": "2024-02-24T11:48:11.626Z",
-              "IsPinned": true
+              "IsPinned": true,
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 7,
+              "DocumentIndex": 4,
               "Title": "Utility.h",
               "DocumentMoniker": "C:\\Users\\Hykudo\\Documents\\3D Engine\\3D Engine\\Utility.h",
               "RelativeDocumentMoniker": "3D Engine\\Utility.h",
@@ -95,60 +87,22 @@
               "IsPinned": true
             },
             {
-              "$type": "Bookmark",
-              "Name": "ST:0:0:{aa2115a1-9712-457b-9047-dbb71ca2cdd2}"
-            },
-            {
               "$type": "Document",
               "DocumentIndex": 1,
-              "Title": "filesystem",
-              "DocumentMoniker": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.42.34433\\include\\filesystem",
-              "RelativeDocumentMoniker": "..\\..\\..\\..\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.42.34433\\include\\filesystem",
-              "ToolTip": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.42.34433\\include\\filesystem",
-              "RelativeToolTip": "..\\..\\..\\..\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.42.34433\\include\\filesystem",
-              "ViewState": "AgIAADUHAAAAAAAAAAAAAEUHAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
-              "WhenOpened": "2025-08-23T08:10:59.622Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 3,
-              "Title": "xmemory",
-              "DocumentMoniker": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.42.34433\\include\\xmemory",
-              "RelativeDocumentMoniker": "..\\..\\..\\..\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.42.34433\\include\\xmemory",
-              "ToolTip": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.42.34433\\include\\xmemory",
-              "RelativeToolTip": "..\\..\\..\\..\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.42.34433\\include\\xmemory",
-              "ViewState": "AgIAAFQAAAAAAAAAAAAAAGQAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
-              "WhenOpened": "2025-08-23T06:52:17.434Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 4,
-              "Title": "__msvc_string_view.hpp",
-              "DocumentMoniker": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.42.34433\\include\\__msvc_string_view.hpp",
-              "RelativeDocumentMoniker": "..\\..\\..\\..\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.42.34433\\include\\__msvc_string_view.hpp",
-              "ToolTip": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.42.34433\\include\\__msvc_string_view.hpp",
-              "RelativeToolTip": "..\\..\\..\\..\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.42.34433\\include\\__msvc_string_view.hpp",
-              "ViewState": "AgIAAG4BAAAAAAAAAAAAAH4BAAAAAAAAAAAAAA==",
+              "Title": "Input.h",
+              "DocumentMoniker": "C:\\Users\\Hykudo\\Documents\\3D Engine\\3D Engine\\Input.h",
+              "RelativeDocumentMoniker": "3D Engine\\Input.h",
+              "ToolTip": "C:\\Users\\Hykudo\\Documents\\3D Engine\\3D Engine\\Input.h",
+              "RelativeToolTip": "3D Engine\\Input.h",
+              "ViewState": "AgIAAB4AAAAAAAAAAAAAADYAAAAEAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
-              "WhenOpened": "2025-08-23T06:43:31.746Z",
+              "WhenOpened": "2025-08-24T04:09:48.538Z",
+              "IsPinned": true,
               "EditorCaption": ""
             },
             {
-              "$type": "Document",
-              "DocumentIndex": 5,
-              "Title": "xstring",
-              "DocumentMoniker": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.42.34433\\include\\xstring",
-              "RelativeDocumentMoniker": "..\\..\\..\\..\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.42.34433\\include\\xstring",
-              "ToolTip": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.42.34433\\include\\xstring",
-              "RelativeToolTip": "..\\..\\..\\..\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.42.34433\\include\\xstring",
-              "ViewState": "AgIAAKoCAAAAAAAAAAAAALoCAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
-              "WhenOpened": "2025-08-23T06:38:01.879Z",
-              "EditorCaption": ""
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{aa2115a1-9712-457b-9047-dbb71ca2cdd2}"
             }
           ]
         }

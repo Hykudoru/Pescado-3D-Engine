@@ -2,14 +2,16 @@
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
+#include <cstring>
 #include <string>
 #include <iostream>
 #include <filesystem>
 #include <vector>
 #include "Utility.h"
+#include "Input.h"
 using namespace std;
 namespace fs = std::filesystem;
-
+extern std::function<PhysicsObject* ()> spawn;
 static List<const char*> assetFiles = {};
 static List<string> files;
 static List<string> filesCopy;
@@ -56,7 +58,8 @@ void ToolTip(const char* description)
 
 void DebuggerWindow()
 {
-    ImGui::Begin("Debugger");
+    static bool foo = true;
+    ImGui::Begin("Debugger", &foo, ImGuiWindowFlags_NoBackground);
     {
         ImGui::SeparatorText("GRAPHICS");
         ImGui::Text(("FPS:" + to_string(fps)).c_str());
@@ -87,7 +90,6 @@ void DebuggerWindow()
     ImGui::End();
 }
 
-extern std::function<PhysicsObject* ()> spawn;
 void ControlsWindow()
 {
     ImGui::Begin("Controls");
@@ -140,7 +142,7 @@ void ControlsWindow()
 
         ImGui::SeparatorText("PHYSICS");
         ImGui::Checkbox("Gravity", &Physics::gravity);
-        ImGui::Checkbox("Rigidbody Physics", &Physics::dynamics);
+        ImGui::Checkbox("Simulate Physics", &Physics::dynamics);
         ToolTip("When disabled, objects will not be affected by gravity, collision impulses, or acceleration.");
         ImGui::Checkbox("Collision Detection", &Physics::collisionDetection);
         ToolTip("When disabled, collisions will be ignored.");
@@ -150,19 +152,57 @@ void ControlsWindow()
     ImGui::End();
 }
 
-string strName;
 void AssetWindow()
 {
     ImGui::Begin("Assets");
+    ImGui::SameLine();
+    ToolTip("Assets are located inside: 3D Engine/Objects/");
     {
-        ImGui::SeparatorText("SPAWN");
-        const char** assets = assetFiles.data();  //{ "Cube", "Sphere", "SpaceShip_2.2.obj", "SpaceShip_3.obj", "SpaceShip_5.obj" };
-        int numAssets = assetFiles.size();//sizeof(assets) / sizeof(char*);
-        static int currentAssetIndex = 0;
-
-        if (ImGui::ListBox("", &currentAssetIndex, assets, numAssets))
+        static int selected = -1;
+        ImGui::BeginChild("Assets");
+        for (int i = 0; i < assetFiles.size(); i++)
         {
-            std::string objName = assets[currentAssetIndex];
+            auto fileName = assetFiles[i];
+            if (ImGui::Selectable(fileName, selected == i, ImGuiSelectableFlags_AllowDoubleClick))
+            {
+                selected = i;
+                if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+                {
+                    auto obj = spawn();
+                    obj->localPosition = Camera::main->Position() + (Camera::main->Forward() * 8 * obj->mesh->bounds->max.Magnitude() * 0.5);
+                    obj->localRotation = Camera::main->Rotation();
+                }
+            }
+            if (i != 0)
+            {
+                if (ImGui::BeginPopupContextItem())
+                {
+                    selected = i;
+                    static char buff[64];
+                    ImGui::InputTextWithHint("", fileName, buff, 64);
+                    if (ImGui::Button("Save") || ImGui::IsKeyDown(ImGuiKey_Enter))
+                    {
+                        ImGui::CloseCurrentPopup();
+                        if (buff[0] != ' ') {
+                            RenameFile(assetFiles[i], buff);
+                            LoadAssets();
+                        }
+                        buff[0] = '\0';
+                    }
+                    if (ImGui::Button("Close"))
+                    {
+                        ImGui::CloseCurrentPopup();
+                        buff[0] = '\0';
+                    }
+                    ImGui::EndPopup();
+                }
+            }
+        }
+        ImGui::EndChild();
+
+        if (selected >= 0)
+        {
+            string objName = assetFiles[selected];
             if (objName == "Cube")
             {
                 spawn = []() { return new PhysicsObject(new CubeMesh(), new BoxCollider()); };
@@ -173,26 +213,6 @@ void AssetWindow()
             }
             else {
                 spawn = [objName]() { return new PhysicsObject(LoadMeshFromOBJFile(objName), new BoxCollider()); };
-            }
-            ImGui::EndListBox();
-        }
-        
-        // Nightmare
-        string original;
-        for (int i = 0; i < files.size(); i++)
-        {
-            if (assets[currentAssetIndex] == assetFiles[i]) {
-                if (i > 0)
-                    original = filesCopy[i-1];
-            }
-        }
-        if (assets[currentAssetIndex] != "Cube")
-        {
-            ImGui::InputTextWithHint("", (char*)original.c_str(), (char*)assets[currentAssetIndex], 32);
-            if (ImGui::Button("Save"))
-            {
-                RenameFile(original, assets[currentAssetIndex]);
-                LoadAssets();
             }
         }
     }
