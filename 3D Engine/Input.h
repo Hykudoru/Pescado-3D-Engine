@@ -12,6 +12,7 @@ extern CubeMesh* grandchild;
 extern CubeMesh* greatGrandchild;
 float massFactor = 1;
 Transform* grabbing;
+RaycastInfo<Mesh> prevGrabInfo;
 RaycastInfo<Mesh> grabInfo;
 Color grabbingsOriginalTriColor; 
 Transform* grabbingsOriginalParent = nullptr;
@@ -63,7 +64,7 @@ void OnMouseButtonEvent(GLFWwindow* window, int button, int action, int mods)
         if (action == GLFW_PRESS)
         {
             // Spawn Dynamic
-            if (button == 0)
+            if (button == 1)
             {
                 PhysicsObject* obj = spawn();
                 Throw(*obj);
@@ -97,7 +98,7 @@ void OnMouseButtonEvent(GLFWwindow* window, int button, int action, int mods)
                     obj->mesh->SetColor(Color::blue);
                 }
             }
-            else if (button == 1)
+            else if (button == 0)
             {
                 if (!grabbing)
                 {
@@ -114,6 +115,10 @@ void OnMouseButtonEvent(GLFWwindow* window, int button, int action, int mods)
                         //grabInfo.triangleHit->forceWireFrame = true;
                         grabInfo.triangleHit->color = Color::green;
                         grabbing->SetParent(Camera::main);
+                        prevGrabInfo = grabInfo;
+                    }
+                    else {
+                        prevGrabInfo = RaycastInfo<Mesh>();
                     }
                 }
             }
@@ -121,8 +126,9 @@ void OnMouseButtonEvent(GLFWwindow* window, int button, int action, int mods)
 
         if (action == GLFW_RELEASE)
         {
-            if (button == 1) {
+            if (button == 0) {
                 if (grabbing) {
+                    prevGrabInfo = grabInfo;
                     grabInfo.triangleHit->forceWireFrame = false;
                     grabInfo.triangleHit->color = grabbingsOriginalTriColor;
                     grabbing->SetParent(grabbingsOriginalParent);

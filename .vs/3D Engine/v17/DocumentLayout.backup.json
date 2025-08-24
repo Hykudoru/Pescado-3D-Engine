@@ -40,7 +40,7 @@
               "RelativeDocumentMoniker": "3D Engine\\GUI.h",
               "ToolTip": "C:\\Users\\Hykudo\\Documents\\3D Engine\\3D Engine\\GUI.h",
               "RelativeToolTip": "3D Engine\\GUI.h",
-              "ViewState": "AgIAAHUAAAAAAAAAAAAAAJEAAABwAAAAAAAAAA==",
+              "ViewState": "AgIAAFIAAAAAAAAAAAAqwG0AAABgAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
               "WhenOpened": "2025-08-17T03:59:40.259Z",
               "IsPinned": true,
@@ -57,7 +57,8 @@
               "ViewState": "AgIAAJ4BAAAAAAAAAAAIwKsBAAAeAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
               "WhenOpened": "2024-02-24T11:48:11.599Z",
-              "IsPinned": true
+              "IsPinned": true,
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
@@ -84,7 +85,8 @@
               "ViewState": "AgIAAAcAAAAAAAAAAAAuwBgAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
               "WhenOpened": "2024-02-24T11:48:11.682Z",
-              "IsPinned": true
+              "IsPinned": true,
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
@@ -94,7 +96,7 @@
               "RelativeDocumentMoniker": "3D Engine\\Input.h",
               "ToolTip": "C:\\Users\\Hykudo\\Documents\\3D Engine\\3D Engine\\Input.h",
               "RelativeToolTip": "3D Engine\\Input.h",
-              "ViewState": "AgIAAB4AAAAAAAAAAAAAADYAAAAEAAAAAAAAAA==",
+              "ViewState": "AgIAACcAAAAAAAAAAAAAADQAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
               "WhenOpened": "2025-08-24T04:09:48.538Z",
               "IsPinned": true,

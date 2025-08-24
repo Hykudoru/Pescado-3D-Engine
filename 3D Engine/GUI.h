@@ -2,6 +2,7 @@
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
+#include "misc/cpp/imgui_stdlib.h"
 #include <cstring>
 #include <string>
 #include <iostream>
@@ -82,7 +83,9 @@ void DebuggerWindow()
         ImGui::Text("Insane Sprint (Right Ctrl)");
         ImGui::Text("Reset Camera (Press 0)");
         ImGui::Text("Switch Camera (Press F2)");
-        ImGui::Text("Grab (Right Mouse Button)");
+        ImGui::Text("Grab Object (Left Mouse Button)");
+        ImGui::Text("Spawn Object (Right Mouse Button)");
+        ImGui::Text("Delete Object (Aim and press Delete key)");
 
         ImGui::Text("\nFast-Forward Time (Hold PageUP)");
         ImGui::Text("Reverse Time (Hold PageDown)");
@@ -92,7 +95,7 @@ void DebuggerWindow()
 
 void ControlsWindow()
 {
-    ImGui::Begin("Controls");
+    ImGui::Begin("Global Settings");
     {
         ImGui::SeparatorText("CAMERA");
         ImGui::Text(("Position: (" + to_string(Camera::main->Position().x) + ", " + to_string(Camera::main->Position().y) + ", " + to_string(Camera::main->Position().z) + ")").c_str());
@@ -106,7 +109,6 @@ void ControlsWindow()
         ToolTip("Gives the camera unrealistic instantaneous movement.");
         ImGui::Checkbox("Inertial Dampeners (Press Z)", &dampenersActive);
         ToolTip("When Kinematic is disabled, the camera will slowly come to a stop over time.");
-
 
         ImGui::SeparatorText("GRAPHICS");
         static string mode = "Enable X-Ray Mode";
@@ -156,7 +158,7 @@ void AssetWindow()
 {
     ImGui::Begin("Assets");
     ImGui::SameLine();
-    ToolTip("Assets are located inside: 3D Engine/Objects/");
+    ToolTip("Double click an object to spawn it or just select one then use the right mouse button while in the world.\n- Assets are located inside: 3D Engine/Objects/");
     {
         static int selected = -1;
         ImGui::BeginChild("Assets");
@@ -219,6 +221,38 @@ void AssetWindow()
     ImGui::End();
 }
 
+void Inspector()
+{
+    ImGui::Begin("Inspector");
+    if (prevGrabInfo.objectHit)
+    {
+        auto mesh = prevGrabInfo.objectHit;
+        auto phys = prevGrabInfo.objectHit->object;
+        {
+            ImGui::Text(("Position: (" + to_string(mesh->Position().x) + ", " + to_string(mesh->Position().y) + ", " + to_string(mesh->Position().z) + ")").c_str());
+            if (phys) 
+            {
+                ImGui::Text(("Velocity: <" + to_string(phys->velocity.x) + ", " + to_string(phys->velocity.y) + ", " + to_string(phys->velocity.z) + ">").c_str());
+            }
+            ImGui::SeparatorText("GRAPHICS");
+            ImGui::Checkbox("View Wireframe", &mesh->forceWireFrame);
+            ImGui::Checkbox("Ignore Lighting", &mesh->ignoreLighting);
+
+            ImGui::SeparatorText("PHYSICS");
+            if (phys)
+            {
+                ImGui::Checkbox("Is Kinematic", &phys->isKinematic);
+                ToolTip("When enabled, objects will not be affected by gravity, impulses, or acceleration.");
+                bool isTrigger = phys->IsTrigger();
+                ImGui::Checkbox("Is Trigger", &isTrigger);
+                phys->IsTrigger(isTrigger);
+                ToolTip("When enabled, collisions will be ignored.");
+            }
+        }
+    }
+    ImGui::End();
+}
+
 void InitGUI()
 {
     // IMGUI
@@ -253,6 +287,7 @@ void GUI()
     DebuggerWindow();
     ControlsWindow();
     AssetWindow();
+    Inspector();
 
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
