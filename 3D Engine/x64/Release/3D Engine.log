@@ -162,132 +162,125 @@ C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(24,24): warning C4305:  
 C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(24,24): warning C4305:         ]
   (compiling source file '3D%20Engine.cpp')
   
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(66,28): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
+C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(69,28): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
   (compiling source file '3D%20Engine.cpp')
   
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(309,85): warning C4244: 'argument': conversion from 'double' to 'const T', possible loss of data
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(309,85): warning C4244:         with
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(309,85): warning C4244:         [
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(309,85): warning C4244:             T=float
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(309,85): warning C4244:         ]
+C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(318,85): warning C4244: 'argument': conversion from 'double' to 'const T', possible loss of data
+C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(318,85): warning C4244:         with
+C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(318,85): warning C4244:         [
+C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(318,85): warning C4244:             T=float
+C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(318,85): warning C4244:         ]
   (compiling source file '3D%20Engine.cpp')
   
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(310,66): warning C4244: 'argument': conversion from 'double' to 'const T', possible loss of data
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(310,66): warning C4244:         with
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(310,66): warning C4244:         [
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(310,66): warning C4244:             T=float
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(310,66): warning C4244:         ]
+C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(319,66): warning C4244: 'argument': conversion from 'double' to 'const T', possible loss of data
+C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(319,66): warning C4244:         with
+C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(319,66): warning C4244:         [
+C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(319,66): warning C4244:             T=float
+C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(319,66): warning C4244:         ]
   (compiling source file '3D%20Engine.cpp')
   
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(450,89): warning C4267: 'argument': conversion from 'size_t' to 'const int', possible loss of data
+C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(459,89): warning C4267: 'argument': conversion from 'size_t' to 'const int', possible loss of data
   (compiling source file '3D%20Engine.cpp')
   
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(451,89): warning C4267: 'argument': conversion from 'size_t' to 'const int', possible loss of data
+C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(460,89): warning C4267: 'argument': conversion from 'size_t' to 'const int', possible loss of data
   (compiling source file '3D%20Engine.cpp')
   
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(503,93): warning C4267: 'argument': conversion from 'size_t' to 'const int', possible loss of data
+C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(512,93): warning C4267: 'argument': conversion from 'size_t' to 'const int', possible loss of data
   (compiling source file '3D%20Engine.cpp')
   
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(504,93): warning C4267: 'argument': conversion from 'size_t' to 'const int', possible loss of data
+C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(513,93): warning C4267: 'argument': conversion from 'size_t' to 'const int', possible loss of data
   (compiling source file '3D%20Engine.cpp')
   
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(532,36): warning C4305: 'initializing': truncation from 'double' to 'float'
+C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(541,36): warning C4305: 'initializing': truncation from 'double' to 'float'
   (compiling source file '3D%20Engine.cpp')
   
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(547,20): warning C4552: '-': result of expression not used
+C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(556,20): warning C4552: '-': result of expression not used
   (compiling source file '3D%20Engine.cpp')
   
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(548,20): warning C4552: '-': result of expression not used
+C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(557,20): warning C4552: '-': result of expression not used
   (compiling source file '3D%20Engine.cpp')
   
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(549,20): warning C4552: '-': result of expression not used
+C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(558,20): warning C4552: '-': result of expression not used
   (compiling source file '3D%20Engine.cpp')
   
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(553,58): warning C4305: 'argument': truncation from 'double' to 'const T'
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(553,58): warning C4305:         with
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(553,58): warning C4305:         [
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(553,58): warning C4305:             T=float
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(553,58): warning C4305:         ]
+C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(562,58): warning C4305: 'argument': truncation from 'double' to 'const T'
+C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(562,58): warning C4305:         with
+C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(562,58): warning C4305:         [
+C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(562,58): warning C4305:             T=float
+C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(562,58): warning C4305:         ]
   (compiling source file '3D%20Engine.cpp')
   
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(557,58): warning C4305: 'argument': truncation from 'double' to 'const T'
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(557,58): warning C4305:         with
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(557,58): warning C4305:         [
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(557,58): warning C4305:             T=float
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(557,58): warning C4305:         ]
+C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(566,58): warning C4305: 'argument': truncation from 'double' to 'const T'
+C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(566,58): warning C4305:         with
+C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(566,58): warning C4305:         [
+C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(566,58): warning C4305:             T=float
+C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(566,58): warning C4305:         ]
   (compiling source file '3D%20Engine.cpp')
   
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(561,58): warning C4305: 'argument': truncation from 'double' to 'const T'
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(561,58): warning C4305:         with
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(561,58): warning C4305:         [
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(561,58): warning C4305:             T=float
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(561,58): warning C4305:         ]
+C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(570,58): warning C4305: 'argument': truncation from 'double' to 'const T'
+C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(570,58): warning C4305:         with
+C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(570,58): warning C4305:         [
+C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(570,58): warning C4305:             T=float
+C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(570,58): warning C4305:         ]
   (compiling source file '3D%20Engine.cpp')
   
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(565,58): warning C4305: 'argument': truncation from 'double' to 'const T'
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(565,58): warning C4305:         with
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(565,58): warning C4305:         [
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(565,58): warning C4305:             T=float
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(565,58): warning C4305:         ]
+C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(574,58): warning C4305: 'argument': truncation from 'double' to 'const T'
+C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(574,58): warning C4305:         with
+C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(574,58): warning C4305:         [
+C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(574,58): warning C4305:             T=float
+C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(574,58): warning C4305:         ]
   (compiling source file '3D%20Engine.cpp')
   
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(569,25): warning C4305: 'argument': truncation from 'double' to 'const T'
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(569,25): warning C4305:         with
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(569,25): warning C4305:         [
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(569,25): warning C4305:             T=float
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(569,25): warning C4305:         ]
+C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(578,25): warning C4305: 'argument': truncation from 'double' to 'const T'
+C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(578,25): warning C4305:         with
+C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(578,25): warning C4305:         [
+C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(578,25): warning C4305:             T=float
+C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(578,25): warning C4305:         ]
   (compiling source file '3D%20Engine.cpp')
   
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(1017,49): warning C4244: 'argument': conversion from 'double' to 'const T', possible loss of data
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(1017,49): warning C4244:         with
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(1017,49): warning C4244:         [
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(1017,49): warning C4244:             T=float
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(1017,49): warning C4244:         ]
+C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(1026,49): warning C4244: 'argument': conversion from 'double' to 'const T', possible loss of data
+C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(1026,49): warning C4244:         with
+C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(1026,49): warning C4244:         [
+C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(1026,49): warning C4244:             T=float
+C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(1026,49): warning C4244:         ]
   (compiling source file '3D%20Engine.cpp')
   
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(1021,39): warning C4244: 'argument': conversion from 'double' to 'const T', possible loss of data
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(1021,39): warning C4244:         with
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(1021,39): warning C4244:         [
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(1021,39): warning C4244:             T=float
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(1021,39): warning C4244:         ]
+C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(1030,39): warning C4244: 'argument': conversion from 'double' to 'const T', possible loss of data
+C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(1030,39): warning C4244:         with
+C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(1030,39): warning C4244:         [
+C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(1030,39): warning C4244:             T=float
+C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(1030,39): warning C4244:         ]
   (compiling source file '3D%20Engine.cpp')
   
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(1023,35): warning C4244: 'argument': conversion from 'double' to 'const T', possible loss of data
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(1023,35): warning C4244:         with
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(1023,35): warning C4244:         [
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(1023,35): warning C4244:             T=float
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(1023,35): warning C4244:         ]
+C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(1036,44): warning C4244: 'argument': conversion from 'double' to 'const T', possible loss of data
+C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(1036,44): warning C4244:         with
+C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(1036,44): warning C4244:         [
+C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(1036,44): warning C4244:             T=float
+C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(1036,44): warning C4244:         ]
   (compiling source file '3D%20Engine.cpp')
   
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(1026,44): warning C4244: 'argument': conversion from 'double' to 'const T', possible loss of data
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(1026,44): warning C4244:         with
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(1026,44): warning C4244:         [
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(1026,44): warning C4244:             T=float
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(1026,44): warning C4244:         ]
+C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(1041,42): warning C4244: 'argument': conversion from 'double' to 'const T', possible loss of data
+C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(1041,42): warning C4244:         with
+C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(1041,42): warning C4244:         [
+C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(1041,42): warning C4244:             T=float
+C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(1041,42): warning C4244:         ]
   (compiling source file '3D%20Engine.cpp')
   
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(1031,42): warning C4244: 'argument': conversion from 'double' to 'const T', possible loss of data
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(1031,42): warning C4244:         with
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(1031,42): warning C4244:         [
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(1031,42): warning C4244:             T=float
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(1031,42): warning C4244:         ]
+C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(1052,48): warning C4244: 'argument': conversion from 'double' to 'const T', possible loss of data
+C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(1052,48): warning C4244:         with
+C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(1052,48): warning C4244:         [
+C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(1052,48): warning C4244:             T=float
+C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(1052,48): warning C4244:         ]
   (compiling source file '3D%20Engine.cpp')
   
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(1042,48): warning C4244: 'argument': conversion from 'double' to 'const T', possible loss of data
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(1042,48): warning C4244:         with
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(1042,48): warning C4244:         [
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(1042,48): warning C4244:             T=float
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(1042,48): warning C4244:         ]
+C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(1054,55): warning C4244: 'argument': conversion from 'double' to 'const T', possible loss of data
+C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(1054,55): warning C4244:         with
+C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(1054,55): warning C4244:         [
+C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(1054,55): warning C4244:             T=float
+C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(1054,55): warning C4244:         ]
   (compiling source file '3D%20Engine.cpp')
   
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(1044,55): warning C4244: 'argument': conversion from 'double' to 'const T', possible loss of data
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(1044,55): warning C4244:         with
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(1044,55): warning C4244:         [
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(1044,55): warning C4244:             T=float
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(1044,55): warning C4244:         ]
-  (compiling source file '3D%20Engine.cpp')
-  
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(1045,96): warning C4244: 'argument': conversion from 'double' to 'const float', possible loss of data
+C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(1055,96): warning C4244: 'argument': conversion from 'double' to 'const float', possible loss of data
   (compiling source file '3D%20Engine.cpp')
   
 C:\Users\Hykudo\Documents\3D Engine\3D Engine\Input.h(23,24): warning C4305: 'initializing': truncation from 'double' to 'float'
@@ -319,55 +312,43 @@ C:\Users\Hykudo\Documents\3D Engine\3D Engine\Input.h(106,118): warning C4244:  
 C:\Users\Hykudo\Documents\3D Engine\3D Engine\Input.h(106,118): warning C4244:         ]
   (compiling source file '3D%20Engine.cpp')
   
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\Input.h(109,128): warning C4244: 'argument': conversion from 'int' to 'const T', possible loss of data
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\Input.h(109,128): warning C4244:         with
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\Input.h(109,128): warning C4244:         [
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\Input.h(109,128): warning C4244:             T=float
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\Input.h(109,128): warning C4244:         ]
+C:\Users\Hykudo\Documents\3D Engine\3D Engine\Input.h(108,128): warning C4244: 'argument': conversion from 'int' to 'const T', possible loss of data
+C:\Users\Hykudo\Documents\3D Engine\3D Engine\Input.h(108,128): warning C4244:         with
+C:\Users\Hykudo\Documents\3D Engine\3D Engine\Input.h(108,128): warning C4244:         [
+C:\Users\Hykudo\Documents\3D Engine\3D Engine\Input.h(108,128): warning C4244:             T=float
+C:\Users\Hykudo\Documents\3D Engine\3D Engine\Input.h(108,128): warning C4244:         ]
   (compiling source file '3D%20Engine.cpp')
   
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\Input.h(148,16): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
+C:\Users\Hykudo\Documents\3D Engine\3D Engine\Input.h(147,16): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
   (compiling source file '3D%20Engine.cpp')
   
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\Input.h(226,36): warning C4305: 'argument': truncation from 'double' to 'const T'
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\Input.h(226,36): warning C4305:         with
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\Input.h(226,36): warning C4305:         [
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\Input.h(226,36): warning C4305:             T=float
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\Input.h(226,36): warning C4305:         ]
+C:\Users\Hykudo\Documents\3D Engine\3D Engine\Input.h(225,36): warning C4305: 'argument': truncation from 'double' to 'const T'
+C:\Users\Hykudo\Documents\3D Engine\3D Engine\Input.h(225,36): warning C4305:         with
+C:\Users\Hykudo\Documents\3D Engine\3D Engine\Input.h(225,36): warning C4305:         [
+C:\Users\Hykudo\Documents\3D Engine\3D Engine\Input.h(225,36): warning C4305:             T=float
+C:\Users\Hykudo\Documents\3D Engine\3D Engine\Input.h(225,36): warning C4305:         ]
   (compiling source file '3D%20Engine.cpp')
   
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\Input.h(234,33): warning C4305: 'argument': truncation from 'double' to 'const T'
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\Input.h(234,33): warning C4305:         with
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\Input.h(234,33): warning C4305:         [
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\Input.h(234,33): warning C4305:             T=float
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\Input.h(234,33): warning C4305:         ]
+C:\Users\Hykudo\Documents\3D Engine\3D Engine\Input.h(233,33): warning C4305: 'argument': truncation from 'double' to 'const T'
+C:\Users\Hykudo\Documents\3D Engine\3D Engine\Input.h(233,33): warning C4305:         with
+C:\Users\Hykudo\Documents\3D Engine\3D Engine\Input.h(233,33): warning C4305:         [
+C:\Users\Hykudo\Documents\3D Engine\3D Engine\Input.h(233,33): warning C4305:             T=float
+C:\Users\Hykudo\Documents\3D Engine\3D Engine\Input.h(233,33): warning C4305:         ]
   (compiling source file '3D%20Engine.cpp')
   
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\Input.h(316,56): warning C4305: 'argument': truncation from 'double' to 'float'
+C:\Users\Hykudo\Documents\3D Engine\3D Engine\Input.h(315,56): warning C4305: 'argument': truncation from 'double' to 'float'
   (compiling source file '3D%20Engine.cpp')
   
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\Input.h(320,56): warning C4305: 'argument': truncation from 'double' to 'float'
+C:\Users\Hykudo\Documents\3D Engine\3D Engine\Input.h(319,56): warning C4305: 'argument': truncation from 'double' to 'float'
   (compiling source file '3D%20Engine.cpp')
   
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\Input.h(366,59): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+C:\Users\Hykudo\Documents\3D Engine\3D Engine\Input.h(365,59): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
   (compiling source file '3D%20Engine.cpp')
   
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\Input.h(370,60): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+C:\Users\Hykudo\Documents\3D Engine\3D Engine\Input.h(369,60): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
   (compiling source file '3D%20Engine.cpp')
   
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\Input.h(374,59): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
-  (compiling source file '3D%20Engine.cpp')
-  
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\Input.h(378,60): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
-  (compiling source file '3D%20Engine.cpp')
-  
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\Input.h(382,59): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
-  (compiling source file '3D%20Engine.cpp')
-  
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\Input.h(386,60): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
-  (compiling source file '3D%20Engine.cpp')
-  
-C:\Users\Hykudo\Documents\3D Engine\3D Engine\GUI.h(105,17): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+C:\Users\Hykudo\Documents\3D Engine\3D Engine\GUI.h(106,17): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
   (compiling source file '3D%20Engine.cpp')
   
 C:\Users\Hykudo\Documents\3D Engine\3D Engine\3D Engine.cpp(78,28): warning C4305: 'argument': truncation from 'double' to 'const T'
@@ -441,11 +422,11 @@ C:\Users\Hykudo\Documents\3D Engine\3D Engine\Utility.h(102,59): warning C4267: 
   (compiling source file '3D%20Engine.cpp')
       C:\Users\Hykudo\Documents\3D Engine\3D Engine\Utility.h(102,59):
       the template instantiation context (the oldest one first) is
-          C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(171,66):
+          C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(180,66):
           see reference to class template instantiation 'ManagedObjectPool<PhysicsObject>' being compiled
           C:\Users\Hykudo\Documents\3D Engine\3D Engine\Utility.h(96,14):
           while compiling class template member function 'ManagedObjectPool<PhysicsObject>::~ManagedObjectPool(void)'
-              C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(177,88):
+              C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(186,88):
               see the first reference to 'ManagedObjectPool<PhysicsObject>::~ManagedObjectPool' in 'PhysicsObject::PhysicsObject'
   
 C:\Users\Hykudo\Documents\3D Engine\3D Engine\Utility.h(92,52): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
@@ -458,7 +439,7 @@ C:\Users\Hykudo\Documents\3D Engine\3D Engine\Utility.h(92,52): warning C4267: '
           [
               T=PhysicsObject
           ]
-              C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(177,88):
+              C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(186,88):
               see the first reference to 'ManagedObjectPool<PhysicsObject>::ManagedObjectPool' in 'PhysicsObject::PhysicsObject'
   
 C:\Users\Hykudo\Documents\3D Engine\3D Engine\Utility.h(127,59): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
@@ -497,7 +478,7 @@ C:\Users\Hykudo\Documents\3D Engine\3D Engine\OctTree.h(75,83): warning C4244:  
   (compiling source file '3D%20Engine.cpp')
       C:\Users\Hykudo\Documents\3D Engine\3D Engine\OctTree.h(75,83):
       the template instantiation context (the oldest one first) is
-          C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(753,30):
+          C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(762,30):
           see reference to class template instantiation 'OctTree<SphereCollider>' being compiled
           C:\Users\Hykudo\Documents\3D Engine\3D Engine\OctTree.h(311,24):
           see reference to class template instantiation 'TreeNode<T>' being compiled
@@ -519,7 +500,7 @@ C:\Users\Hykudo\Documents\3D Engine\3D Engine\OctTree.h(75,83): warning C4244:  
           ]
               C:\Users\Hykudo\Documents\3D Engine\3D Engine\OctTree.h(374,14):
               see the first reference to 'OctTree<SphereCollider>::OctTree' in 'OctTree<SphereCollider>::Update'
-              C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(753,36):
+              C:\Users\Hykudo\Documents\3D Engine\3D Engine\Physics.h(762,36):
               see the first reference to 'OctTree<SphereCollider>::Update' in 'DetectCollisionsOctTree'
   
 C:\Users\Hykudo\Documents\3D Engine\3D Engine\OctTree.h(75,137): warning C4244: 'argument': conversion from 'int' to 'const T', possible loss of data
@@ -537,8 +518,7 @@ C:\Users\Hykudo\Documents\3D Engine\3D Engine\OctTree.h(75,197): warning C4244: 
   (compiling source file '3D%20Engine.cpp')
   
   Generating code
-  1 of 4543 functions (<0.1%) were compiled, the rest were copied from previous compilation.
-    0 functions were new in current compilation
-    49 functions had inline decision re-evaluated but remain unchanged
+  Previous IPDB and IOBJ mismatch, fall back to full compilation.
+  All 4535 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
   Finished generating code
   3D Engine.vcxproj -> C:\Users\Hykudo\Documents\3D Engine\x64\Release\3D Engine.exe

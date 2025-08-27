@@ -144,7 +144,6 @@ void ControlsWindow()
 
         ImGui::SeparatorText("PHYSICS");
         ImGui::Checkbox("Time", &Physics::time);
-        
         ImGui::Checkbox("Gravity", &Physics::gravity);
         ImGui::Checkbox("Simulate Physics", &Physics::dynamics);
         ToolTip("When disabled, objects will not be affected by gravity, collision impulses, or acceleration.");
