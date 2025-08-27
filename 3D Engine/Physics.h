@@ -34,6 +34,7 @@ Vec3 velocity = Vec3(0, 0, 0);
 class Physics
 {
 public:
+    static bool time;
     static bool collisionDetection;
     static bool dynamics;
     static bool raycasting;
@@ -41,6 +42,7 @@ public:
     static bool gravity;
     static bool octTree;
 };
+bool Physics::time = true;
 bool Physics::collisionDetection = true;
 bool Physics::dynamics = true;
 bool Physics::raycasting = false;
@@ -48,6 +50,7 @@ bool Physics::raycastDebugging = false;
 bool Physics::gravity = false;
 bool Physics::octTree = true;
 
+double _engineDeltaTime = 0;
 double deltaTime = 0;
 int fps = 0;
 
@@ -68,6 +71,12 @@ void Time()
     {
         t = 0;
         frames = 0;
+    }
+
+    _engineDeltaTime = deltaTime;
+    if (!Physics::time) {
+
+        deltaTime = 0;
     }
 }
 
@@ -1014,21 +1023,22 @@ static void Physics()
     //---------- Physics Update ------------
     if (isKinematic)
     {
-        cam->localPosition += moveDir * accel * deltaTime;
+        cam->localPosition += moveDir * accel * _engineDeltaTime;
     }
     else
     {
-        velocity += moveDir * accel * deltaTime;
-        if (Physics::gravity) {
-            velocity += gravity * deltaTime;
+        velocity += moveDir * accel * _engineDeltaTime;
+        /*if (Physics::gravity) {
+            velocity += gravity * _engineDeltaTime;
         }
-        else if (dampenersActive) {
-            velocity += velocity * decel * deltaTime;
+        else if*/
+        if (dampenersActive) {
+            velocity += velocity * decel * _engineDeltaTime;
         }
         if (velocity.SqrMagnitude() < 0.0001) {
             velocity = Vec3::zero;
         }
-        cam->localPosition += velocity * deltaTime;
+        cam->localPosition += velocity * _engineDeltaTime;
     }
 
     if (Physics::dynamics)

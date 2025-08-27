@@ -143,6 +143,8 @@ void ControlsWindow()
         ToolTip("Not recommended. Fun to experiment with though if you're learning how a graphics engine works.");
 
         ImGui::SeparatorText("PHYSICS");
+        ImGui::Checkbox("Time", &Physics::time);
+        
         ImGui::Checkbox("Gravity", &Physics::gravity);
         ImGui::Checkbox("Simulate Physics", &Physics::dynamics);
         ToolTip("When disabled, objects will not be affected by gravity, collision impulses, or acceleration.");

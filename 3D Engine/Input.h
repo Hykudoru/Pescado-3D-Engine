@@ -105,7 +105,6 @@ void OnMouseButtonEvent(GLFWwindow* window, int button, int action, int mods)
                     static int maxDist = 1000000;
                     if (Raycast<Mesh>(Camera::main->Position(), Camera::main->Position() + Camera::main->Forward() * maxDist, grabInfo))
                     {
-                        cout << "RAYCAST HIT" << '\n';
                         Line::AddWorldLine(Line(Camera::main->Position(), Camera::main->Position() + Camera::main->Forward() * maxDist, Color::green, 3));
                         Point::AddWorldPoint(Point(grabInfo.contactPoint, Color::green, 10));
                         grabbing = &grabInfo.objectHit->Root();//grabInfo.objectHit;
@@ -356,35 +355,20 @@ static void CameraControl(Camera* cam)
     }
     // DOWN
     if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS) {
-        moveDir += cam->localRotation* Direction::down;
+        moveDir += cam->localRotation * Direction::down;
     }
 
     moveDir.Normalize();
 
     // ROTATE CCW
     if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) {
-        cam->localRotation *= Matrix3x3::RotZ(rotateSpeed * deltaTime);
+        cam->localRotation *= Matrix3x3::RotZ(rotateSpeed * _engineDeltaTime);
     }
     // ROTATE CW
     if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS) {
-        cam->localRotation *= Matrix3x3::RotZ(-rotateSpeed * deltaTime);
+        cam->localRotation *= Matrix3x3::RotZ(-rotateSpeed * _engineDeltaTime);
     }
-    // LOOK UP
-    if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
-        cam->localRotation *= Matrix3x3::RotX(rotateSpeed * deltaTime);
-    }
-    // LOOK DOWN
-    if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
-        cam->localRotation *= Matrix3x3::RotX(-rotateSpeed * deltaTime);
-    }
-    // TURN LEFT
-    if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
-        cam->localRotation *= Matrix3x3::RotY(rotateSpeed * deltaTime);
-    }
-    // TURN RIGHT
-    if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
-        cam->localRotation *= Matrix3x3::RotY(-rotateSpeed * deltaTime);
-    }
+    
     // Speed 
     if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
     {
