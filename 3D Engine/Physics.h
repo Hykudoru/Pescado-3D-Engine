@@ -210,7 +210,6 @@ public:
         SetCollider(collider);
         SetMesh(mesh);
         collider->mesh->bounds->color = Color::red;
-        mesh->bounds->color = Color::blue;
     }
 
     PhysicsObject(float scale, Vec3 position, Matrix3x3 rotation, Mesh* mesh, BoxCollider* collider) : ManagedObjectPool<PhysicsObject>(this)
@@ -223,6 +222,7 @@ public:
         mesh->localScale = Vec3::one;
         SetCollider(collider);
         SetMesh(mesh);
+
         delete collider->mesh;
         collider->mesh = mesh;
         collider->mesh->bounds->color = Color::red;
@@ -239,7 +239,6 @@ public:
         SetCollider(collider);
         SetMesh(mesh);
         collider->mesh->bounds->color = Color::red;
-        mesh->bounds->color = Color::blue;
     }
 
     virtual ~PhysicsObject()

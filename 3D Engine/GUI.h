@@ -74,21 +74,25 @@ void DebuggerWindow()
         ImGui::Text(("Box Colliders: " + to_string(ManagedObjectPool<BoxCollider>::count)).c_str());
         ImGui::Text(("Plane Colliders: " + to_string(ManagedObjectPool<PlaneCollider>::count)).c_str());
 
-        ImGui::SeparatorText("CAMERA CONTROLS");
-        ImGui::Text("Move Forward/Back/Left/Right (W,A,S,D)");
-        ImGui::Text("Move Up (Spacebar)");
-        ImGui::Text("Move Down (C)");
-        ImGui::Text("Rotate (Q and E)");
-        ImGui::Text("Sprint (Left Shift)");
-        ImGui::Text("Insane Sprint (Right Ctrl)");
-        ImGui::Text("Reset Camera (Press 0)");
-        ImGui::Text("Switch Camera (Press F2)");
-        ImGui::Text("Grab Object (Left Mouse Button)");
-        ImGui::Text("Spawn Object (Right Mouse Button)");
-        ImGui::Text("Delete Object (Aim and press Delete key)");
+        ImGui::SeparatorText("");
+        if (ImGui::TreeNode("CAMERA CONTROLS"))
+        {
+            ImGui::Text("Move Forward/Back/Left/Right (W,A,S,D)");
+            ImGui::Text("Move Up (Spacebar)");
+            ImGui::Text("Move Down (C)");
+            ImGui::Text("Rotate (Q and E)");
+            ImGui::Text("Sprint (Left Shift)");
+            ImGui::Text("Insane Sprint (Right Ctrl)");
+            ImGui::Text("Reset Camera (Press 0)");
+            ImGui::Text("Switch Camera (Press F2)");
+            ImGui::Text("Grab Object (Left Mouse Button)");
+            ImGui::Text("Spawn Object (Right Mouse Button)");
+            ImGui::Text("Delete Object (Aim and press Delete key)");
 
-        ImGui::Text("\nFast-Forward Time (Hold PageUP)");
-        ImGui::Text("Reverse Time (Hold PageDown)");
+            ImGui::Text("\nFast-Forward Time (Hold PageUP)");
+            ImGui::Text("Reverse Time (Hold PageDown)");
+            ImGui::TreePop();
+        }
     }
     ImGui::End();
 }
@@ -210,7 +214,7 @@ void AssetWindow()
             {
                 spawn = []() { return new PhysicsObject(new CubeMesh(), new BoxCollider()); };
             }
-            else if (objName == "Sphere")
+            else if (objName == "Sphere.obj")
             {
                 spawn = []() { return new PhysicsObject(LoadMeshFromOBJFile("Sphere.obj"), new SphereCollider()); };
             }
@@ -239,7 +243,6 @@ void Inspector()
             designated_transform->localPosition.z = pos[2];
         }
 
-        //ImGui::Text(("Position: (" + to_string(mesh->Position().x) + ", " + to_string(mesh->Position().y) + ", " + to_string(mesh->Position().z) + ")").c_str());
         if (phys) 
         {
             float vel[3] = { phys->velocity.x, phys->velocity.y, phys->velocity.z };
@@ -250,6 +253,7 @@ void Inspector()
 
             ImGui::Text(("Velocity: <" + to_string(phys->velocity.x) + ", " + to_string(phys->velocity.y) + ", " + to_string(phys->velocity.z) + ">").c_str());
         }
+
         ImGui::SeparatorText("GRAPHICS");
         ImGui::Checkbox("View Wireframe", &mesh->forceWireFrame);
         ImGui::Checkbox("Ignore Lighting", &mesh->ignoreLighting);
@@ -263,6 +267,13 @@ void Inspector()
             ImGui::Checkbox("Is Trigger", &isTrigger);
             phys->IsTrigger(isTrigger);
             ToolTip("When enabled, collisions will be ignored.");
+        }
+        else 
+        {
+            if (ImGui::Button("Add Physics Component")) 
+            {
+                new PhysicsObject(mesh, new BoxCollider());
+            }
         }
     }
     ImGui::End();
