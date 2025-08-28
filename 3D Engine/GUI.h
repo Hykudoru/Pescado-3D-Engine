@@ -227,28 +227,42 @@ void Inspector()
     ImGui::Begin("Inspector");
     if (prevGrabInfo.objectHit)
     {
-        auto mesh = prevGrabInfo.objectHit;
-        auto phys = prevGrabInfo.objectHit->object;
+        Mesh* mesh = prevGrabInfo.objectHit;
+        PhysicsObject* phys = prevGrabInfo.objectHit->object;
+        Transform* designated_transform = phys ? (Transform*)phys : mesh;
+        
+        float pos[3] = { designated_transform->localPosition.x, designated_transform->localPosition.y, designated_transform->localPosition.z};
+        if (ImGui::InputFloat3("Position", pos))
         {
-            ImGui::Text(("Position: (" + to_string(mesh->Position().x) + ", " + to_string(mesh->Position().y) + ", " + to_string(mesh->Position().z) + ")").c_str());
-            if (phys) 
-            {
-                ImGui::Text(("Velocity: <" + to_string(phys->velocity.x) + ", " + to_string(phys->velocity.y) + ", " + to_string(phys->velocity.z) + ">").c_str());
-            }
-            ImGui::SeparatorText("GRAPHICS");
-            ImGui::Checkbox("View Wireframe", &mesh->forceWireFrame);
-            ImGui::Checkbox("Ignore Lighting", &mesh->ignoreLighting);
+            designated_transform->localPosition.x = pos[0];
+            designated_transform->localPosition.y = pos[1];
+            designated_transform->localPosition.z = pos[2];
+        }
 
-            ImGui::SeparatorText("PHYSICS");
-            if (phys)
-            {
-                ImGui::Checkbox("Is Kinematic", &phys->isKinematic);
-                ToolTip("When enabled, objects will not be affected by gravity, impulses, or acceleration.");
-                bool isTrigger = phys->IsTrigger();
-                ImGui::Checkbox("Is Trigger", &isTrigger);
-                phys->IsTrigger(isTrigger);
-                ToolTip("When enabled, collisions will be ignored.");
-            }
+        //ImGui::Text(("Position: (" + to_string(mesh->Position().x) + ", " + to_string(mesh->Position().y) + ", " + to_string(mesh->Position().z) + ")").c_str());
+        if (phys) 
+        {
+            float vel[3] = { phys->velocity.x, phys->velocity.y, phys->velocity.z };
+            ImGui::InputFloat3("Velocity", vel);
+            phys->velocity.x = vel[0];
+            phys->velocity.y = vel[1];
+            phys->velocity.z = vel[2];
+
+            ImGui::Text(("Velocity: <" + to_string(phys->velocity.x) + ", " + to_string(phys->velocity.y) + ", " + to_string(phys->velocity.z) + ">").c_str());
+        }
+        ImGui::SeparatorText("GRAPHICS");
+        ImGui::Checkbox("View Wireframe", &mesh->forceWireFrame);
+        ImGui::Checkbox("Ignore Lighting", &mesh->ignoreLighting);
+
+        ImGui::SeparatorText("PHYSICS");
+        if (phys)
+        {
+            ImGui::Checkbox("Is Kinematic", &phys->isKinematic);
+            ToolTip("When enabled, objects will not be affected by gravity, impulses, or acceleration.");
+            bool isTrigger = phys->IsTrigger();
+            ImGui::Checkbox("Is Trigger", &isTrigger);
+            phys->IsTrigger(isTrigger);
+            ToolTip("When enabled, collisions will be ignored.");
         }
     }
     ImGui::End();
