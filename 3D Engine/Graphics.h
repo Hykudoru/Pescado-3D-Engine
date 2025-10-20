@@ -1013,7 +1013,7 @@ public:
         this->name = "Camera " + cameraCount;
     }
     
-    static bool InsideViewScreen(Vec3* verts_proj, int size)
+    static bool InsideViewScreen(const Vec3* verts_proj, int size)
     {
         Range xRange = ProjectVertsOntoAxis(verts_proj, size, Direction::right);
         if ((xRange.min > 1.0f || xRange.max < -1.0f)) {
@@ -1542,48 +1542,6 @@ void Draw()
     projectionMatrix = ProjectionMatrix();
     Matrix4x4 vpMatrix = projectionMatrix * worldToViewMatrix;
 
-    /*
-    int nodeCount = 0;
-    auto visible = [&](TreeNode<Mesh>* node) mutable {
-        List<Vec3>* verts = node->bounds->WorldVertices();
-        Vec3 camPos = Camera::main->Position();
-        Vec3 camLooking = Camera::main->Forward();
-        for (size_t v = 0; v < verts->size(); v++)
-        {
-            bool behindCamera = DotProduct((*verts)[v] - camPos, camLooking) < 0;
-            if (!behindCamera)
-            {
-                nodeCount++;
-                return true;
-            }
-        }
-        return false;
-    };
-    
-    List<Mesh*> meshes;
-    OctTree<Mesh>::Update();
-    OctTree<Mesh>::Tree()->Extract(meshes);
-    for (size_t i = 0; i < 8; i++)
-    {
-        auto zone = OctTree<Mesh>::Tree()->children->at(i);
-        if (visible(zone))
-        {
-            zone->Extract(meshes);
-            zone->ForEachSubNode([&](TreeNode<Mesh>* sub) {
-                if (visible(sub))
-                {
-                    sub->Extract(meshes);
-                }
-            });
-        }
-    }
-
-    if (DEBUGGING) {
-        std::cout << "Nodes: " << OctTree<Mesh>::count << std::endl;
-        std::cout << "Nodes Visible: " << nodeCount << std::endl;
-        std::cout << "Meshes Looping: " << meshes.size() << std::endl;
-    }
-    */
     // ---------- Transform -----------
     for (int i = 0; i < Mesh::count; i++)
     {
@@ -1618,8 +1576,7 @@ void Draw()
                 }
 
                 // Check if visible
-                List<Vec3>* verts_p = bounds->ProjectedVertices();
-                if (!Camera::InsideViewScreen(verts_p->data(), 8))
+                if (!Camera::InsideViewScreen(bounds->ProjectedVertices()->data(), 8))
                 {
                     continue;
                 }
