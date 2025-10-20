@@ -372,8 +372,8 @@ protected:
 public:
     static int worldTriangleDrawCount;
     List<Vec3> vertices;
-    List<int>* indices;
-    List<Triangle>* triangles;
+    List<int> indices;
+    List<Triangle> triangles;
     bool ignoreLighting = false;
     bool forceWireFrame = false;
     //Mesh(const Mesh& other) = delete;//disables copying
@@ -382,7 +382,7 @@ public:
     Mesh(const float& scale = 1, const Vec3& position = Vec3(0, 0, 0), const Vec3& rotationEuler = Vec3(0, 0, 0))
         : Transform(scale, position, rotationEuler), ManagedObjectPool<Mesh>(this)
     {
-        triangles = new List<Triangle>{};
+        triangles = List<Triangle>{};
         MapVertsToTriangles();
         SetColor(color);
         bounds = new BoundingBox(this);
@@ -391,7 +391,7 @@ public:
     Mesh(const Vec3& scale, const Vec3& position = Vec3(0, 0, 0), const Matrix3x3& rotation = Matrix3x3::identity)
         : Transform(scale, position, rotation), ManagedObjectPool<Mesh>(this)
     {
-        triangles = new List<Triangle>{};
+        triangles = List<Triangle>{};
         MapVertsToTriangles();
         SetColor(color);
         bounds = new BoundingBox(this);
@@ -400,8 +400,8 @@ public:
     virtual ~Mesh()
     {
         //delete vertices;
-        delete indices;
-        delete triangles;
+        //delete indices;
+        //delete triangles;
         delete bounds;
     }
 
@@ -1056,33 +1056,33 @@ void Mesh::SetColor(Color& c)
     color = c;
     if (vertices.size() > 0)
     {
-        for (int i = 0; i < triangles->size(); i++)
+        for (int i = 0; i < triangles.size(); i++)
         {
-            (*triangles)[i].color = c;
+            triangles[i].color = c;
         }
     }
 }
 
 List<Triangle>* Mesh::MapVertsToTriangles()
 {
-    if (indices && !vertices.empty())
+    if (!vertices.empty())
     {
         int t = 0;
-        for (size_t i = 0; i < indices->size(); i++)
+        for (size_t i = 0; i < indices.size(); i++)
         {
-            int p1Index = (*indices)[i++];
-            int p2Index = (*indices)[i++];
-            int p3Index = (*indices)[i];
+            int p1Index = indices[i++];
+            int p2Index = indices[i++];
+            int p3Index = indices[i];
 
-            (*triangles)[t].verts[0] = (vertices)[p1Index];
-            (*triangles)[t].verts[1] = (vertices)[p2Index];
-            (*triangles)[t].verts[2] = (vertices)[p3Index];
+            triangles[t].verts[0] = (vertices)[p1Index];
+            triangles[t].verts[1] = (vertices)[p2Index];
+            triangles[t].verts[2] = (vertices)[p3Index];
             
             t++;
         }
     }
 
-    return triangles;
+    return &triangles;
 }
 
 //Convert to world coordinates
@@ -1263,7 +1263,7 @@ public:
             Vec3(0.5, -0.5, -0.5)
             });
 
-        this->indices = new List<int>{
+        this->indices = List<int>{
             //South
             0, 1, 2,
             0, 2, 3,
@@ -1284,7 +1284,7 @@ public:
             3, 4, 0
         };
 
-        triangles = new List<Triangle>(this->indices->size() / 3);
+        triangles = List<Triangle>(this->indices.size() / 3);
 
         bounds->CreateBounds(this);
     }
@@ -1304,8 +1304,8 @@ public:
                 Vec3(0.5, 0, 0.5)
         };
 
-        this->triangles->emplace_back(Triangle((vertices)[0], (vertices)[1], (vertices)[2]));
-        this->triangles->emplace_back(Triangle((vertices)[0], (vertices)[2], (vertices)[3]));
+        this->triangles.emplace_back(Triangle((vertices)[0], (vertices)[1], (vertices)[2]));
+        this->triangles.emplace_back(Triangle((vertices)[0], (vertices)[2], (vertices)[3]));
         
         bounds->CreateBounds(this);
     }
@@ -1445,8 +1445,8 @@ Mesh* LoadMeshFromOBJFile(std::string objFileName)
     // -----------------Construct new mesh-------------------
     
     List<Vec3> verts = List<Vec3>();
-    List<int>* indices = new List<int>();
-    List<Triangle>* triangles = new List<Triangle>(indices->size() / 3);
+    List<int> indices = List<int>();
+    List<Triangle> triangles = List<Triangle>(indices.size() / 3);
     Material material;
     for (size_t i = 0; i < strings.size(); i++)
     {
@@ -1511,13 +1511,13 @@ Mesh* LoadMeshFromOBJFile(std::string objFileName)
             int p2Index = stof(strings[++i]) - 1;
             int p1Index = stof(strings[++i]) - 1;
 
-            indices->emplace_back(p1Index);
-            indices->emplace_back(p2Index);
-            indices->emplace_back(p3Index);
+            indices.emplace_back(p1Index);
+            indices.emplace_back(p2Index);
+            indices.emplace_back(p3Index);
 
             Triangle tri = Triangle((verts)[p1Index], (verts)[p2Index], (verts)[p3Index]);
             tri.color = material.color;
-            triangles->emplace_back(tri);
+            triangles.emplace_back(tri);
         }
     }
     //mtlFile.close();
