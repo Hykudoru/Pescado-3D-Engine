@@ -1,6 +1,6 @@
 # Pescado 3D Engine
  
-This is a 3D graphics and physics engine coded in C++ and OpenGL. All the libraries, including the Vector and Matrix math libraries were written by myself. The physics and geometry processing happens in 3D but when you want to display the image to your 2D monitor you can only plot 2D points. Thus, every 3D point is projected and squashed to the screen using a perspective projection matrix and perspective division. Although it looks 3D, it is actually 2D. There is no such thing as 3D graphics.  
+This is a 3D graphics and physics engine coded in C++ and OpenGL. All the libraries, including the vector math and matrix math libraries were coded from scratch. The physics and geometry processing happens in 3D but when you want to display the image to your 2D monitor you can only plot 2D points. Thus, every 3D point is projected and squashed to the screen using a perspective projection matrix and perspective division. Although it looks 3D, it is actually 2D. There is no such thing as 3D graphics.  
 
 ## Meshes
 Points and lines are grouped into triangles. Triangles are grouped into meshes (shapes). These shapes then get placed (transformed) into the world by a model-to-world matrix (TRS). This TRS matrix scales, rotates, and translates every point visible (in that exact order) from local space to world space.
