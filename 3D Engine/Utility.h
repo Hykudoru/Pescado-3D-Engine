@@ -407,18 +407,18 @@ Vec3 ClosestPointOnPlane(Vec3& pointOnPlane, Vec3& normal, Vec3& somePoint)
 }
 
 // Builds a 3x3 orthogonal matrix with its -Z axis facing the given direction (similar to a camera with no rotation).
-Matrix3x3 OrthogonalMatrixLookAt(Vec3 direction)
+Matrix3x3 OrthogonalMatrixLookAt(const Vec3& direction, Vec3& up = Direction::up)
 {
-    // Cached staticallly since highly improbable the initial random vector will ever be exactly aligned with direction arg. 
+    // (Previously) Cached staticallly since highly improbable the initial random vector will ever be exactly aligned with direction arg. 
     // Prevent recalculating a random vector every call.
-    static Vec3 randomDirection = RandomDirection();
+    //static Vec3 randomDirection = RandomDirection();
 
     Vec3 rayZ = direction * -1.0;
-    if (rayZ == randomDirection) {
-        randomDirection = RandomDirection();
+    if (rayZ == up) {
+        up = RandomDirection();
     }
-    Vec3 rayX = CrossProduct(rayZ, randomDirection);
-    Vec3 rayY = CrossProduct(rayZ, rayX);
+    Vec3 rayX = CrossProduct(up, rayZ);// CrossProduct(rayZ, randomDirection);
+    Vec3 rayY = up;//CrossProduct(rayZ, rayX);
     //rayX.Normalize();
     //rayY.Normalize();
     float rotationMatrix[3][3] = {

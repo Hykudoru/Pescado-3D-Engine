@@ -84,12 +84,14 @@ void Init(GLFWwindow* window)
     sun->localPosition = lightSource * 100000;
     sun->localScale *= 5000;
     sun->ignoreLighting = true;
+    sun->name = "Sun";
 
     Camera* sunCam = new Camera();
     sunCam->SetParent(sun, false);
     sunCam->localScale = sun->LocalScale4x4Inverse() * sunCam->localScale;
     sunCam->localPosition = Vec3::zero;
     sunCam->localRotation = Matrix3x3::identity;
+    sunCam->name = "Sun Camera";
 
     planet = new PhysicsObject(500.0, Direction::forward * 1200, Matrix3x3::identity, LoadMeshFromOBJFile("Planet.obj"), new SphereCollider());
     planet->mass = 100000;
@@ -112,7 +114,8 @@ void Init(GLFWwindow* window)
 
     spaceShip3 = LoadMeshFromOBJFile("SpaceShip_5.obj");
     spaceShip3->localPosition = Direction::right * 20 + Direction::up * 10;
-   
+
+
     parent = new CubeMesh(3, Vec3(0, 10, 500), Vec3(0, 45, 0));
     child = new CubeMesh(.5, Vec3(0, 0, 2), Vec3(0, 45, 0));
     grandchild = new CubeMesh(.5, Vec3(0, 0, 2), Vec3(0, 45, 0));
@@ -357,7 +360,7 @@ void Update()
         Mesh* mesh = Mesh::objects[i];
         for (int ii = 0; ii < mesh->vertices.size(); ii++)
         {
-            Vec3* v = &((mesh->vertices))[ii];
+            Vec3* v = &mesh->vertices[ii];
 
             //DECAY
             //*v += *v * 0.001*cos(2.0*PI*t*ii);
@@ -366,7 +369,7 @@ void Update()
             //*v += (*v * (0.001 * sin(2.0 * PI * t + ((float)ii))));
 
             //WAVE
-            //*v += (*v * (0.005 * sin(2.0 * PI * t + ii)));
+            *v += (*v * (0.005 * sin(2.0 * PI * t + ii)));
 
             //CRUSH
             //*v += (v->Normalized() * (0.001 * sin(2.0 * PI * t + ((float)ii))));
@@ -381,8 +384,8 @@ void Update()
             //Stretch 3
             //*v += (RandomDirection() * -ii * (0.001 * t * abs(sin(t * .1))));
         }
-    }
-    */
+    }*/
+    
 }
 
 int main(void)

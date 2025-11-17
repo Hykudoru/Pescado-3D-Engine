@@ -235,6 +235,8 @@ void Inspector()
         PhysicsObject* phys = prevGrabInfo.objectHit->object;
         Transform* designated_transform = phys ? (Transform*)phys : mesh;
         
+        ImGui::InputText("Name", &mesh->name);
+
         float pos[3] = { designated_transform->localPosition.x, designated_transform->localPosition.y, designated_transform->localPosition.z};
         if (ImGui::InputFloat3("Position", pos))
         {
@@ -279,6 +281,39 @@ void Inspector()
     ImGui::End();
 }
 
+
+void SceneObjectsWindow()
+{
+    static bool open = true;
+    ImGui::Begin("Game Objects", &open);
+    {
+        static int selected = -1;
+        ImGui::BeginChild("Object");
+        for (int i = 0; i < ManagedObjectPool<Mesh>::objects.size(); i++)
+        {
+            ImGui::PushID(i); // unique
+            // Display selectable object name
+            Mesh* obj = ManagedObjectPool<Mesh>::objects[i];
+            if (ImGui::Selectable(obj->name.c_str(), selected == i, ImGuiSelectableFlags_AllowDoubleClick))
+            {
+                selected = i;
+                if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))  
+                {
+                    // Face and Position the main camera in front of the object selected.
+                    Vec3 scale = obj->Scale();
+                    Camera::main->localPosition = obj->Position() + -Direction::forward * (scale.x + scale.y + scale.z);
+                    Vec3 lookAt = (obj->Position() - Camera::main->Position()).Normalized();
+                    Camera::main->localRotation = OrthogonalMatrixLookAt(lookAt);
+                    prevGrabInfo.objectHit = obj;
+                }
+            }
+            ImGui::PopID();
+        }
+        ImGui::EndChild();
+    }
+    ImGui::End();
+}
+
 void InitGUI()
 {
     // IMGUI
@@ -314,6 +349,7 @@ void GUI()
     ControlsWindow();
     AssetWindow();
     Inspector();
+    SceneObjectsWindow();
 
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());

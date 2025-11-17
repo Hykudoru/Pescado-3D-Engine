@@ -2,7 +2,7 @@
 #include <Matrix.h>
 #include <vector>
 #include <algorithm>
-#include <string.h>
+#include <string>
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -378,6 +378,7 @@ public:
     bool forceWireFrame = false;
     //Mesh(const Mesh& other) = delete;//disables copying
     BoundingBox* bounds;
+    std::string name = "";
 
     Mesh(const float& scale = 1, const Vec3& position = Vec3(0, 0, 0), const Vec3& rotationEuler = Vec3(0, 0, 0))
         : Transform(scale, position, rotationEuler), ManagedObjectPool<Mesh>(this)
@@ -386,6 +387,10 @@ public:
         MapVertsToTriangles();
         SetColor(color);
         bounds = new BoundingBox(this);
+        
+        std::ostringstream addr;
+        addr << this;
+        name = "Mesh " + addr.str();
     }
     
     Mesh(const Vec3& scale, const Vec3& position = Vec3(0, 0, 0), const Matrix3x3& rotation = Matrix3x3::identity)
@@ -395,6 +400,10 @@ public:
         MapVertsToTriangles();
         SetColor(color);
         bounds = new BoundingBox(this);
+        
+        std::ostringstream addr;
+        addr << this;
+        name = "Mesh " + addr.str();
     }
 
     virtual ~Mesh()
@@ -1526,6 +1535,7 @@ Mesh* LoadMeshFromOBJFile(std::string objFileName)
     mesh->indices = indices;
     mesh->triangles = triangles;
     mesh->bounds->CreateBounds(mesh);
+    mesh->name = objFileName;
 
     return mesh;
 }
