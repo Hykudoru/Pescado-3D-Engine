@@ -1,38 +1,7 @@
 #pragma once
 #ifndef UTILITY_H
 #define UTILITY_H
-
-#include <math.h>
-#include <functional>
-
-#define List std::vector
-extern bool DEBUGGING;
-const float PI = 3.14159265359f;
-const float TAO = 2.0 * PI;
-typedef void (*Callback)();
-
-List<std::string> debugLog = List<std::string>();
-List<std::string> debugLog2 = List<std::string>();
-
-void Log(const std::string& str)
-{
-    debugLog.emplace_back(str);
-}
-
-void Log2(const std::string& str)
-{
-    debugLog2.emplace_back(str);
-}
-
-void ClearLog()
-{
-    debugLog.clear();
-}
-
-void ClearLog2()
-{
-    debugLog2.clear();
-}
+#include <System.h>
 
 struct Direction
 {
@@ -49,13 +18,6 @@ Vec3 Direction::right = Vec3(1, 0, 0);
 Vec3 Direction::left = Vec3(-1, 0, 0);
 Vec3 Direction::up = Vec3(0, 1, 0);
 Vec3 Direction::down = Vec3(0, -1, 0);
-
-class PhysicsObject;
-class Component// : public Transform
-{
-public:
-    PhysicsObject* object;
-};
 
 template <typename T>
 void Foreach(List<T*>& objects, std::function<void(T*)>&& callback)
@@ -76,67 +38,6 @@ void Foreach(List<T>& objects, std::function<void(T*)>&& callback)
         callback(obj);
     }
 }
-
-template <typename T>
-class ManagedObjectPool
-{
-public:
-    static List<T*> objects;
-    static int count;
-
-    ManagedObjectPool(T* obj)
-    {
-        if (obj)
-        {
-            ManagedObjectPool::objects.emplace_back(obj);
-            count = ManagedObjectPool::objects.size();//count++;
-        }
-    }
-    
-    virtual ~ManagedObjectPool()
-    {
-        for (size_t i = 0; i < ManagedObjectPool<T>::objects.size(); i++)
-        {
-            if (this == ManagedObjectPool<T>::objects[i]) {
-                ManagedObjectPool<T>::objects.erase(ManagedObjectPool<T>::objects.begin() + i);
-                count = ManagedObjectPool<T>::objects.size();
-                break;
-            }
-        }
-    }
-
-    static void AddToPool(T* obj)
-    {
-        for (size_t i = 0; i < ManagedObjectPool<T>::objects.size(); i++)
-        {
-            if (obj == ManagedObjectPool<T>::objects[i]) {
-                return;
-            }
-        }
-        
-        ManagedObjectPool<T>::objects.emplace_back(obj);
-        count = ManagedObjectPool<T>::objects.size();//count++;
-    }
-
-    static void RemoveFromPool(T* obj)
-    {
-        for (size_t i = 0; i < ManagedObjectPool<T>::objects.size(); i++)
-        {
-            if (obj == ManagedObjectPool<T>::objects[i]) {
-                ManagedObjectPool<T>::objects.erase(ManagedObjectPool<T>::objects.begin() + i);
-                count = ManagedObjectPool<T>::objects.size();
-                return;
-            }
-        }
-    }
-    
-
-   
-};
-template <typename T>
-List<T*> ManagedObjectPool<T>::objects = List<T*>();
-template <typename T>
-int ManagedObjectPool<T>::count = 0;
 
 class Plane
 {

@@ -11,8 +11,9 @@
 #include "Utility.h"
 #include "Input.h"
 using namespace std;
-namespace fs = std::filesystem;
 extern std::function<PhysicsObject* ()> spawn;
+
+namespace fs = filesystem;
 static List<const char*> assetFiles = {};
 static List<string> files;
 static List<string> filesCopy;
@@ -226,6 +227,7 @@ void AssetWindow()
     ImGui::End();
 }
 
+
 void Inspector()
 {
     ImGui::Begin("Inspector");
@@ -313,6 +315,7 @@ void SceneObjectsWindow()
     }
     ImGui::End();
 }
+
 
 void InitGUI()
 {

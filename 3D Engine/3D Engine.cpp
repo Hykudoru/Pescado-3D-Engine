@@ -2,10 +2,7 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
-#include <fstream>
-#include <sstream>
 #include <string>
-#include <math.h>
 #include <Matrix.h>
 #include <Graphics.h>
 #include <Physics.h>
@@ -32,20 +29,6 @@ Mesh* compass;
 Mesh* bender;
 
 PhysicsObject* trigger;
-
-void Init0(GLFWwindow* window)
-{
-    glfwSetCursorPosCallback(window, OnMouseMoveEvent);
-    glfwSetScrollCallback(window, OnScrollEvent);
-    glfwSetMouseButtonCallback(window, OnMouseButtonEvent);
-    glfwSetKeyCallback(window, OnKeyPressEvent);
-    glfwGetWindowSize(window, &screenWidth, &screenHeight);
-    glfwSetCursorPos(window, screenWidth / 2.0, screenHeight / 2.0);
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
-
-    glLineWidth(2);
-    glPointSize(2);
-}
 
 void Init(GLFWwindow* window)
 {
@@ -263,38 +246,7 @@ void Init(GLFWwindow* window)
 }
 
 void Update()
-{/*
-    OctTree<Mesh>::Update();
-    Foreach<Mesh>(ManagedObjectPool<Mesh>::objects, [](Mesh* obj) {
-        obj->SetColor(Color::red);
-    });
-    auto list = OctTree<Mesh>::Search(Camera::main->Position(), [](Mesh* obj) { obj->SetColor(Color::green); });
-    
-    if (DEBUGGING) {
-        cout << list->size() << endl;
-    }
-*/
-    /*
-    for (int width = -100; width < 100; width++)
-    {
-        for (int depth = -100; depth < 100; depth++)
-        {
-            Vec3 from1 = Direction::right* width;
-            Vec3 to1 = Direction::right * width + Direction::forward * depth;
-            Vec3 from2 = Direction::forward * width;
-            Vec3 to2 = Direction::forward * width + Direction::right * depth;
-            if (DotProduct(Camera::main->Forward(), from1 - Camera::main->Position()) < 0
-             && DotProduct(Camera::main->Forward(), to1 - Camera::main->Position()) < 0
-             || DotProduct(Camera::main->Forward(), from2 - Camera::main->Position()) < 0
-             && DotProduct(Camera::main->Forward(), from2 - Camera::main->Position()) < 0)
-            {
-                continue;
-            }
-            Line::AddWorldLine(Line(from1, to1));
-            Line::AddWorldLine(Line(from2, to2));
-        }
-    }*/
-
+{
     if (CameraSettings::displayReticle)
     {
         Point::AddPoint(Point(Vec3(), Color::white, 5));
@@ -410,6 +362,7 @@ int main(void)
     //glewInit();
     
     Init(window);
+
     InitGUI();
 
     /* Loop until the user closes the window */
@@ -426,7 +379,6 @@ int main(void)
             Draw();
             GUI();
         }
-        
 
         /* Swap front and back buffers */
         glfwSwapBuffers(window);

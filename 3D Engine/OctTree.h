@@ -53,9 +53,11 @@ public:
             for (size_t i = 0; i < children->size(); i++)
             {
                 delete (*children)[i];
+                (*children)[i] = nullptr;
             }
 
             delete children;
+            children = nullptr;
         }
     }
 

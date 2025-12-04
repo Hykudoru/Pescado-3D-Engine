@@ -1,7 +1,7 @@
 #pragma once
 #include <GLFW/glfw3.h>
-#include <math.h>
 #include <Functional>
+#include <System.h>
 #include <Matrix.h>
 #include <Graphics.h>
 #include <Utility.h>
